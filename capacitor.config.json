@@ -40,6 +40,18 @@
       "style": "LIGHT",
       "backgroundColor": "#153E49",
       "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "LIGHT",
+      "resizeOnFullScreen": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_launcher_foreground",
+      "iconColor": "#153E49"
     }
   }
 }
