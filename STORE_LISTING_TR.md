@@ -4,17 +4,13 @@ Bu dosya Google Play Console ve Apple App Store Connect formlarını dakikalar i
 
 ---
 
-## 1. İmzalı Google Play AAB Üretimi İçin GitHub Secrets Ayarı (Tek Seferlik)
+## 1. İmzalı Google Play AAB Üretimi İçin GitHub Secrets Ayarı (Tamamlandı ✓)
 
-Bilgisayarınızda repo dışında oluşturulan `ustanomi_signing_private\GITHUB_SECRETS_LOCAL_ONLY.txt` dosyasındaki 4 gizli anahtarı GitHub deponuza eklediğiniz anda Actions otomatik olarak **Google Play uyumlu İMZALI `.aab`** üretecektir:
+4 imzalama anahtarı (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) GitHub repo Secrets bölümüne eklendi ve GitHub Actions **Run `44918438097`** ile üretilen **Google Play imzalı `.aab`** paketi `jarsigner -verify` (`CN=Ustanomi`) ile doğrulandı.
 
-1. Açın: `https://github.com/samierdogan82-glitch/ustanomi-mobile/settings/secrets/actions`
-2. **"New repository secret"** ile aşağıdaki **4 Secret** kaydını oluşturun (değerleri yalnızca kendi bilgisayarınızdaki `GITHUB_SECRETS_LOCAL_ONLY.txt` dosyasından kopyalayın):
-   - `ANDROID_KEYSTORE_BASE64`
-   - `ANDROID_KEYSTORE_PASSWORD`
-   - `ANDROID_KEY_ALIAS` (`ustanomi-upload`)
-   - `ANDROID_KEY_PASSWORD`
-3. Ardından GitHub Actions sekmesinden **"Build Ustanomi Android & iOS"** iş akışını **Run workflow** ile tetikleyin; çıkan `ustanomi-android-release-aab` dosyası Google Play Console'a yüklenmeye hazırdır.
+- Secret Adresi: `https://github.com/samierdogan82-glitch/ustanomi-mobile/settings/secrets/actions`
+- Yerel Şifreli Yedek: Repo dışındaki `ustanomi_signing_private\ustanomi-upload.keystore` ve `dist-signed\app-release.aab`
+- Yeni sürüm derlemek için GitHub Actions sekmesinden **"Build Ustanomi Android & iOS"** iş akışını **Run workflow** ile tetikleyebilirsiniz.
 
 > **Önemli:** `ustanomi-upload.keystore` dosyasını mutlaka güvenli bir yerde (örneğin şifreli Google Drive / parola yöneticisi) yedekleyin. Google Play güncellemeleri için gelecekte de aynı upload anahtarı gerekir.
 
@@ -64,10 +60,13 @@ Not: Ödeme kuruluşu (PayTR/iyzico) entegrasyon modülü şu an test/sandbox mo
 
 ## 4. Görsel & Veri Güvenliği (Data Safety / App Privacy) Özet Tablosu
 
-- **Hazır Pazarlama Görselleri (`store-assets/`):**
+- **Hazır Pazarlama Görselleri (`store-assets/`, tamamı alfa kanalsız RGB PNG):**
   - Google Play Uygulama İkonu (`512×512`): `store-assets/google-play-icon-512.png`
   - Google Play Özellik Grafiği (`1024×500`): `store-assets/google-play-feature-graphic-1024x500.png`
   - Apple App Store İkonu (`1024×1024`): `store-assets/apple-app-store-icon-1024.png`
+  - Google Play Telefon Ekran Görüntüleri (`5 adet • 1080×1920`): `store-assets/screenshots/android/` (`01_kesfet.png` – `05_profil.png`)
+  - Apple App Store 6.9" Ekran Görüntüleri (`5 adet • 1320×2868`): `store-assets/screenshots/ios-6.9/` (`01_kesfet.png` – `05_profil.png`)
+  - Apple App Store 6.7" Ekran Görüntüleri (`5 adet • 1290×2796`): `store-assets/screenshots/ios-6.7/` (`01_kesfet.png` – `05_profil.png`)
 - **Google Play Veri Güvenliği / Apple App Privacy Beyanı:**
   - *Toplanan Veriler:* Ad soyad, e-posta, telefon numarası, kullanıcı fotoğrafları/belgeleri (isteğe bağlı yükleme), yaklaşık/hassas konum (yalnızca Acil Radar kullanıldığında).
   - *Veri Şifreleme:* Aktarım sırasında HTTPS/TLS ile şifrelenir.
