@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bağlantı Bekleniyor — Ustanomi</title>
+    <style>
+        body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#FAF9F6; color:#111827; font-family:system-ui,-apple-system,sans-serif; padding:24px; }
+        .card { max-width:360px; width:100%; background:#FFFFFF; border:1px solid #E5E7EB; border-radius:20px; padding:28px 24px; text-align:center; box-shadow:0 12px 30px rgba(15,23,42,0.06); }
+        .badge { display:inline-block; padding:5px 12px; border-radius:99px; background:#FEF3C7; color:#92400E; font-size:0.74rem; font-weight:700; margin-bottom:14px; }
+        h1 { margin:0 0 8px; font-size:1.2rem; color:#153E49; }
+        p { margin:0 0 20px; font-size:0.88rem; color:#4B5563; line-height:1.5; }
+        button { width:100%; padding:13px 18px; border:none; border-radius:12px; background:#153E49; color:#FFFFFF; font-weight:700; font-size:0.95rem; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="badge">Çevrimdışı Mod</span>
+        <h1>İnternet Bağlantısı Kurulamadı</h1>
+        <p>Ustanomi canlı ihale, güvenli havuz ve usta ağına bağlanmak için internet bağlantınızı kontrol edip tekrar deneyin.</p>
+        <button type="button" onclick="window.location.href='https://ustanomi-web-production.up.railway.app/app/'">Yeniden Bağlan</button>
+    </div>
+</body>
+</html>

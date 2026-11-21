@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ustanomi</string>
+    <string name="title_activity_main">Ustanomi</string>
+    <string name="package_name">com.ustanomi.app</string>
+    <string name="custom_url_scheme">com.ustanomi.app</string>
+</resources>

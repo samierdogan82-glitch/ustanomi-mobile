@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>tr</string>
+	<key>CFBundleDisplayName</key>
+        <string>Ustanomi</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Ustanomi, şantiye keşif fotoğrafı çekmek, MEB/MYK belgesi yüklemek ve 15 dakikalık görüntülü keşif görüşmesi yapmak için kameranıza erişim ister.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ustanomi, usta ile canlı 15 dakikalık görüntülü keşif görüşmesi yapabilmeniz için mikrofonunuza erişim ister.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ustanomi, tadilat öncesi/sonrası görsellerinizi, hasar tutanağı fotoğraflarınızı ve belgelerinizi yükleyebilmeniz için fotoğraf galerinize erişim ister.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ustanomi, profil QR kartvizitinizi ve iş görsellerinizi galerinize kaydedebilmek için izin ister.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ustanomi, 30 dakika Acil Nöbetçi Usta Radarı ile bölgenizdeki en yakın doğrulanmış ustaları listelemek için konum bilginize erişim ister.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+</dict>
+</plist>

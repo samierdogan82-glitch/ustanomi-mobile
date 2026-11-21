@@ -1,0 +1,45 @@
+{
+  "appId": "com.ustanomi.app",
+  "appName": "Ustanomi",
+  "webDir": "www",
+  "server": {
+    "url": "https://ustanomi-web-production.up.railway.app/app/",
+    "cleartext": false,
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "ustanomi-web-production.up.railway.app",
+      "ustanomi.com",
+      "*.ustanomi.com",
+      "www.paytr.com",
+      "sandbox-api.iyzipay.com",
+      "api.iyzipay.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#153E49"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#153E49",
+    "limitsNavigationsToAppBoundDomains": false,
+    "scheme": "Ustanomi"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1600,
+      "launchAutoHide": true,
+      "backgroundColor": "#153E49",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#153E49",
+      "overlaysWebView": false
+    }
+  }
+}
