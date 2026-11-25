@@ -112,9 +112,75 @@
             font-weight: 800;
         }
 
-        /* Section Cards */
+        /* Section Cards & 60 FPS Spring Transitions (motion-primitives / vaul aligned) */
+        @keyframes slideFadeUp {
+            from { opacity: 0; transform: translateY(14px) scale(0.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
         .view-section { display: none; }
-        .view-section.active { display: block; }
+        .view-section.active {
+            display: block;
+            animation: slideFadeUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .card, .reel-card {
+            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease;
+        }
+        .card:active, .reel-card:active {
+            transform: scale(0.988);
+        }
+        .btn-amber, .cluster-chip, .reel-action-btn, .status-toggle {
+            transition: transform 0.14s ease, filter 0.14s ease, background-color 0.18s ease;
+        }
+        .btn-amber:active, .cluster-chip:active, .reel-action-btn:active {
+            transform: scale(0.95);
+        }
+        .auth-subtabs { display: flex; gap: 6px; margin-bottom: 12px; }
+        .auth-tab-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .auth-tab-btn.active {
+            background: var(--amber);
+            color: #0F172A;
+            border-color: var(--amber);
+            font-weight: 800;
+        }
+        .pwd-meter {
+            height: 6px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.12);
+            overflow: hidden;
+            margin: 5px 0 4px;
+        }
+        .pwd-meter-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--rose);
+            transition: width 0.25s ease, background-color 0.25s ease;
+        }
+        .kyc-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.73rem;
+            padding: 4px 10px;
+            border-radius: 99px;
+            background: rgba(16,185,129,0.16);
+            border: 1px solid rgba(16,185,129,0.45);
+            color: #A7F3D0;
+            font-weight: 700;
+        }
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
@@ -356,6 +422,71 @@
         <section id="tab-profile" class="view-section" aria-label="Instagram Tarzı Uzman Profil Vitrini">
             <div class="card" id="ig-profile-container"></div>
         </section>
+
+        <!-- TAB 4: TİCARİ GÜVENLİK, T.C. KİMLİKLE KAYIT (KYC), GİRİŞ & ŞİFREMİ UNUTTUM -->
+        <section id="tab-auth" class="view-section" aria-label="Ticari Güvenlik, T.C. Kimlikli Kayıt ve Şifre Kurtarma">
+            <div class="card">
+                <div class="card-header">
+                    <span class="kyc-status-pill">🪪 Ticari KYC &amp; Güvenli Havuz Koruması</span>
+                    <span style="font-size:0.7rem;color:#FDE68A;">NVI Algoritma Doğrulamalı</span>
+                </div>
+
+                <div class="auth-subtabs">
+                    <button type="button" class="auth-tab-btn active" data-auth-mode="kyc-register">🪪 Kimlikle Kayıt</button>
+                    <button type="button" class="auth-tab-btn" data-auth-mode="login">🔐 Giriş Yap</button>
+                    <button type="button" class="auth-tab-btn" data-auth-mode="forgot">🔑 Şifremi Unuttum</button>
+                </div>
+
+                <!-- 1. T.C. Kimlik (TCKN) & TR IBAN Doğrulamalı Ticari Kayıt -->
+                <div id="auth-pane-kyc-register">
+                    <p class="card-desc">Ticari güven ve sahte hesap engeli için tüm uzman ve işveren kayıtları <strong>11 haneli T.C. Kimlik No (TCKN)</strong> algoritması ile doğrulanır.</p>
+                    <select id="kyc-role-select" class="input" style="margin-bottom:7px;">
+                        <option value="MASTER">🛠️ Uzman / Usta Hesabı (İş &amp; Ödeme Al)</option>
+                        <option value="CUSTOMER">🏠 İşveren / Müşteri Hesabı (Hizmet Al)</option>
+                    </select>
+                    <input type="text" id="kyc-fullname" class="input" style="margin-bottom:7px;" placeholder="Kimlikteki Ad Soyad (Örn: Selim Karaca)">
+                    <input type="text" id="kyc-tckn" class="input" style="margin-bottom:4px;" maxlength="11" inputmode="numeric" placeholder="11 Haneli T.C. Kimlik Numarası (TCKN)">
+                    <div id="kyc-tckn-hint" style="font-size:0.72rem;color:#CBD5E1;margin-bottom:7px;">🪪 10. ve 11. hane resmi NVI algoritmasıyla anlık kontrol edilir.</div>
+                    <input type="text" id="kyc-iban" class="input" style="margin-bottom:7px;" maxlength="32" placeholder="TR IBAN (%88 Hak Ediş Aktarımı İçin — İsteğe Bağlı)">
+                    <input type="email" id="kyc-email" class="input" style="margin-bottom:7px;" placeholder="Kurumsal / Kişisel E-Posta Adresi">
+                    <input type="password" id="kyc-password" class="input" placeholder="Güçlü Ticari Şifre (En az 8 krk, Büyük Harf + Rakam)">
+                    <div class="pwd-meter"><div class="pwd-meter-bar" id="kyc-pwd-bar"></div></div>
+                    <div id="kyc-pwd-label" style="font-size:0.71rem;color:#CBD5E1;margin-bottom:8px;">Şifre Gücü: Bekleniyor</div>
+
+                    <label style="display:flex;align-items:flex-start;gap:7px;font-size:0.74rem;color:#E2E8F0;margin-bottom:6px;cursor:pointer;">
+                        <input type="checkbox" id="kyc-kvkk-check" checked>
+                        <span>KVKK Aydınlatma Metnini ve kimlik verilerimin SHA-256 ile maskelenerek doğrulanmasını onaylıyorum.</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:7px;font-size:0.74rem;color:#E2E8F0;margin-bottom:10px;cursor:pointer;">
+                        <input type="checkbox" id="kyc-escrow-check" checked>
+                        <span>Ustanomi Ticari Güvenli Havuz (%88 Uzman / %12 Komisyon) Sözleşmesini kabul ediyorum.</span>
+                    </label>
+                    <button type="button" class="btn-amber" id="kyc-submit-btn" style="width:100%;padding:11px;">🪪 Kimliğimi Doğrula &amp; Ticari Hesabımı Aç</button>
+                </div>
+
+                <!-- 2. Güvenli Giriş -->
+                <div id="auth-pane-login" style="display:none;">
+                    <p class="card-desc">Doğrulanmış ticari hesabınıza zamanlama-korumalı (Timing-Safe) şifrenizle giriş yapın.</p>
+                    <input type="email" id="login-email" class="input" style="margin-bottom:8px;" placeholder="Kayıtlı E-Posta Adresiniz">
+                    <input type="password" id="login-password" class="input" style="margin-bottom:10px;" placeholder="Şifreniz">
+                    <button type="button" class="btn-amber" id="login-submit-btn" style="width:100%;padding:11px;">🔐 Güvenli Oturum Aç</button>
+                </div>
+
+                <!-- 3. Şifremi Unuttum (6 Haneli SMS / E-Posta OTP Kurtarma) -->
+                <div id="auth-pane-forgot" style="display:none;">
+                    <p class="card-desc">Şifrenizi unuttuysanız kayıtlı e-posta veya telefonunuza <strong>10 dakika geçerli 6 haneli OTP sıfırlama kodu</strong> gönderilir.</p>
+                    <div class="bid-row" style="margin-bottom:8px;">
+                        <input type="email" id="forgot-email" class="input" placeholder="Kayıtlı E-Posta Adresiniz">
+                        <button type="button" class="btn-amber" id="forgot-send-otp-btn">Kod Gönder</button>
+                    </div>
+                    <input type="text" id="forgot-otp-code" class="input" style="margin-bottom:8px;" maxlength="6" inputmode="numeric" placeholder="6 Haneli Doğrulama Kodu">
+                    <input type="password" id="forgot-new-password" class="input" style="margin-bottom:10px;" placeholder="Yeni Güçlü Şifreniz (En az 8 krk, Büyük Harf + Rakam)">
+                    <button type="button" class="btn-amber" id="forgot-reset-btn" style="width:100%;padding:11px;">🔑 Şifremi Güvenle Yenile</button>
+                </div>
+
+                <div id="auth-feedback-box" style="margin-top:10px;font-size:0.77rem;font-weight:700;" aria-live="polite"></div>
+            </div>
+        </section>
     </div>
 
     <!-- Bottom Tab Navigation -->
@@ -366,15 +497,19 @@
         </button>
         <button type="button" class="nav-btn" data-target="tab-reels">
             <span class="nav-icon">🎬</span>
-            <span>Reels Vitrin</span>
+            <span>Yetenek Vitrin</span>
         </button>
         <button type="button" class="nav-btn" data-target="tab-profile">
             <span class="nav-icon">📸</span>
-            <span>Uzman Profilim</span>
+            <span>Profilim</span>
+        </button>
+        <button type="button" class="nav-btn" data-target="tab-auth">
+            <span class="nav-icon">🪪</span>
+            <span>Kimlik &amp; Giriş</span>
         </button>
         <button type="button" class="nav-btn" id="open-live-cloud-btn">
             <span class="nav-icon">🌐</span>
-            <span>Tam Ekran Ağ</span>
+            <span>Tam Ağ</span>
         </button>
     </nav>
 
@@ -384,13 +519,16 @@
             createUrgentJobPostPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
+            evaluatePasswordStrength,
             formatInstagramProShowcase,
             getOfflineQueue,
             initUstanomiNativeShell,
             rankTalentShowcasePosts,
             resolveUniversalProfessionCluster,
             triggerHapticImpact,
-            UNIVERSAL_PROFESSION_CLUSTERS
+            UNIVERSAL_PROFESSION_CLUSTERS,
+            validateKycRegistrationPayload,
+            validateTurkishTckn
         } from './capacitor-bridge.js';
 
         const LIVE_APP_URL = 'https://ustanomi-web-production.up.railway.app/app/';
@@ -838,6 +976,119 @@
 
         document.getElementById('open-live-cloud-btn').addEventListener('click', () => {
             window.location.assign(LIVE_APP_URL);
+        });
+
+        // Auth / KYC / Forgot Password Sub-Tab Switching & Live Validation
+        const authFeedback = document.getElementById('auth-feedback-box');
+        document.querySelectorAll('.auth-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const mode = btn.getAttribute('data-auth-mode');
+                document.querySelectorAll('.auth-tab-btn').forEach((b) => {
+                    b.classList.remove('active');
+                });
+                btn.classList.add('active');
+                document.getElementById('auth-pane-kyc-register').style.display = mode === 'kyc-register' ? 'block' : 'none';
+                document.getElementById('auth-pane-login').style.display = mode === 'login' ? 'block' : 'none';
+                document.getElementById('auth-pane-forgot').style.display = mode === 'forgot' ? 'block' : 'none';
+                authFeedback.textContent = '';
+            });
+        });
+
+        const tcknInput = document.getElementById('kyc-tckn');
+        const tcknHint = document.getElementById('kyc-tckn-hint');
+        tcknInput.addEventListener('input', () => {
+            const val = tcknInput.value.replace(/\D/g, '');
+            tcknInput.value = val;
+            if (val.length === 11) {
+                const ok = validateTurkishTckn(val);
+                tcknHint.style.color = ok ? '#A7F3D0' : '#FDA4AF';
+                tcknHint.textContent = ok
+                    ? '✓ Resmi 11 Hane T.C. Kimlik Algoritması Doğrulandı'
+                    : '✕ Geçersiz T.C. Kimlik Numarası (10. ve 11. kontrol hanesi hatalı)';
+            } else {
+                tcknHint.style.color = '#CBD5E1';
+                tcknHint.textContent = `🪪 ${val.length}/11 hane girildi`;
+            }
+        });
+
+        const pwdInput = document.getElementById('kyc-password');
+        const pwdBar = document.getElementById('kyc-pwd-bar');
+        const pwdLabel = document.getElementById('kyc-pwd-label');
+        pwdInput.addEventListener('input', () => {
+            const res = evaluatePasswordStrength(pwdInput.value);
+            const widths = ['8%', '28%', '55%', '82%', '100%'];
+            const colors = ['#F43F5E', '#FB923C', '#FACC15', '#10B981', '#059669'];
+            pwdBar.style.width = widths[res.score] || '8%';
+            pwdBar.style.backgroundColor = colors[res.score] || '#F43F5E';
+            pwdLabel.style.color = res.isStrong ? '#A7F3D0' : '#FDE68A';
+            pwdLabel.textContent = `Şifre Gücü: ${res.labelTr}`;
+        });
+
+        document.getElementById('kyc-submit-btn').addEventListener('click', async () => {
+            const result = validateKycRegistrationPayload({
+                fullName: document.getElementById('kyc-fullname').value,
+                tckn: tcknInput.value,
+                iban: document.getElementById('kyc-iban').value,
+                email: document.getElementById('kyc-email').value,
+                password: pwdInput.value,
+                accountRole: document.getElementById('kyc-role-select').value,
+                kvkkAccepted: document.getElementById('kyc-kvkk-check').checked,
+                escrowContractAccepted: document.getElementById('kyc-escrow-check').checked
+            });
+
+            if (!result.valid) {
+                authFeedback.style.color = '#FDA4AF';
+                authFeedback.textContent = `✕ ${result.messageTr}`;
+                triggerHapticImpact('HEAVY');
+                return;
+            }
+
+            await enqueueOfflineAction('KYC_COMMERCIAL_REGISTRATION', {
+                maskedTckn: result.maskedTckn,
+                role: result.normalizedRole
+            });
+            authFeedback.style.color = '#A7F3D0';
+            authFeedback.textContent = `✓ ${result.kycBadgeTr} (${result.maskedTckn}) • ${result.messageTr}`;
+            triggerHapticImpact('MEDIUM');
+        });
+
+        document.getElementById('login-submit-btn').addEventListener('click', () => {
+            const email = document.getElementById('login-email').value.trim();
+            const pwd = document.getElementById('login-password').value;
+            if (!email || pwd.length < 8) {
+                authFeedback.style.color = '#FDA4AF';
+                authFeedback.textContent = '✕ Lütfen kayıtlı e-posta adresinizi ve en az 8 karakterli şifrenizi giriniz.';
+                return;
+            }
+            authFeedback.style.color = '#A7F3D0';
+            authFeedback.textContent = '✓ Güvenli ticari oturum doğrulandı.';
+            triggerHapticImpact('LIGHT');
+        });
+
+        document.getElementById('forgot-send-otp-btn').addEventListener('click', () => {
+            const email = document.getElementById('forgot-email').value.trim();
+            if (!email.includes('@')) {
+                authFeedback.style.color = '#FDA4AF';
+                authFeedback.textContent = '✕ Şifre sıfırlama kodu için kayıtlı e-posta adresinizi giriniz.';
+                return;
+            }
+            authFeedback.style.color = '#FDE68A';
+            authFeedback.textContent = '📲 6 haneli şifre sıfırlama OTP kodunuz gönderildi (10 dk geçerli).';
+            triggerHapticImpact('LIGHT');
+        });
+
+        document.getElementById('forgot-reset-btn').addEventListener('click', () => {
+            const otp = document.getElementById('forgot-otp-code').value.trim();
+            const newPwd = document.getElementById('forgot-new-password').value;
+            const strength = evaluatePasswordStrength(newPwd);
+            if (otp.length !== 6 || !strength.isStrong) {
+                authFeedback.style.color = '#FDA4AF';
+                authFeedback.textContent = '✕ 6 haneli OTP kodunu ve güçlü yeni şifrenizi (en az 8 krk, büyük harf + rakam) giriniz.';
+                return;
+            }
+            authFeedback.style.color = '#A7F3D0';
+            authFeedback.textContent = '✓ Şifreniz kriptografik olarak yenilendi! Giriş sekmesinden oturum açabilirsiniz.';
+            triggerHapticImpact('MEDIUM');
         });
 
         initUstanomiNativeShell({

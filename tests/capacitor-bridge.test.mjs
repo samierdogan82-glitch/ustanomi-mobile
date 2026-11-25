@@ -9,6 +9,7 @@ import {
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
 	enqueueOfflineAction,
+	evaluatePasswordStrength,
 	evaluateProAvailability,
 	evaluateWorkflowRoleAccess,
 	flushOfflineQueue,
@@ -21,6 +22,10 @@ import {
 	resolveOfferServiceCategory,
 	resolveUniversalProfessionCluster,
 	UNIVERSAL_PROFESSION_CLUSTERS,
+	validateKycRegistrationPayload,
+	validateTurkishIban,
+	validateTurkishTckn,
+	validateTurkishVkn,
 } from "../www/capacitor-bridge.js";
 
 // Simple in-memory localStorage shim for Node test runner
@@ -241,6 +246,51 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		assert.equal(hireReq.platformEscrowFeeTl, 600); // 12% of 5000
 		assert.equal(hireReq.status, "DIRECT_WORK_REQUEST_SENT");
 		assert.equal(hireReq.customerNote.includes("0532 999 88 77"), false);
+	});
+
+	it("validates official Turkish TCKN, VKN, TR IBAN checksums, password strength, and KYC registration", () => {
+		// Official algorithmic TCKN (10000000146 passes NVI Mod-10/11 rules)
+		assert.equal(validateTurkishTckn("10000000146"), true);
+		assert.equal(validateTurkishTckn("10000000147"), false);
+		assert.equal(validateTurkishTckn("01234567890"), false);
+
+		// Valid 26-char TR IBAN Mod-97 check
+		assert.equal(validateTurkishIban("TR33 0006 1005 1978 6457 8413 26"), true);
+		assert.equal(
+			validateTurkishIban("TR00 0006 1005 1978 6457 8413 00"),
+			false,
+		);
+
+		// Password strength evaluation
+		assert.equal(evaluatePasswordStrength("12345").isStrong, false);
+		assert.equal(evaluatePasswordStrength("Ustanomi2026!").isStrong, true);
+
+		// Full KYC registration validation
+		const validKyc = validateKycRegistrationPayload({
+			fullName: "Selim Karaca",
+			phone: "+905321112233",
+			tckn: "10000000146",
+			iban: "TR33 0006 1005 1978 6457 8413 26",
+			password: "Ustanomi2026!",
+			accountRole: "MASTER",
+			kvkkAccepted: true,
+			escrowContractAccepted: true,
+		});
+		assert.equal(validKyc.valid, true);
+		assert.equal(validKyc.maskedTckn, "10*******46");
+
+		// Reject fake TCKN
+		const invalidKyc = validateKycRegistrationPayload({
+			fullName: "Sahte Hesap",
+			phone: "+905321112233",
+			tckn: "11111111111",
+			password: "Ustanomi2026!",
+			accountRole: "MASTER",
+			kvkkAccepted: true,
+			escrowContractAccepted: true,
+		});
+		assert.equal(invalidKyc.valid, false);
+		assert.equal(invalidKyc.errorCode, "INVALID_TCKN_CHECKSUM");
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

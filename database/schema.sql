@@ -262,3 +262,34 @@ CREATE TABLE IF NOT EXISTS direct_hire_requests (
   CONSTRAINT fk_hire_pro FOREIGN KEY (pro_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_hire_pro_status (pro_user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Commercial KYC Identity Verification (TCKN / VKN / IBAN) & Password Reset OTP
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS user_kyc_identities (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL UNIQUE,
+  tckn_sha256 CHAR(64) NOT NULL UNIQUE,
+  tckn_masked CHAR(11) NOT NULL,
+  vkn_masked VARCHAR(16) NULL,
+  iban_masked VARCHAR(34) NULL,
+  birth_year SMALLINT UNSIGNED NULL,
+  kvkk_consent_at DATETIME NOT NULL,
+  escrow_contract_consent_at DATETIME NOT NULL,
+  kyc_status ENUM('VERIFIED_ALGORITHMIC', 'NVİ_KPS_VERIFIED', 'SUSPENDED') NOT NULL DEFAULT 'VERIFIED_ALGORITHMIC',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_kyc_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  token_sha256 CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  used_at DATETIME NULL,
+  request_ip VARCHAR(45) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX idx_reset_user_expires (user_id, expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

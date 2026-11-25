@@ -680,6 +680,178 @@ export function createWorkWithYouRequestPayload(input) {
 }
 
 /**
+ * Official 11-digit Turkish T.C. Kimlik No (TCKN) algorithmic checksum validator
+ * ported from _mit-kit/finance/tr-money-math.ts.
+ * @param {string} rawTckn
+ * @returns {boolean}
+ */
+export function validateTurkishTckn(rawTckn) {
+	if (typeof rawTckn !== "string") {
+		return false;
+	}
+	const tckn = rawTckn.replace(/\s+/g, "");
+	if (!/^[1-9]\d{10}$/.test(tckn)) {
+		return false;
+	}
+	const d = tckn.split("").map(Number);
+	const odd = d[0] + d[2] + d[4] + d[6] + d[8];
+	const even = d[1] + d[3] + d[5] + d[7];
+	const d10 = (((odd * 7 - even) % 10) + 10) % 10;
+	const d11 = d.slice(0, 10).reduce((a, b) => a + b, 0) % 10;
+	return d[9] === d10 && d[10] === d11;
+}
+
+/**
+ * Official 10-digit Turkish Tax ID (VKN) algorithmic modulo-10 checksum validator.
+ * @param {string} rawVkn
+ * @returns {boolean}
+ */
+export function validateTurkishVkn(rawVkn) {
+	if (typeof rawVkn !== "string") {
+		return false;
+	}
+	const vkn = rawVkn.replace(/\s+/g, "");
+	if (!/^\d{10}$/.test(vkn)) {
+		return false;
+	}
+	const digits = vkn.split("").map(Number);
+	let sum = 0;
+	for (let i = 0; i < 9; i++) {
+		const tmp = (digits[i] + (9 - i)) % 10;
+		if (tmp === 9) {
+			sum += 9;
+		} else {
+			sum += (tmp * 2 ** (9 - i)) % 9;
+		}
+	}
+	const checkDigit = (10 - (sum % 10)) % 10;
+	return digits[9] === checkDigit;
+}
+
+/**
+ * Validates a 26-character Turkish IBAN (TR + 24 digits) using ISO 7064 Mod 97-10.
+ * @param {string} rawIban
+ * @returns {boolean}
+ */
+export function validateTurkishIban(rawIban) {
+	if (typeof rawIban !== "string") {
+		return false;
+	}
+	const iban = rawIban.replace(/\s+/g, "").toUpperCase();
+	if (!/^TR\d{24}$/.test(iban)) {
+		return false;
+	}
+	const rearranged = `${iban.slice(4)}2927${iban.slice(2, 4)}`;
+	let remainder = 0n;
+	for (const ch of rearranged) {
+		remainder = (remainder * 10n + BigInt(ch)) % 97n;
+	}
+	return remainder === 1n;
+}
+
+/**
+ * Evaluates password strength for commercial accounts (0..4 score + Turkish feedback label).
+ * @param {string} password
+ */
+export function evaluatePasswordStrength(password) {
+	if (typeof password !== "string" || password.length === 0) {
+		return { score: 0, isStrong: false, labelTr: "Şifre Girilmedi" };
+	}
+	let score = 0;
+	if (password.length >= 8) score += 1;
+	if (/[A-ZÇĞİÖŞÜ]/.test(password) && /[a-zçğıöşü]/.test(password)) score += 1;
+	if (/\d/.test(password)) score += 1;
+	if (/[^A-Za-z0-9ÇĞİÖŞÜçğıöşü]/.test(password) || password.length >= 12)
+		score += 1;
+
+	const labels = [
+		"Çok Zayıf (En az 8 karakter)",
+		"Zayıf (Harf ve rakam ekleyin)",
+		"Orta (Büyük harf veya sembol ekleyin)",
+		"Güçlü Ticari Şifre ✓",
+		"Çok Güçlü (Kriptografik Koruma) ✓",
+	];
+	return {
+		score,
+		isStrong: score >= 3 && password.length >= 8,
+		labelTr: labels[score] || labels[0],
+	};
+}
+
+/**
+ * Validates commercial KYC registration payload requiring verified TCKN (or VKN),
+ * strong password, KVKK consent, and Sub-Merchant Escrow agreement.
+ * @param {{
+ *   fullName: string,
+ *   phone: string,
+ *   email?: string,
+ *   password: string,
+ *   accountRole?: "CUSTOMER" | "MASTER",
+ *   tckn: string,
+ *   iban?: string,
+ *   kvkkAccepted?: boolean,
+ *   escrowContractAccepted?: boolean
+ * }} payload
+ */
+export function validateKycRegistrationPayload(payload) {
+	if (
+		!payload ||
+		typeof payload.fullName !== "string" ||
+		payload.fullName.trim().length < 4
+	) {
+		return {
+			valid: false,
+			errorCode: "FULL_NAME_REQUIRED",
+			messageTr: "Kimlikteki tam ad ve soyadınızı giriniz.",
+		};
+	}
+	if (!validateTurkishTckn(payload.tckn)) {
+		return {
+			valid: false,
+			errorCode: "INVALID_TCKN_CHECKSUM",
+			messageTr:
+				"Geçersiz T.C. Kimlik Numarası (11 hane resmi algoritma doğrulaması başarısız).",
+		};
+	}
+	const pwdCheck = evaluatePasswordStrength(payload.password);
+	if (!pwdCheck.isStrong) {
+		return {
+			valid: false,
+			errorCode: "WEAK_PASSWORD",
+			messageTr:
+				"Ticari hesap güvenliği için en az 8 karakterli, büyük/küçük harf ve rakam içeren şifre belirleyiniz.",
+		};
+	}
+	const role = payload.accountRole === "MASTER" ? "MASTER" : "CUSTOMER";
+	if (role === "MASTER" && payload.iban && !validateTurkishIban(payload.iban)) {
+		return {
+			valid: false,
+			errorCode: "INVALID_TR_IBAN",
+			messageTr:
+				"Hak ediş ödemeleri için geçerli bir 26 haneli TR IBAN giriniz.",
+		};
+	}
+	if (!payload.kvkkAccepted || !payload.escrowContractAccepted) {
+		return {
+			valid: false,
+			errorCode: "LEGAL_CONSENT_REQUIRED",
+			messageTr:
+				"Ticari işlem ve Güvenli Havuz koruması için KVKK ve Mesafeli Hizmet Sözleşmesini onaylayınız.",
+		};
+	}
+
+	const cleanTckn = payload.tckn.replace(/\s+/g, "");
+	return {
+		valid: true,
+		errorCode: null,
+		normalizedRole: role,
+		maskedTckn: `${cleanTckn.slice(0, 2)}*******${cleanTckn.slice(-2)}`,
+		kycBadgeTr: "🪪 T.C. Kimlik (TCKN) & Ticari KYC Doğrulandı",
+		messageTr: "Kimlik doğrulamalı ticari hesabınız başarıyla oluşturuldu.",
+	};
+}
+
+/**
  * Validates whether a URL belongs to Ustanomi or an approved 3D Secure payment host (PayTR / iyzico).
  * @param {string} rawUrl
  * @returns {boolean}
@@ -1296,6 +1468,11 @@ export const UstanomiNative = Object.freeze({
 	calculateTalentTrendingScore,
 	rankTalentShowcasePosts,
 	createWorkWithYouRequestPayload,
+	validateTurkishTckn,
+	validateTurkishVkn,
+	validateTurkishIban,
+	evaluatePasswordStrength,
+	validateKycRegistrationPayload,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,
