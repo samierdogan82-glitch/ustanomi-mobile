@@ -575,6 +575,111 @@ export function createUrgentJobPostPayload(postInput) {
 }
 
 /**
+ * Calculates a deterministic Talent Trending Score so the most liked and most requested
+ * skill posts automatically rise to the top of the discovery feed.
+ * @param {{
+ *   likesCount?: number,
+ *   workRequestsCount?: number,
+ *   isProOpen?: boolean,
+ *   rating?: number
+ * }} post
+ */
+export function calculateTalentTrendingScore(post = {}) {
+	const likes = Math.max(0, Number(post.likesCount) || 0);
+	const hires = Math.max(0, Number(post.workRequestsCount) || 0);
+	const ratingBonus = Math.max(0, Number(post.rating) || 4.8) * 20;
+	const openBonus = post.isProOpen !== false ? 50 : 0;
+	return Math.round(likes * 2 + hires * 18 + ratingBonus + openBonus);
+}
+
+/**
+ * Ranks an array of talent showcase posts by their trending score (descending)
+ * and attaches `trendingRank` and `isFeaturedTopTalent` badges.
+ * @param {Array<Record<string, unknown>>} posts
+ */
+export function rankTalentShowcasePosts(posts) {
+	if (!Array.isArray(posts)) {
+		return [];
+	}
+	const scored = posts.map((post) => {
+		const trendingScore = calculateTalentTrendingScore(post);
+		return {
+			...post,
+			trendingScore,
+		};
+	});
+	scored.sort((a, b) => b.trendingScore - a.trendingScore);
+	return scored.map((item, idx) => ({
+		...item,
+		trendingRank: idx + 1,
+		isFeaturedTopTalent: idx === 0 || item.trendingScore >= 1000,
+		trendingBadgeTr:
+			idx === 0
+				? "🔥 TREND #1 • EN ÇOK BEĞENİLEN YETENEK"
+				: idx < 3
+					? `⚡ ÖNE ÇIKAN YETENEK #${idx + 1}`
+					: "✨ Doğrulanmış Yetenek",
+	}));
+}
+
+/**
+ * Builds a validated "Seninle Çalışmak İstiyorum" (Direct Work-With-You Hire Request) payload
+ * from a talent showcase post, calculating the 88% Pro / 12% Escrow split automatically.
+ * @param {{
+ *   talentPostId: string,
+ *   proHandle: string,
+ *   proDisplayName?: string,
+ *   skillTitle: string,
+ *   offeredBudgetTl: number,
+ *   customerNote: string,
+ *   preferredSchedule?: string
+ * }} input
+ */
+export function createWorkWithYouRequestPayload(input) {
+	if (
+		!input ||
+		typeof input.proHandle !== "string" ||
+		!input.proHandle.trim()
+	) {
+		throw new Error("TARGET_PRO_HANDLE_REQUIRED");
+	}
+	if (
+		typeof input.skillTitle !== "string" ||
+		input.skillTitle.trim().length < 3
+	) {
+		throw new Error("SKILL_TITLE_REQUIRED");
+	}
+	const budgetNum = Number(input.offeredBudgetTl);
+	if (!Number.isFinite(budgetNum) || budgetNum <= 0) {
+		throw new Error("VALID_WORK_BUDGET_REQUIRED");
+	}
+	const split = calculateSplitPaymentEscrow(budgetNum);
+	const cleanHandle = input.proHandle.trim().startsWith("@")
+		? input.proHandle.trim()
+		: `@${input.proHandle.trim()}`;
+
+	return {
+		requestCode: `HIRE-${Date.now().toString(36).toUpperCase()}`,
+		talentPostId: String(input.talentPostId || "TALENT-1"),
+		proHandle: cleanHandle,
+		proDisplayName: String(input.proDisplayName || cleanHandle).trim(),
+		skillTitle: redactKvkkSensitiveText(input.skillTitle.trim()),
+		customerNote: redactKvkkSensitiveText(
+			String(input.customerNote || "").trim(),
+		),
+		preferredSchedule: String(
+			input.preferredSchedule || "En Kısa Sürede (Müsaitlik Durumuna Göre)",
+		),
+		offeredBudgetTl: split.totalAmountTl,
+		proNetShareTl: split.subMerchantShareTl,
+		platformEscrowFeeTl: split.platformCommissionTl,
+		status: "DIRECT_WORK_REQUEST_SENT",
+		ctaLabelTr: "🤝 Seninle Çalışmak İstiyorum Talebi İletildi",
+		createdAt: new Date().toISOString(),
+	};
+}
+
+/**
  * Validates whether a URL belongs to Ustanomi or an approved 3D Secure payment host (PayTR / iyzico).
  * @param {string} rawUrl
  * @returns {boolean}
@@ -1188,6 +1293,9 @@ export const UstanomiNative = Object.freeze({
 	evaluateProAvailability,
 	formatInstagramProShowcase,
 	createUrgentJobPostPayload,
+	calculateTalentTrendingScore,
+	rankTalentShowcasePosts,
+	createWorkWithYouRequestPayload,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,

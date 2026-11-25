@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import {
 	calculateSplitPaymentEscrow,
+	calculateTalentTrendingScore,
 	canTransitionEscrow,
 	canTransitionLeadState,
 	canTransitionOfferState,
 	createUrgentJobPostPayload,
+	createWorkWithYouRequestPayload,
 	enqueueOfflineAction,
 	evaluateProAvailability,
 	evaluateWorkflowRoleAccess,
@@ -14,6 +16,7 @@ import {
 	getOfflineQueue,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
+	rankTalentShowcasePosts,
 	redactKvkkSensitiveText,
 	resolveOfferServiceCategory,
 	resolveUniversalProfessionCluster,
@@ -189,6 +192,55 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		assert.equal(urgentPost.clusterCode, "AUTO_LOGISTICS");
 		assert.equal(urgentPost.onlyNotifyOpenPros, true);
 		assert.equal(urgentPost.title.includes("0532 111 22 33"), false);
+	});
+
+	it("ranks talent posts by likes and direct 'Seninle Çalışmak İstiyorum' requests", () => {
+		const rawTalents = [
+			{
+				id: "t1",
+				title: "Standart Boya",
+				likesCount: 40,
+				workRequestsCount: 2,
+				isProOpen: true,
+			},
+			{
+				id: "t2",
+				title: "4K Drone & Reels",
+				likesCount: 850,
+				workRequestsCount: 35,
+				isProOpen: true,
+			},
+			{
+				id: "t3",
+				title: "Mobil Oto Elektrik",
+				likesCount: 310,
+				workRequestsCount: 14,
+				isProOpen: true,
+			},
+		];
+		const ranked = rankTalentShowcasePosts(rawTalents);
+		assert.equal(ranked[0].id, "t2");
+		assert.equal(ranked[0].trendingRank, 1);
+		assert.equal(ranked[0].isFeaturedTopTalent, true);
+		assert.equal(
+			calculateTalentTrendingScore(rawTalents[1]) >
+				calculateTalentTrendingScore(rawTalents[0]),
+			true,
+		);
+
+		const hireReq = createWorkWithYouRequestPayload({
+			talentPostId: "t2",
+			proHandle: "elif_visual_studio",
+			skillTitle: "4K Drone & Reels Çekimi",
+			offeredBudgetTl: 5000,
+			customerNote:
+				"Cumartesi çekim için seninle çalışmak istiyorum, tel 0532 999 88 77",
+		});
+		assert.equal(hireReq.proHandle, "@elif_visual_studio");
+		assert.equal(hireReq.proNetShareTl, 4400); // 88% of 5000
+		assert.equal(hireReq.platformEscrowFeeTl, 600); // 12% of 5000
+		assert.equal(hireReq.status, "DIRECT_WORK_REQUEST_SENT");
+		assert.equal(hireReq.customerNote.includes("0532 999 88 77"), false);
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

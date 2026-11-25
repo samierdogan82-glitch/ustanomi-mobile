@@ -333,8 +333,22 @@
             <div id="urgent-feed-list"></div>
         </main>
 
-        <!-- TAB 2: TIKTOK / REELS DİKEY VİTRİN AKIŞI -->
-        <section id="tab-reels" class="view-section" aria-label="Uzman Reels ve Öncesi Sonrası Akışı">
+        <!-- TAB 2: TIKTOK / REELS DİKEY YETENEK VİTRİNİ & DOĞRUDAN İŞE ALIM ("SENİNLE ÇALIŞMAK İSTİYORUM") -->
+        <section id="tab-reels" class="view-section" aria-label="Yetenek Paylaşımı, Beğeni Sıralaması ve Doğrudan İşe Alım">
+            <!-- Quick Share Talent Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="urgent-badge today">✨ Yeteneğini Paylaş &amp; Öne Çık</span>
+                    <span style="font-size:0.71rem;color:#FDE68A;">❤️ Beğeni Aldıkça #1 Trend Ol</span>
+                </div>
+                <input type="text" id="talent-title-input" class="input" style="margin-bottom:7px;" placeholder="Yeteneğin / Uzmanlığın nedir? (Örn: Özel Düğün Reels Çekimi / Kırmadan Kaçak Tespiti)">
+                <div class="bid-row">
+                    <input type="text" id="talent-handle-input" class="input" style="flex:1;" placeholder="@kullanici_adin">
+                    <input type="number" id="talent-price-input" class="input" style="flex:0.8;" placeholder="Başlangıç ₺" min="100" step="50">
+                    <button type="button" class="btn-amber" id="share-talent-btn">Vitrine Ekle</button>
+                </div>
+            </div>
+
             <div id="reels-feed-list"></div>
         </section>
 
@@ -368,11 +382,14 @@
         import {
             calculateSplitPaymentEscrow,
             createUrgentJobPostPayload,
+            createWorkWithYouRequestPayload,
             enqueueOfflineAction,
             formatInstagramProShowcase,
             getOfflineQueue,
             initUstanomiNativeShell,
-            triggerHapticImpact, 
+            rankTalentShowcasePosts,
+            resolveUniversalProfessionCluster,
+            triggerHapticImpact,
             UNIVERSAL_PROFESSION_CLUSTERS
         } from './capacitor-bridge.js';
 
@@ -445,28 +462,40 @@
 
         const reelsItems = [
             {
-                handle: '@selim_tesisat_pro',
-                cluster: '🏠 Ev & Teknik Servis',
-                title: 'Kırmadan Termal Kameralı Su Kaçağı Tespiti & Onarımı',
-                priceTag: 'Sabit Keşif & Tespit: 850 ₺',
-                availability: '🟢 Şu An Açık • 20 dk Varış',
-                likes: 418
-            },
-            {
+                id: 'TALENT-201',
                 handle: '@elif_visual_studio',
                 cluster: '📸 Etkinlik & Medya',
                 title: 'Restoran & Marka Tanıtımı 60 Sn TikTok/Reels Çekim Paketi',
-                priceTag: 'Başlangıç Paketi: 2.800 ₺',
+                priceTl: 2800,
                 availability: '🟢 Şu An Açık • Randevu Müsait',
-                likes: 965
+                isProOpen: true,
+                likesCount: 965,
+                workRequestsCount: 42,
+                lastHireFeedback: ''
             },
             {
+                id: 'TALENT-202',
                 handle: '@kaan_oto_kurtarma',
                 cluster: '🚗 Oto & Yol Yardım',
                 title: 'Gece 03:00 Yerinde AGM Akü Değişimi & Alternatör Ölçümü',
-                priceTag: '7/24 Nöbetçi Servis: 1.250 ₺',
+                priceTl: 1250,
                 availability: '⚡ 7/24 Acil Nöbetçi',
-                likes: 612
+                isProOpen: true,
+                likesCount: 612,
+                workRequestsCount: 29,
+                lastHireFeedback: ''
+            },
+            {
+                id: 'TALENT-203',
+                handle: '@selim_tesisat_pro',
+                cluster: '🏠 Ev & Teknik Servis',
+                title: 'Kırmadan Termal Kameralı Su Kaçağı Tespiti & Onarımı',
+                priceTl: 850,
+                availability: '🟢 Şu An Açık • 20 dk Varış',
+                isProOpen: true,
+                likesCount: 418,
+                workRequestsCount: 35,
+                lastHireFeedback: ''
             }
         ];
 
@@ -578,26 +607,70 @@
 
         function renderReels() {
             reelsFeedList.innerHTML = '';
-            for (const r of reelsItems) {
+            const ranked = rankTalentShowcasePosts(reelsItems);
+
+            for (const r of ranked) {
+                const targetItem = reelsItems.find((item) => item.id === r.id) || r;
+                const split = calculateSplitPaymentEscrow(r.priceTl);
                 const el = document.createElement('article');
                 el.className = 'reel-card';
                 el.innerHTML = `
                     <div class="reel-top">
-                        <span class="reel-tag">${r.cluster}</span>
+                        <span class="reel-tag" style="background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.5);">${r.trendingBadgeTr}</span>
                         <span class="reel-tag">${r.availability}</span>
                     </div>
-                    <div style="margin: 22px 0;">
-                        <div style="font-size:0.8rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} ✓</div>
-                        <h3 style="margin:0 0 8px;font-size:1.05rem;">${r.title}</h3>
-                        <div style="display:inline-block;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);padding:5px 10px;border-radius:8px;font-size:0.78rem;color:#A7F3D0;font-weight:700;">
-                            🏷️ ${r.priceTag}
+                    <div style="margin: 14px 0 10px;">
+                        <div style="font-size:0.78rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} ✓ • ${r.cluster}</div>
+                        <h3 style="margin:0 0 8px;font-size:1.02rem;">${r.title}</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+                            <span style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);padding:4px 9px;border-radius:8px;font-size:0.76rem;color:#A7F3D0;font-weight:700;">
+                                🏷️ Başlangıç: ${r.priceTl} ₺ (%88 Uzman Payı: ${split.subMerchantShareTl} ₺)
+                            </span>
+                            <span style="font-size:0.73rem;color:#CBD5E1;">🤝 ${r.workRequestsCount} Kişi Çalışmak İstedi • Skor: ${r.trendingScore}</span>
                         </div>
                     </div>
-                    <div class="reel-actions">
-                        <button type="button" class="reel-action-btn">❤️ ${r.likes} Beğeni</button>
-                        <button type="button" class="reel-action-btn" onclick="document.querySelector('[data-target=tab-profile]').click()">📸 Instagram Profilini &amp; Fiyatlarını Gör</button>
+                    <div class="reel-actions" style="margin-bottom:8px;flex-wrap:wrap;">
+                        <button type="button" class="reel-action-btn like-talent-btn" style="background:rgba(244,63,94,0.24);border:1px solid rgba(244,63,94,0.5);">
+                            ❤️ Beğen &amp; Öne Çıkar (${r.likesCount})
+                        </button>
+                        <button type="button" class="reel-action-btn view-ig-btn">
+                            📸 Profil &amp; Saatler
+                        </button>
                     </div>
+                    <div class="bid-row">
+                        <input type="text" class="input work-note-input" placeholder="Mesajınız (Örn: Cumartesi 14:00 için çalışalım)">
+                        <button type="button" class="btn-amber work-with-you-btn">🤝 Seninle Çalışmak İstiyorum</button>
+                    </div>
+                    ${r.lastHireFeedback ? `<div style="margin-top:8px;padding:7px 10px;border-radius:9px;background:rgba(16,185,129,0.22);border:1px solid rgba(16,185,129,0.45);font-size:0.75rem;color:#A7F3D0;font-weight:700;">${r.lastHireFeedback}</div>` : ''}
                 `;
+
+                el.querySelector('.like-talent-btn').addEventListener('click', async () => {
+                    targetItem.likesCount += 1;
+                    triggerHapticImpact('LIGHT');
+                    await enqueueOfflineAction('LIKE_TALENT_POST', { talentPostId: targetItem.id });
+                    renderReels();
+                });
+
+                el.querySelector('.view-ig-btn').addEventListener('click', () => {
+                    document.querySelector('[data-target=tab-profile]')?.click();
+                });
+
+                const noteInput = el.querySelector('.work-note-input');
+                el.querySelector('.work-with-you-btn').addEventListener('click', async () => {
+                    const req = createWorkWithYouRequestPayload({
+                        talentPostId: targetItem.id,
+                        proHandle: targetItem.handle,
+                        skillTitle: targetItem.title,
+                        offeredBudgetTl: targetItem.priceTl,
+                        customerNote: noteInput.value || 'Yetenek paylaşımınızı beğendim, sizinle çalışmak istiyorum.'
+                    });
+                    targetItem.workRequestsCount += 1;
+                    targetItem.lastHireFeedback = `✓ ${req.ctaLabelTr} (${req.requestCode} • %88 Uzman Net: ${req.proNetShareTl} ₺)`;
+                    triggerHapticImpact('MEDIUM');
+                    await enqueueOfflineAction('DIRECT_WORK_WITH_YOU_REQUEST', req);
+                    renderReels();
+                });
+
                 reelsFeedList.appendChild(el);
             }
         }
@@ -687,6 +760,33 @@
             currentModeIndex = (currentModeIndex + 1) % availabilityCycle.length;
             triggerHapticImpact('LIGHT');
             renderInstagramProfile();
+        });
+
+        document.getElementById('share-talent-btn').addEventListener('click', async () => {
+            const titleEl = document.getElementById('talent-title-input');
+            const handleEl = document.getElementById('talent-handle-input');
+            const priceEl = document.getElementById('talent-price-input');
+            if (!titleEl.value || titleEl.value.trim().length < 4) return;
+
+            const cluster = resolveUniversalProfessionCluster(titleEl.value);
+            const rawHandle = (handleEl.value || 'yeni_yetenek').trim().replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+            const newTalent = {
+                id: `TALENT-${Date.now()}`,
+                handle: `@${rawHandle || 'ustanomi_uzman'}`,
+                cluster: `${cluster.iconEmoji} ${cluster.titleTr}`,
+                title: titleEl.value.trim(),
+                priceTl: Math.max(100, Number(priceEl.value) || cluster.startingPriceTl),
+                availability: '🟢 Şu An Açık • Hemen Çalışabiliriz',
+                isProOpen: true,
+                likesCount: 1,
+                workRequestsCount: 0,
+                lastHireFeedback: '✨ Yeteneğiniz vitrine eklendi! Beğeni ve iş talebi aldıkça üst sıraya çıkar.'
+            };
+            reelsItems.push(newTalent);
+            await enqueueOfflineAction('SHARE_TALENT_POST', newTalent);
+            titleEl.value = '';
+            priceEl.value = '';
+            renderReels();
         });
 
         document.getElementById('publish-urgent-btn').addEventListener('click', async () => {

@@ -223,3 +223,42 @@ CREATE TABLE IF NOT EXISTS urgent_job_posts (
   CONSTRAINT fk_urgent_customer FOREIGN KEY (customer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_urgent_open_cluster (status, urgency_code, cluster_code, city)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Talent Discovery Feed (Like-Boosted Ranking) & "Seninle Çalışmak İstiyorum" Direct Hire
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS talent_posts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  pro_user_id INT UNSIGNED NOT NULL,
+  pro_handle VARCHAR(64) NOT NULL,
+  cluster_code VARCHAR(40) NOT NULL DEFAULT 'HOME_TECH',
+  skill_title VARCHAR(180) NOT NULL,
+  description TEXT NOT NULL,
+  starting_price_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  likes_count INT UNSIGNED NOT NULL DEFAULT 0,
+  work_requests_count INT UNSIGNED NOT NULL DEFAULT 0,
+  trending_score INT UNSIGNED NOT NULL DEFAULT 100,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_talent_pro FOREIGN KEY (pro_user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX idx_talent_trending (trending_score DESC, likes_count DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS direct_hire_requests (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  request_code VARCHAR(32) NOT NULL UNIQUE,
+  talent_post_id INT UNSIGNED NOT NULL,
+  customer_user_id INT UNSIGNED NOT NULL,
+  pro_user_id INT UNSIGNED NOT NULL,
+  offered_budget_kurus BIGINT UNSIGNED NOT NULL,
+  pro_net_share_kurus BIGINT UNSIGNED NOT NULL,
+  platform_fee_kurus BIGINT UNSIGNED NOT NULL,
+  customer_note TEXT NOT NULL,
+  preferred_schedule VARCHAR(120) NOT NULL DEFAULT 'En Kısa Sürede',
+  status ENUM('SENT', 'ACCEPTED_BY_PRO', 'IN_ESCROW', 'COMPLETED', 'DECLINED') NOT NULL DEFAULT 'SENT',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_hire_talent FOREIGN KEY (talent_post_id) REFERENCES talent_posts(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_hire_customer FOREIGN KEY (customer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_hire_pro FOREIGN KEY (pro_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_hire_pro_status (pro_user_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
