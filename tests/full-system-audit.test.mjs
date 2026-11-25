@@ -68,6 +68,7 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 			"dm_chat_escrow.php",
 			"escrow_jobs.php",
 			"leads.php",
+			"live_stream_gift.php",
 			"pro_offers.php",
 			"pro_showcase.php",
 			"send_otp.php",

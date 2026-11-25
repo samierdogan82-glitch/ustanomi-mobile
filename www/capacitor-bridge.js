@@ -2743,6 +2743,473 @@ export async function initUstanomiNativeShell(callbacks = {}) {
 	}
 }
 
+// ============================================================================
+// Work-In-Progress Live Streaming & Profession-Specific SVG Gifting Engine
+// 1 Jeton = 50 Kuruş (0.50 TL) | 85% Creator Net Share / 15% Live Platform Fee
+// ============================================================================
+
+export const LIVE_COIN_VALUE_KURUS = 50;
+export const LIVE_GIFT_CREATOR_SHARE_BPS = 8500;
+export const LIVE_GIFT_PLATFORM_FEE_BPS = 1500;
+
+export const PROFESSION_GIFT_CATALOG = Object.freeze({
+	HOME_TECH: Object.freeze([
+		Object.freeze({
+			code: "GOLDEN_WRENCH",
+			clusterCode: "HOME_TECH",
+			clusterTitleTr: "Ev ve Teknik Servis",
+			titleTr: "Altın Anahtar",
+			subtitleTr: "Usta işçilik desteği",
+			tier: "STANDARD",
+			coins: 50,
+			accentHex: "#D97706",
+			svgPath:
+				'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 1 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.2-.6-.6-2.2z"/><circle cx="6" cy="18" r="1"/>',
+		}),
+		Object.freeze({
+			code: "THERMAL_LENS",
+			clusterCode: "HOME_TECH",
+			clusterTitleTr: "Ev ve Teknik Servis",
+			titleTr: "Termal Kamera",
+			subtitleTr: "Hassas arıza tespiti",
+			tier: "PRO",
+			coins: 200,
+			accentHex: "#0095F6",
+			svgPath:
+				'<rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4.5"/><circle cx="12" cy="13" r="1.8"/><path d="M8 6 9.5 3.5h5L16 6"/>',
+		}),
+		Object.freeze({
+			code: "MASTER_TOOLBOX",
+			clusterCode: "HOME_TECH",
+			clusterTitleTr: "Ev ve Teknik Servis",
+			titleTr: "Takım Sandığı",
+			subtitleTr: "Başusta donanım ödülü",
+			tier: "LEGEND",
+			coins: 500,
+			accentHex: "#FFB400",
+			svgPath:
+				'<rect x="2" y="8" width="20" height="12" rx="2.5"/><path d="M8 8V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V8"/><path d="M2 13h20"/><rect x="10" y="11.5" width="4" height="3" rx="0.8"/>',
+		}),
+	]),
+	AUTO_LOGISTICS: Object.freeze([
+		Object.freeze({
+			code: "CERAMIC_ROTOR",
+			clusterCode: "AUTO_LOGISTICS",
+			clusterTitleTr: "Oto Sanayi ve Ekspertiz",
+			titleTr: "Seramik Disk",
+			subtitleTr: "Performans fren desteği",
+			tier: "STANDARD",
+			coins: 100,
+			accentHex: "#E11D48",
+			svgPath:
+				'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M15 4.5a8.5 8.5 0 0 1 4.5 4.5"/><circle cx="12" cy="6.5" r="0.9"/><circle cx="17.5" cy="12" r="0.9"/><circle cx="12" cy="17.5" r="0.9"/><circle cx="6.5" cy="12" r="0.9"/>',
+		}),
+		Object.freeze({
+			code: "TWIN_TURBO",
+			clusterCode: "AUTO_LOGISTICS",
+			clusterTitleTr: "Oto Sanayi ve Ekspertiz",
+			titleTr: "Twin Turbo",
+			subtitleTr: "Yüksek basınç ustası",
+			tier: "PRO",
+			coins: 400,
+			accentHex: "#0095F6",
+			svgPath:
+				'<path d="M12 4a8 8 0 1 0 8 8V6h-5v3"/><circle cx="12" cy="12" r="3.2"/><path d="M12 8.8v6.4M8.8 12h6.4"/>',
+		}),
+		Object.freeze({
+			code: "GOLDEN_PISTON",
+			clusterCode: "AUTO_LOGISTICS",
+			clusterTitleTr: "Oto Sanayi ve Ekspertiz",
+			titleTr: "Altın Piston",
+			subtitleTr: "Sanayi şampiyonluk kupası",
+			tier: "LEGEND",
+			coins: 1000,
+			accentHex: "#FFB400",
+			svgPath:
+				'<rect x="6" y="3" width="12" height="8" rx="1.8"/><path d="M6 6h12M6 8.5h12"/><circle cx="12" cy="5.8" r="1"/><path d="M10.5 11v5.5a2.5 2.5 0 1 0 3 0V11"/><circle cx="12" cy="18.5" r="2.2"/>',
+		}),
+	]),
+	EVENTS_MEDIA: Object.freeze([
+		Object.freeze({
+			code: "CINEMA_CLAPPER",
+			clusterCode: "EVENTS_MEDIA",
+			clusterTitleTr: "Etkinlik, Drone ve Medya",
+			titleTr: "Sinema Klaketi",
+			subtitleTr: "Kusursuz sahne çekimi",
+			tier: "STANDARD",
+			coins: 100,
+			accentHex: "#7C3AED",
+			svgPath:
+				'<rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 9V5.5A1.5 1.5 0 0 1 4.5 4h15A1.5 1.5 0 0 1 21 5.5V9"/><path d="m7 4 2.5 5M13 4l2.5 5"/>',
+		}),
+		Object.freeze({
+			code: "GIMBAL_8K",
+			clusterCode: "EVENTS_MEDIA",
+			clusterTitleTr: "Etkinlik, Drone ve Medya",
+			titleTr: "8K Gimbal Lens",
+			subtitleTr: "Sinematik kadraj ödülü",
+			tier: "PRO",
+			coins: 350,
+			accentHex: "#0095F6",
+			svgPath:
+				'<rect x="6" y="4" width="12" height="8" rx="2"/><circle cx="12" cy="8" r="2.2"/><path d="M5 12v3a7 7 0 0 0 14 0v-3M12 18v3M9 21h6"/>',
+		}),
+		Object.freeze({
+			code: "PRO_DRONE",
+			clusterCode: "EVENTS_MEDIA",
+			clusterTitleTr: "Etkinlik, Drone ve Medya",
+			titleTr: "4K Pro Drone",
+			subtitleTr: "Hava çekimi başyapıtı",
+			tier: "LEGEND",
+			coins: 800,
+			accentHex: "#FFB400",
+			svgPath:
+				'<rect x="9" y="9" width="6" height="6" rx="1.8"/><path d="M9 9 5.5 5.5M15 9l3.5-3.5M9 15l-3.5 3.5M15 15l3.5 3.5"/><circle cx="5" cy="5" r="2.3"/><circle cx="19" cy="5" r="2.3"/><circle cx="5" cy="19" r="2.3"/><circle cx="19" cy="19" r="2.3"/>',
+		}),
+	]),
+	DIGITAL_AI: Object.freeze([
+		Object.freeze({
+			code: "MECH_KEY",
+			clusterCode: "DIGITAL_AI",
+			clusterTitleTr: "Yazılım, Dijital ve AI",
+			titleTr: "Mekanik Tuş",
+			subtitleTr: "Temiz kod desteği",
+			tier: "STANDARD",
+			coins: 80,
+			accentHex: "#0D9488",
+			svgPath:
+				'<rect x="3" y="4" width="18" height="16" rx="3"/><rect x="6.5" y="7" width="11" height="9" rx="1.8"/><path d="m9.5 11.5 1.8 1.8 3.2-3.2"/>',
+		}),
+		Object.freeze({
+			code: "NEURAL_GPU",
+			clusterCode: "DIGITAL_AI",
+			clusterTitleTr: "Yazılım, Dijital ve AI",
+			titleTr: "Nöral GPU Çipi",
+			subtitleTr: "Yüksek hız mimarisi",
+			tier: "PRO",
+			coins: 300,
+			accentHex: "#0095F6",
+			svgPath:
+				'<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+		}),
+		Object.freeze({
+			code: "QUANTUM_RACK",
+			clusterCode: "DIGITAL_AI",
+			clusterTitleTr: "Yazılım, Dijital ve AI",
+			titleTr: "Kuantum Kabin",
+			subtitleTr: "Başmühendis sistem ödülü",
+			tier: "LEGEND",
+			coins: 900,
+			accentHex: "#FFB400",
+			svgPath:
+				'<rect x="4" y="3" width="16" height="5" rx="1.2"/><rect x="4" y="9.5" width="16" height="5" rx="1.2"/><rect x="4" y="16" width="16" height="5" rx="1.2"/><circle cx="7" cy="5.5" r="0.8"/><circle cx="7" cy="12" r="0.8"/><circle cx="7" cy="18.5" r="0.8"/>',
+		}),
+	]),
+	PERSONAL_WELLNESS: Object.freeze([
+		Object.freeze({
+			code: "TITANIUM_SHEARS",
+			clusterCode: "PERSONAL_WELLNESS",
+			clusterTitleTr: "Güzellik, Bakım ve Stil",
+			titleTr: "Titanyum Makas",
+			subtitleTr: "Kusursuz kesim dokunuşu",
+			tier: "STANDARD",
+			coins: 80,
+			accentHex: "#DB2777",
+			svgPath:
+				'<circle cx="6" cy="6" r="2.8"/><circle cx="6" cy="18" r="2.8"/><path d="M20 4 8.2 15.8M14.5 14.5 20 20M8.2 8.2 12 12"/>',
+		}),
+		Object.freeze({
+			code: "SAPPHIRE_ELIXIR",
+			clusterCode: "PERSONAL_WELLNESS",
+			clusterTitleTr: "Güzellik, Bakım ve Stil",
+			titleTr: "Safir Bakım",
+			subtitleTr: "Özel tasarım bakım serisi",
+			tier: "PRO",
+			coins: 250,
+			accentHex: "#0095F6",
+			svgPath:
+				'<path d="M10 3h4v3l3.5 4.5a3 3 0 0 1 .6 1.8V19a2 2 0 0 1-2 2H7.9a2 2 0 0 1-2-2v-6.7a3 3 0 0 1 .6-1.8L10 6z"/><path d="M9 3h6M12 11v6M9 14h6"/>',
+		}),
+		Object.freeze({
+			code: "VIP_CROWN",
+			clusterCode: "PERSONAL_WELLNESS",
+			clusterTitleTr: "Güzellik, Bakım ve Stil",
+			titleTr: "Stil Tacı",
+			subtitleTr: "VIP atölye onur ödülü",
+			tier: "LEGEND",
+			coins: 750,
+			accentHex: "#FFB400",
+			svgPath:
+				'<path d="m2 7 4.5 5L12 5l5.5 7L22 7l-2 12H4z"/><path d="M4 19h16"/>',
+		}),
+	]),
+	EDUCATION_CONSULT: Object.freeze([
+		Object.freeze({
+			code: "ARCH_COMPASS",
+			clusterCode: "EDUCATION_CONSULT",
+			clusterTitleTr: "Eğitim, Mimari ve Danışmanlık",
+			titleTr: "Mimari Pergel",
+			subtitleTr: "Altın oran proje desteği",
+			tier: "STANDARD",
+			coins: 80,
+			accentHex: "#2563EB",
+			svgPath:
+				'<circle cx="12" cy="5" r="2"/><path d="m10.5 6.8-5.5 13.2M13.5 6.8l5.5 13.2M7 14h10"/>',
+		}),
+		Object.freeze({
+			code: "GOLD_FOUNTAIN_PEN",
+			clusterCode: "EDUCATION_CONSULT",
+			clusterTitleTr: "Eğitim, Mimari ve Danışmanlık",
+			titleTr: "Dolma Kalem",
+			subtitleTr: "Uzman danışmanlık imzası",
+			tier: "PRO",
+			coins: 250,
+			accentHex: "#0095F6",
+			svgPath:
+				'<path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.5 7.5"/><circle cx="11" cy="11" r="1.5"/>',
+		}),
+		Object.freeze({
+			code: "MASTER_CHARTER",
+			clusterCode: "EDUCATION_CONSULT",
+			clusterTitleTr: "Eğitim, Mimari ve Danışmanlık",
+			titleTr: "Başusta Beratı",
+			subtitleTr: "Lonca onur nişanı",
+			tier: "LEGEND",
+			coins: 700,
+			accentHex: "#FFB400",
+			svgPath:
+				'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h8"/><circle cx="12" cy="16" r="2.2"/>',
+		}),
+	]),
+});
+
+export function calculateLiveGiftSettlementKurus(coinsCount, quantity = 1) {
+	const safeCoins = Math.max(1, Math.round(Number(coinsCount) || 0));
+	const safeQty = Math.min(100, Math.max(1, Math.round(Number(quantity) || 1)));
+	const totalCoins = safeCoins * safeQty;
+	const grossKurus = totalCoins * LIVE_COIN_VALUE_KURUS;
+	const platformFeeKurus = Math.round(
+		(grossKurus * LIVE_GIFT_PLATFORM_FEE_BPS) / 10000,
+	);
+	const creatorNetKurus = grossKurus - platformFeeKurus;
+
+	return {
+		unitCoins: safeCoins,
+		quantity: safeQty,
+		totalCoins,
+		grossKurus,
+		grossTl: Number((grossKurus / 100).toFixed(2)),
+		creatorNetKurus,
+		creatorNetTl: Number((creatorNetKurus / 100).toFixed(2)),
+		platformFeeKurus,
+		platformFeeTl: Number((platformFeeKurus / 100).toFixed(2)),
+		creatorSharePercent: 85,
+		platformFeePercent: 15,
+	};
+}
+
+export function getProfessionGiftCatalog(clusterCode = "ALL") {
+	const normalized = String(clusterCode || "ALL")
+		.trim()
+		.toUpperCase();
+	const rawList =
+		normalized === "ALL" || !PROFESSION_GIFT_CATALOG[normalized]
+			? Object.values(PROFESSION_GIFT_CATALOG).flat()
+			: PROFESSION_GIFT_CATALOG[normalized];
+
+	return rawList.map((gift) => {
+		const settlement = calculateLiveGiftSettlementKurus(gift.coins, 1);
+		return {
+			...gift,
+			priceKurus: settlement.grossKurus,
+			priceTl: settlement.grossTl,
+			creatorNetKurus: settlement.creatorNetKurus,
+			creatorNetTl: settlement.creatorNetTl,
+			platformFeeKurus: settlement.platformFeeKurus,
+			svgMarkup: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${gift.svgPath}</svg>`,
+		};
+	});
+}
+
+export function buildWorkInProgressLiveStreamDeck(streamsInput = []) {
+	const defaultStreams = [
+		{
+			streamId: "LIVE-301",
+			streamerUserId: 201,
+			handle: "maslak_bimmer_servis",
+			displayName: "Maslak Bimmer Servis",
+			clusterCode: "AUTO_LOGISTICS",
+			city: "Maslak Oto Sanayi",
+			workTitleTr: "BMW F30 N20 Triger Seti ve Sente Ayarı Canlı",
+			currentStageLabelTr: "Aşama 2/3 · Lazer Sente Kilit Kontrolü",
+			viewerCount: 418,
+			totalGiftsCoins: 3400,
+			startingServicePriceTl: 4500,
+			tone: 1,
+		},
+		{
+			streamId: "LIVE-302",
+			streamerUserId: 202,
+			handle: "selim_tesisat_pro",
+			displayName: "Selim Karaca",
+			clusterCode: "HOME_TECH",
+			city: "Kadıköy Moda",
+			workTitleTr: "Kırmadan Termal Kameralı Su Kaçağı Nokta Tespiti",
+			currentStageLabelTr: "Aşama 2/3 · Kızılötesi Basınç Tarama",
+			viewerCount: 276,
+			totalGiftsCoins: 1950,
+			startingServicePriceTl: 850,
+			tone: 2,
+		},
+		{
+			streamId: "LIVE-303",
+			streamerUserId: 203,
+			handle: "elif_visual_studio",
+			displayName: "Elif Visual Studio",
+			clusterCode: "EVENTS_MEDIA",
+			city: "Beşiktaş Sahil",
+			workTitleTr: "Marka Reklam Seti 4K FPV Drone ve Gimbal Çekimi",
+			currentStageLabelTr: "Aşama 1/3 · Sahne Işık ve Renk Kalibrasyonu",
+			viewerCount: 512,
+			totalGiftsCoins: 4200,
+			startingServicePriceTl: 2800,
+			tone: 0,
+		},
+		{
+			streamId: "LIVE-304",
+			streamerUserId: 204,
+			handle: "eren_ai_mimar",
+			displayName: "Eren Yazılım & AI",
+			clusterCode: "DIGITAL_AI",
+			city: "Levent Teknopark",
+			workTitleTr: "E-Ticaret Ödeme Havuzu ve Canlı Kod Denetimi",
+			currentStageLabelTr: "Aşama 3/3 · Yük Testi ve Güvenlik Doğrulaması",
+			viewerCount: 194,
+			totalGiftsCoins: 1640,
+			startingServicePriceTl: 3200,
+			tone: 3,
+		},
+	];
+
+	const source =
+		Array.isArray(streamsInput) && streamsInput.length > 0
+			? streamsInput
+			: defaultStreams;
+
+	return source.map((s, idx) => {
+		const clusterCode = PROFESSION_GIFT_CATALOG[s.clusterCode]
+			? s.clusterCode
+			: "HOME_TECH";
+		const gifts = getProfessionGiftCatalog(clusterCode);
+		const settlement = calculateLiveGiftSettlementKurus(
+			Number(s.totalGiftsCoins) || 500,
+			1,
+		);
+		return {
+			streamId: String(s.streamId || `LIVE-${301 + idx}`),
+			streamerUserId: Number(s.streamerUserId || 200 + idx),
+			handle: String(s.handle || `usta_${idx + 1}`).replace(/^@/, ""),
+			displayName: String(s.displayName || "Ustanomi Uzmanı"),
+			clusterCode,
+			clusterTitleTr: gifts[0]?.clusterTitleTr || "Uzmanlık",
+			city: String(s.city || "İstanbul"),
+			workTitleTr: String(s.workTitleTr || "İş Başında Canlı Yayın"),
+			currentStageLabelTr: String(
+				s.currentStageLabelTr || "Aşama 1/3 · Uygulama",
+			),
+			isLive: true,
+			liveBadgeTr: "CANLI · İŞ BAŞINDA",
+			protocol: "WEBRTC_LOW_LATENCY",
+			resolution: "1080p60",
+			latencyMs: 950,
+			viewerCount: Math.max(1, Number(s.viewerCount) || 120),
+			totalGiftsCoins: settlement.totalCoins,
+			totalGiftsNetTl: settlement.creatorNetTl,
+			startingServicePriceTl: Math.max(
+				100,
+				Number(s.startingServicePriceTl) || 1000,
+			),
+			tone: Number(s.tone ?? idx % 6),
+			professionGifts: gifts,
+		};
+	});
+}
+
+export function processLiveStreamGiftTransaction(input = {}) {
+	const streamId = String(input.streamId || "").trim();
+	const giftCode = String(input.giftCode || "")
+		.trim()
+		.toUpperCase();
+	const senderUserId = Number(input.senderUserId || 0);
+	const streamerUserId = Number(input.streamerUserId || 0);
+	const senderHandle = String(input.senderHandle || "musteri_destek")
+		.trim()
+		.replace(/^@/, "");
+	const comboQuantity = Math.min(
+		100,
+		Math.max(1, Math.round(Number(input.quantity) || 1)),
+	);
+
+	if (!streamId) {
+		return {
+			valid: false,
+			errorCode: "INVALID_STREAM_ID",
+			messageTr: "Canlı yayın oturumu bulunamadı.",
+		};
+	}
+
+	if (
+		senderUserId > 0 &&
+		streamerUserId > 0 &&
+		senderUserId === streamerUserId
+	) {
+		return {
+			valid: false,
+			errorCode: "SELF_GIFTING_FORBIDDEN",
+			messageTr: "Yayıncı kendi canlı yayınına hediye gönderemez.",
+		};
+	}
+
+	const allGifts = getProfessionGiftCatalog("ALL");
+	const matchedGift = allGifts.find((g) => g.code === giftCode);
+	if (!matchedGift) {
+		return {
+			valid: false,
+			errorCode: "UNKNOWN_PROFESSION_GIFT",
+			messageTr: "Seçilen meslek hediyesi katalogda bulunamadı.",
+		};
+	}
+
+	const settlement = calculateLiveGiftSettlementKurus(
+		matchedGift.coins,
+		comboQuantity,
+	);
+	const safeNote = redactKvkkSensitiveText(String(input.note || "").trim());
+	const receiptCode = `GFT-2026-${streamId.replace(/[^A-Z0-9]/gi, "")}-${matchedGift.code.slice(0, 4)}-${settlement.totalCoins}`;
+
+	return {
+		valid: true,
+		receiptCode,
+		streamId,
+		giftCode: matchedGift.code,
+		giftTitleTr: matchedGift.titleTr,
+		clusterCode: matchedGift.clusterCode,
+		tier: matchedGift.tier,
+		senderHandle,
+		quantity: settlement.quantity,
+		comboBadgeTr: `×${settlement.quantity}`,
+		totalCoins: settlement.totalCoins,
+		grossKurus: settlement.grossKurus,
+		grossTl: settlement.grossTl,
+		creatorNetKurus: settlement.creatorNetKurus,
+		creatorNetTl: settlement.creatorNetTl,
+		platformFeeKurus: settlement.platformFeeKurus,
+		platformFeeTl: settlement.platformFeeTl,
+		sanitizedNote: safeNote,
+		bannerAnnouncementTr: `${senderHandle} · ${matchedGift.titleTr} ×${settlement.quantity} gönderdi (+${settlement.creatorNetTl} ₺ usta cüzdanına eklendi)`,
+	};
+}
+
 export const UstanomiNative = Object.freeze({
 	OFFER_SERVICE_CATEGORIES,
 	UNIVERSAL_PROFESSION_CLUSTERS,
@@ -2802,6 +3269,12 @@ export const UstanomiNative = Object.freeze({
 	evaluateMobileViewportErgonomics,
 	createSignaturePad,
 	initUstanomiNativeShell,
+	LIVE_COIN_VALUE_KURUS,
+	PROFESSION_GIFT_CATALOG,
+	calculateLiveGiftSettlementKurus,
+	getProfessionGiftCatalog,
+	buildWorkInProgressLiveStreamDeck,
+	processLiveStreamGiftTransaction,
 });
 
 if (typeof window !== "undefined") {

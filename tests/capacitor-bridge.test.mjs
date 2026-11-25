@@ -4,6 +4,8 @@ import {
 	B2B_TENDER_CATEGORIES,
 	buildFullScreenStoryDeck,
 	buildOmnichannelEngagementLinks,
+	buildWorkInProgressLiveStreamDeck,
+	calculateLiveGiftSettlementKurus,
 	calculateProWalletDashboard,
 	calculateSplitPaymentEscrow,
 	calculateTalentTrendingScore,
@@ -33,10 +35,13 @@ import {
 	generateGibEfaturaQrSummary,
 	getCurrentRadarLocation,
 	getOfflineQueue,
+	getProfessionGiftCatalog,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
 	openSecurePaymentOrLegalUrl,
+	PROFESSION_GIFT_CATALOG,
 	parseAndImportExternalCommerceProfile,
+	processLiveStreamGiftTransaction,
 	rankTalentShowcasePosts,
 	redactKvkkSensitiveText,
 	resolveOfferServiceCategory,
@@ -699,5 +704,64 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		assert.equal(ergo.compliant, true);
 		assert.equal(ergo.horizontalDriftPx, 0);
 		assert.equal(ergo.grade, "A+_ZERO_SHIFT_MOBILE");
+	});
+
+	it("provides 18 profession-specific vector SVG gifts across 6 clusters, Work-in-Progress Live Streams, and kuruş-exact 85/15 gift payouts", () => {
+		assert.equal(Object.keys(PROFESSION_GIFT_CATALOG).length, 6);
+		const allGifts = getProfessionGiftCatalog("ALL");
+		assert.equal(allGifts.length, 18);
+
+		for (const g of allGifts) {
+			assert.equal(g.svgMarkup.startsWith("<svg"), true);
+			assert.equal(g.creatorNetKurus + g.platformFeeKurus, g.priceKurus);
+		}
+
+		const autoGifts = getProfessionGiftCatalog("AUTO_LOGISTICS");
+		assert.equal(autoGifts.length, 3);
+		assert.equal(autoGifts[2].code, "GOLDEN_PISTON");
+		assert.equal(autoGifts[2].coins, 1000);
+		assert.equal(autoGifts[2].priceTl, 500);
+		assert.equal(autoGifts[2].creatorNetTl, 425); // 85% of 500 TL
+
+		const liveDeck = buildWorkInProgressLiveStreamDeck();
+		assert.equal(liveDeck.length, 4);
+		assert.equal(liveDeck[0].isLive, true);
+		assert.equal(liveDeck[0].protocol, "WEBRTC_LOW_LATENCY");
+		assert.equal(liveDeck[0].professionGifts.length, 3);
+
+		// Self-gifting is blocked for anti-laundering compliance
+		const selfGift = processLiveStreamGiftTransaction({
+			streamId: "LIVE-301",
+			giftCode: "GOLDEN_PISTON",
+			senderUserId: 201,
+			streamerUserId: 201,
+			quantity: 1,
+		});
+		assert.equal(selfGift.valid, false);
+		assert.equal(selfGift.errorCode, "SELF_GIFTING_FORBIDDEN");
+
+		// Valid x5 Golden Piston combo gift -> 5000 coins = 2500 TL gross, 2125 TL net to pro
+		const validCombo = processLiveStreamGiftTransaction({
+			streamId: "LIVE-301",
+			giftCode: "GOLDEN_PISTON",
+			senderUserId: 101,
+			streamerUserId: 201,
+			senderHandle: "anadolu_filo",
+			quantity: 5,
+			note: "Harika sente işçiliği 0532 111 22 33",
+		});
+		assert.equal(validCombo.valid, true);
+		assert.equal(validCombo.totalCoins, 5000);
+		assert.equal(validCombo.grossKurus, 250000);
+		assert.equal(validCombo.creatorNetKurus, 212500);
+		assert.equal(validCombo.platformFeeKurus, 37500);
+		assert.equal(validCombo.creatorNetTl, 2125);
+		assert.equal(validCombo.sanitizedNote.includes("0532 111 22 33"), false);
+
+		const settlement = calculateLiveGiftSettlementKurus(200, 10);
+		assert.equal(settlement.totalCoins, 2000);
+		assert.equal(settlement.grossTl, 1000);
+		assert.equal(settlement.creatorNetTl, 850);
+		assert.equal(settlement.platformFeeTl, 150);
 	});
 });

@@ -74,5 +74,13 @@ void main() {
       expect(listing.externalId, '1189402190');
       expect(listing.autoSyncEnabled, isTrue);
     });
+
+    test('85/15 kurus-exact live stream profession gift split', () {
+      final EscrowSplitResult giftSplit =
+          UstanomiDomain.calculateLiveGiftSplitKurus(1000, quantity: 5);
+      expect(giftSplit.totalKurus, 250000); // 2.500,00 TL
+      expect(giftSplit.proPayoutKurus, 212500); // 85% = 2.125,00 TL
+      expect(giftSplit.platformFeeKurus, 37500); // 15% = 375,00 TL
+    });
   });
 }

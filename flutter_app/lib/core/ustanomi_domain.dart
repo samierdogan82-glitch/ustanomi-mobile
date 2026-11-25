@@ -182,6 +182,26 @@ class MarketplaceFilterCriteria {
 class UstanomiDomain {
   static const int platformCommissionBps = 1200; // 12.00%
   static const int proPayoutBps = 8800; // 88.00%
+  static const int liveCoinValueKurus = 50; // 1 Jeton = 50 kurus (0.50 TL)
+  static const int liveGiftCreatorShareBps = 8500; // 85.00%
+  static const int liveGiftPlatformFeeBps = 1500; // 15.00%
+
+  /// Kuruş-exact live stream profession gift settlement (85% Creator / 15% Platform)
+  static EscrowSplitResult calculateLiveGiftSplitKurus(int coins, {int quantity = 1}) {
+    if (coins <= 0 || quantity <= 0) {
+      throw ArgumentError('coins and quantity must be positive integers.');
+    }
+    final int totalKurus = coins * quantity * liveCoinValueKurus;
+    final int platformFeeKurus = (totalKurus * liveGiftPlatformFeeBps) ~/ 10000;
+    final int proPayoutKurus = totalKurus - platformFeeKurus;
+    return EscrowSplitResult(
+      totalKurus: totalKurus,
+      platformFeeKurus: platformFeeKurus,
+      proPayoutKurus: proPayoutKurus,
+      platformRateBps: liveGiftPlatformFeeBps,
+      proRateBps: liveGiftCreatorShareBps,
+    );
+  }
 
   static const Map<String, double> fxRatesFromTry = {
     'TRY': 1.0,

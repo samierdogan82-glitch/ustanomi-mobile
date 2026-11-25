@@ -385,3 +385,47 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   CONSTRAINT fk_dm_recipient FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_dm_thread_created (thread_code, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Work-In-Progress Live Streams & Profession-Specific Gift Ledger (Kuruş-Exact)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS live_work_streams (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  stream_code VARCHAR(32) NOT NULL UNIQUE,
+  streamer_user_id INT UNSIGNED NOT NULL,
+  cluster_code ENUM('HOME_TECH', 'AUTO_LOGISTICS', 'EVENTS_MEDIA', 'DIGITAL_AI', 'PERSONAL_WELLNESS', 'EDUCATION_CONSULT') NOT NULL DEFAULT 'HOME_TECH',
+  work_title VARCHAR(180) NOT NULL,
+  current_stage_label VARCHAR(140) NOT NULL,
+  city VARCHAR(80) NOT NULL DEFAULT 'İstanbul',
+  viewer_count INT UNSIGNED NOT NULL DEFAULT 0,
+  total_gift_coins BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  creator_net_earned_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  stream_status ENUM('LIVE', 'ENDED', 'SUSPENDED') NOT NULL DEFAULT 'LIVE',
+  started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ended_at DATETIME NULL,
+  CONSTRAINT fk_live_streamer FOREIGN KEY (streamer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_live_cluster_status (cluster_code, stream_status, viewer_count)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS live_gift_transactions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  receipt_code VARCHAR(64) NOT NULL UNIQUE,
+  stream_id BIGINT UNSIGNED NOT NULL,
+  sender_user_id INT UNSIGNED NOT NULL,
+  streamer_user_id INT UNSIGNED NOT NULL,
+  cluster_code ENUM('HOME_TECH', 'AUTO_LOGISTICS', 'EVENTS_MEDIA', 'DIGITAL_AI', 'PERSONAL_WELLNESS', 'EDUCATION_CONSULT') NOT NULL,
+  gift_code VARCHAR(40) NOT NULL,
+  gift_tier ENUM('STANDARD', 'PRO', 'LEGEND') NOT NULL DEFAULT 'STANDARD',
+  quantity SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  total_coins INT UNSIGNED NOT NULL,
+  gross_amount_kurus BIGINT UNSIGNED NOT NULL,
+  creator_net_kurus BIGINT UNSIGNED NOT NULL,
+  platform_fee_kurus BIGINT UNSIGNED NOT NULL,
+  supporter_note VARCHAR(240) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_gift_stream FOREIGN KEY (stream_id) REFERENCES live_work_streams(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_gift_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_gift_streamer FOREIGN KEY (streamer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_gift_streamer_created (streamer_user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
