@@ -10,6 +10,7 @@ import {
 	canTransitionEscrow,
 	canTransitionLeadState,
 	canTransitionOfferState,
+	captureFieldPhoto,
 	convertAndFormatGlobalPrice,
 	createDmProformaMessageCard,
 	createSealedProformaBidPayload,
@@ -28,9 +29,11 @@ import {
 	formatInstagramProShowcase,
 	GLOBAL_LOCALES,
 	generateGibEfaturaQrSummary,
+	getCurrentRadarLocation,
 	getOfflineQueue,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
+	openSecurePaymentOrLegalUrl,
 	parseAndImportExternalCommerceProfile,
 	rankTalentShowcasePosts,
 	redactKvkkSensitiveText,
@@ -652,5 +655,12 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		const flushed = await flushOfflineQueue(async () => true);
 		assert.equal(flushed.synced, 1);
 		assert.equal(flushed.remaining, 0);
+
+		assert.equal(typeof captureFieldPhoto, "function");
+		assert.equal(typeof getCurrentRadarLocation, "function");
+		await assert.rejects(
+			() => openSecurePaymentOrLegalUrl("https://evil.example.com/phishing"),
+			/BLOCKED_UNTRUSTED_NAVIGATION_URL/,
+		);
 	});
 });

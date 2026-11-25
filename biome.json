@@ -1,0 +1,20 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+	"files": {
+		"includes": [
+			"www/**",
+			"tests/**",
+			".agents/**/*.json",
+			"package.json",
+			"capacitor.config.json",
+			"biome.json"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true
+	}
+}

@@ -11,16 +11,7 @@ if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
  * Official 11-digit Turkish TCKN algorithmic checksum validation in PHP 8.3
  */
 function is_valid_turkish_tckn(string $raw): bool {
-    $tckn = preg_replace('/\s+/', '', $raw) ?? '';
-    if (!preg_match('/^[1-9]\d{10}$/', $tckn)) {
-        return false;
-    }
-    $d = array_map('intval', str_split($tckn));
-    $odd  = $d[0] + $d[2] + $d[4] + $d[6] + $d[8];
-    $even = $d[1] + $d[3] + $d[5] + $d[7];
-    $d10  = ((($odd * 7) - $even) % 10 + 10) % 10;
-    $d11  = array_sum(array_slice($d, 0, 10)) % 10;
-    return $d[9] === $d10 && $d[10] === $d11;
+    return validate_tckn_checksum($raw);
 }
 
 $payload = read_json_body();
@@ -34,7 +25,7 @@ $action = trim((string)($payload['action'] ?? 'login'));
 // 1. KYC-Verified Commercial Registration (T.C. Kimlik No + KVKK + Escrow Consent)
 // ----------------------------------------------------------------------------
 if ($action === 'register_kyc') {
-    $fullName       = trim((string)($payload['fullName'] ?? ''));
+    $fullName       = e(trim((string)($payload['fullName'] ?? '')));
     $email          = strtolower(trim((string)($payload['email'] ?? '')));
     $phone          = preg_replace('/[^0-9+]/', '', (string)($payload['phone'] ?? '')) ?? '';
     $password       = (string)($payload['password'] ?? '');
