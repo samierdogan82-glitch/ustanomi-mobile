@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <meta name="theme-color" content="#FFFFFF">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <title>Ustanomi</title>
     <style>
         :root {
@@ -75,7 +77,8 @@
             background: var(--bg);
             border-bottom: 1px solid var(--line);
         }
-        .wordmark { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+        .wordmark { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+        .wordmark img { width: 28px; height: 28px; display: block; }
         .header-actions { display: flex; gap: 6px; }
         .icon-btn {
             position: relative;
@@ -413,7 +416,7 @@
 <body>
     <div class="app">
         <header class="header">
-            <h1 class="wordmark">Ustanomi</h1>
+            <h1 class="wordmark"><img src="favicon.svg" alt="" width="28" height="28">Ustanomi</h1>
             <div class="header-actions">
                 <button type="button" class="icon-btn" id="open-filter-sheet-btn" aria-label="Filtre">
                     <svg class="ico" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>

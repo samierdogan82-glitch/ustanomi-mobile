@@ -5,12 +5,14 @@
  * - Stale-While-Revalidate on static shell assets with offline navigation fallback
  */
 
-const CACHE_NAME = "ustanomi-shell-v2.6";
+const CACHE_NAME = "ustanomi-shell-v2.7";
 const PRECACHE_ASSETS = [
 	"/index.html",
 	"/offline.html",
 	"/capacitor-bridge.js",
 	"/manifest.json",
+	"/favicon.svg",
+	"/icons/icon-192.png",
 ];
 
 self.addEventListener("install", (event) => {
