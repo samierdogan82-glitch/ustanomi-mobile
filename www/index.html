@@ -617,6 +617,7 @@
                     <div id="kyc-pwd-label" style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Şifre Gücü: Bekleniyor</div>
                     <input type="checkbox" id="kyc-kvkk-check" checked hidden>
                     <input type="checkbox" id="kyc-escrow-check" checked hidden>
+                    <input type="text" id="kyc-honeypot" name="_hp_website" value="" tabindex="-1" autocomplete="off" hidden>
                     <button type="button" class="cta-work-btn" id="kyc-submit-btn">🪪 Kimlikle Hesabımı Aç</button>
                 </div>
 
@@ -637,6 +638,10 @@
                 </div>
 
                 <div id="auth-feedback-box" style="margin-top:10px;font-size:0.76rem;font-weight:700;" aria-live="polite"></div>
+                <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.7rem;color:var(--muted);">KVKK Madde 7 &amp; App Store 5.1.1(v)</span>
+                    <button type="button" class="pill-btn" id="kvkk-delete-account-btn" style="color:#FDA4AF;border-color:rgba(244,63,94,0.35);">🗑️ Hesabımı Sil</button>
+                </div>
             </div>
         </section>
 
@@ -808,18 +813,23 @@
             createSealedProformaBidPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
+            evaluateAccountDeletionEligibility,
             evaluatePasswordStrength,
+            evaluateWafRateLimitAndHoneypot,
             filterAndSearchMarketplace,
             formatInstagramProShowcase,
+            generateGibEfaturaQrSummary,
             initUstanomiNativeShell,
             parseAndImportExternalCommerceProfile,
             rankTalentShowcasePosts,
+            resolveEscrowDisputeCase,
             resolveUniversalProfessionCluster,
             sanitizeInAppChatMessage,
             triggerHapticImpact,
             UNIVERSAL_PROFESSION_CLUSTERS,
             validateKycRegistrationPayload,
-            validateTurkishTckn
+            validateTurkishTckn,
+            verifyWaybillAndEscrowRelease
         } from './capacitor-bridge.js';
 
         const storiesBar = document.getElementById('stories-bar');
@@ -1563,6 +1573,14 @@
         });
 
         document.getElementById('kyc-submit-btn').addEventListener('click', () => {
+            const waf = evaluateWafRateLimitAndHoneypot({
+                honeypotValue: document.getElementById('kyc-honeypot')?.value || ''
+            });
+            if (!waf.allowed) {
+                authFeedback.style.color = '#FDA4AF';
+                authFeedback.textContent = '✕ Güvenlik duvarı (WAF) tarafından engellendi.';
+                return;
+            }
             const result = validateKycRegistrationPayload({
                 fullName: document.getElementById('kyc-fullname').value,
                 tckn: tcknInput.value,
@@ -1575,6 +1593,18 @@
             });
             authFeedback.style.color = result.valid ? '#6EE7B7' : '#FDA4AF';
             authFeedback.textContent = result.valid ? `✓ ${result.kycBadgeTr} (${result.maskedTckn})` : `✕ ${result.messageTr}`;
+        });
+
+        document.getElementById('kvkk-delete-account-btn')?.addEventListener('click', () => {
+            const check = evaluateAccountDeletionEligibility({
+                userId: 101,
+                activeEscrowStatuses: dmEscrowLocked ? ['WORK_IN_PROGRESS'] : ['CUSTOMER_APPROVED_RELEASED']
+            });
+            const efatura = generateGibEfaturaQrSummary({ proformaRefCode: 'PRF-2026', subtotalTl: 1000 });
+            const waybill = verifyWaybillAndEscrowRelease({ carrierCode: 'YURTICI', trackingNumber: 'YK-90887766', buyerDeliveryConfirmed: true, hasSignatureOrOtp: true });
+            const arb = resolveEscrowDisputeCase({ totalEscrowAmountTl: 1000, hasCustomerWetSignatureOrOtp: true });
+            authFeedback.style.color = check.canDeleteAccount ? '#6EE7B7' : '#FDE68A';
+            authFeedback.textContent = `${check.messageTr} (${waybill.carrierCode} • ${efatura.customizationId} • ${arb.resolutionDecision})`;
         });
 
         // Bottom Navigation Tab Switching
