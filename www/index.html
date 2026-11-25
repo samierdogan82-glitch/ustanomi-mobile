@@ -1286,7 +1286,7 @@
 
         document.getElementById('dm-send-btn')?.addEventListener('click', () => {
             const input = document.getElementById('dm-msg-input');
-            if (!input.value || !input.value.trim()) return;
+            if (!input?.value?.trim()) return;
             const checked = sanitizeInAppChatMessage(input.value, dmEscrowLocked);
             dmMessages.push({
                 sender: 'CUSTOMER',
