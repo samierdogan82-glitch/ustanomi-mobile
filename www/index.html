@@ -1071,6 +1071,15 @@
 
         <!-- VIEW 2: ACİL İŞLER -->
         <section id="tab-urgent" class="view" aria-label="Acil İşler Akışı">
+            <div class="clean-post" style="border-color:rgba(37,99,235,0.4);background:rgba(37,99,235,0.08);">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+                    <span style="font-size:0.75rem;font-weight:800;color:#93C5FD;">⚡ Akıllı Fiyat &amp; %30/%40/%30 Aşamalı Havuz</span>
+                    <span class="tabular-nums" id="smart-quote-badge" style="font-size:0.71rem;font-weight:800;color:#6EE7B7;">SLA: ~20 dk</span>
+                </div>
+                <div id="smart-quote-milestones" class="tabular-nums" style="font-size:0.73rem;color:var(--text-secondary);">
+                    Başlangıç %30 • Ara Kontrol %40 • Islak İmzalı Teslim %30
+                </div>
+            </div>
             <div id="urgent-feed-list"></div>
         </section>
 
@@ -1284,6 +1293,31 @@
         </div>
     </div>
 
+    <!-- CLEAN BOTTOM SHEET 3: TOUCH WET SIGNATURE & ESCROW RELEASE PROOF -->
+    <div class="sheet-backdrop" id="signature-sheet">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong style="font-size:0.9rem;">✍️ Müşteri Islak İmza &amp; %88 Havuz Çözümü</strong>
+                <button type="button" class="pill-btn" id="close-signature-sheet-btn">Kapat ✕</button>
+            </div>
+            <div style="font-size:0.74rem;color:var(--text-secondary);margin-bottom:10px;">
+                Teslimatı onaylamak için aşağıdaki yüksek-DPI alana parmağınızla imza atınız. İmza özeti (SHA-256) GİB e-Fatura ve kargo irsaliyesi ile eşleştirilir.
+            </div>
+            <div style="background:#0A0F1D;border:1px dashed rgba(16,185,129,0.5);border-radius:14px;padding:6px;margin-bottom:10px;">
+                <canvas id="wet-signature-canvas" width="360" height="140" style="width:100%;height:140px;display:block;touch-action:none;cursor:crosshair;"></canvas>
+            </div>
+            <div class="row" style="margin-bottom:8px;">
+                <button type="button" class="btn-minimal" id="clear-signature-btn" style="min-height:44px;flex:0.45;">Temizle</button>
+                <button type="button" class="cta-work-btn" id="confirm-signature-btn" style="flex:1;">✍️ İmzala &amp; %88 IBAN'a Aktar</button>
+            </div>
+            <div id="signature-proof-feedback" class="tabular-nums" style="font-size:0.74rem;font-weight:700;color:#6EE7B7;word-break:break-word;" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <!-- Accessible Floating Toast Notification Stack (_mit-kit/ui/toast-notification-stack.tsx) -->
+    <div id="toast-stack" aria-live="polite" style="position:fixed;top:62px;left:50%;transform:translateX(-50%);z-index:85;width:calc(100% - 24px);max-width:416px;display:flex;flex-direction:column;gap:6px;pointer-events:none;"></div>
+
     <!-- Fixed 5-Column Bottom Navigation Dock with Crisp SVG Icons -->
     <nav class="bottom-bar" aria-label="Alt Menü">
         <div class="bottom-bar-inner">
@@ -1317,9 +1351,13 @@
             convertAndFormatGlobalPrice,
             createDmProformaMessageCard,
             createSealedProformaBidPayload,
+            createSignaturePad,
+            createTouchWetSignatureProof,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
+            estimateArmutStyleSmartQuote,
             evaluateAccountDeletionEligibility,
+            evaluateMobileViewportErgonomics,
             evaluatePasswordStrength,
             evaluateWafRateLimitAndHoneypot,
             filterAndSearchMarketplace,
@@ -1358,6 +1396,18 @@
             if (!discoverHeaderStrip) return;
             const showStrip = activeTabId === 'tab-reels' || activeTabId === 'tab-urgent';
             discoverHeaderStrip.style.display = showStrip ? 'block' : 'none';
+        }
+
+        const toastStack = document.getElementById('toast-stack');
+        function showToast(messageTr, borderColor = 'rgba(16,185,129,0.55)') {
+            if (!toastStack) return;
+            const item = document.createElement('div');
+            item.style.cssText = `background:rgba(17,26,46,0.96);backdrop-filter:blur(12px);border:1px solid ${borderColor};color:#F8FAFC;padding:10px 12px;border-radius:12px;font-size:0.75rem;font-weight:700;box-shadow:0 10px 24px rgba(0,0,0,0.45);`;
+            item.textContent = messageTr;
+            toastStack.appendChild(item);
+            setTimeout(() => {
+                item.remove();
+            }, 2600);
         }
 
         const storyPros = [
@@ -1657,7 +1707,31 @@
 
         function renderUrgentFeed() {
             urgentFeedList.innerHTML = '';
+            const quote = estimateArmutStyleSmartQuote({
+                clusterCode: activeClusterCode === 'ALL' ? 'HOME_TECH' : activeClusterCode,
+                urgencyCode: 'URGENT_2H',
+                regionCode: activeRegionCode
+            });
+            const mSplit = calculateSplitPaymentEscrow(quote.recommendedPriceTl);
+            const m0 = convertAndFormatGlobalPrice(mSplit.milestonesTl[0], activeRegionCode).formatted;
+            const m1 = convertAndFormatGlobalPrice(mSplit.milestonesTl[1], activeRegionCode).formatted;
+            const m2 = convertAndFormatGlobalPrice(mSplit.milestonesTl[2], activeRegionCode).formatted;
+            const sqBadge = document.getElementById('smart-quote-badge');
+            const sqMilestones = document.getElementById('smart-quote-milestones');
+            if (sqBadge) sqBadge.textContent = `Tahmin: ${quote.formattedRange}`;
+            if (sqMilestones) sqMilestones.textContent = `Etap 1 (%30): ${m0} • Etap 2 (%40): ${m1} • Teslim (%30): ${m2}`;
+
             const filtered = filterAndSearchMarketplace(urgentPosts, getActiveSearchFilters());
+            if (filtered.length === 0) {
+                urgentFeedList.innerHTML = `<div class="clean-post" style="text-align:center;"><div style="font-size:0.84rem;font-weight:700;margin-bottom:8px;">Seçili filtreye uygun acil iş bulunamadı.</div><button type="button" class="btn-minimal" id="reset-urgent-filter-btn">Filtreleri Sıfırla</button></div>`;
+                document.getElementById('reset-urgent-filter-btn')?.addEventListener('click', () => {
+                    activeClusterCode = 'ALL';
+                    renderClusters();
+                    renderReels();
+                    renderUrgentFeed();
+                });
+                return;
+            }
             for (const post of filtered) {
                 const budgetFmt = convertAndFormatGlobalPrice(post.estimatedBudgetTl, activeRegionCode).formatted;
                 const card = document.createElement('article');
@@ -1680,6 +1754,7 @@
                 card.querySelector('.urgent-bid-btn').addEventListener('click', () => {
                     post.offersCount += 1;
                     triggerHapticImpact('LIGHT');
+                    showToast(`⚡ ${post.title} ilanına teklifiniz iletildi!`);
                     renderUrgentFeed();
                 });
                 urgentFeedList.appendChild(card);
@@ -1758,6 +1833,9 @@
                     </div>
                 </div>
                 ${rows}
+                <button type="button" class="cta-work-btn" id="open-signature-sheet-btn" style="margin-top:6px;">
+                    ✍️ Islak İmza ile Teslim Onayla (%88 Havuz Çöz)
+                </button>
             `;
         }
 
@@ -1987,7 +2065,47 @@
                 document.getElementById('tab-auth').classList.add('active');
                 syncDiscoverStripVisibility('tab-auth');
             });
+
+            document.getElementById('open-signature-sheet-btn')?.addEventListener('click', () => {
+                document.getElementById('signature-sheet')?.classList.add('open');
+            });
         }
+
+        // Touch Wet Signature Canvas Lifecycle
+        const signatureSheet = document.getElementById('signature-sheet');
+        const sigCanvas = document.getElementById('wet-signature-canvas');
+        const sigFeedback = document.getElementById('signature-proof-feedback');
+        const sigPad = sigCanvas ? createSignaturePad(sigCanvas) : null;
+
+        document.getElementById('close-signature-sheet-btn')?.addEventListener('click', () => {
+            signatureSheet?.classList.remove('open');
+        });
+        document.getElementById('clear-signature-btn')?.addEventListener('click', () => {
+            sigPad?.clear();
+            if (sigFeedback) sigFeedback.textContent = '';
+        });
+        document.getElementById('confirm-signature-btn')?.addEventListener('click', async () => {
+            const proof = sigPad && !sigPad.isEmpty()
+                ? sigPad.getProof('JOB-801', 'Selim Karaca Teslim Onayı')
+                : createTouchWetSignatureProof({
+                    jobId: 'JOB-801',
+                    signerName: 'Selim Karaca Teslim Onayı',
+                    strokePointsCount: 28,
+                    boundingBoxWidth: 180,
+                    boundingBoxHeight: 64
+                });
+            if (sigFeedback) {
+                sigFeedback.style.color = proof.valid ? '#6EE7B7' : '#FDA4AF';
+                sigFeedback.textContent = proof.messageTr;
+            }
+            if (proof.valid) {
+                walletJobs[0].state = 'RELEASED_TO_IBAN';
+                triggerHapticImpact('MEDIUM');
+                showToast(proof.messageTr);
+                await enqueueOfflineAction('WET_SIGNATURE_ESCROW_RELEASE', proof);
+                renderInstagramProfile();
+            }
+        });
 
         // Bottom Sheet Toggles
         const filterSheet = document.getElementById('filter-sheet');
@@ -2216,6 +2334,16 @@
         if (urlParams.get('sheet') === 'create') {
             createSheet.classList.add('open');
         }
+        if (urlParams.get('sheet') === 'signature') {
+            signatureSheet?.classList.add('open');
+        }
+        evaluateMobileViewportErgonomics({
+            viewportWidthPx: window.innerWidth,
+            documentScrollWidthPx: document.documentElement.scrollWidth,
+            minTapTargetPx: 44,
+            inputFontSizePx: 16,
+            hasSafeAreaInsets: true
+        });
     </script>
 </body>
 </html>

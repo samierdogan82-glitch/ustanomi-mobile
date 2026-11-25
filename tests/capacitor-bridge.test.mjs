@@ -14,12 +14,14 @@ import {
 	convertAndFormatGlobalPrice,
 	createDmProformaMessageCard,
 	createSealedProformaBidPayload,
+	createTouchWetSignatureProof,
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
 	detectExternalPlatformConnector,
 	EXTERNAL_COMMERCE_CONNECTORS,
 	enqueueOfflineAction,
 	estimateArmutStyleSmartQuote,
+	evaluateMobileViewportErgonomics,
 	evaluatePasswordStrength,
 	evaluateProAvailability,
 	evaluateWorkflowRoleAccess,
@@ -662,5 +664,40 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 			() => openSecurePaymentOrLegalUrl("https://evil.example.com/phishing"),
 			/BLOCKED_UNTRUSTED_NAVIGATION_URL/,
 		);
+	});
+
+	it("validates high-DPI Touch Wet-Signature Proof and Zero-Shift Mobile Viewport Ergonomics", () => {
+		const rejectedShort = createTouchWetSignatureProof({
+			jobId: "JOB-801",
+			strokePointsCount: 3,
+			boundingBoxWidth: 8,
+			boundingBoxHeight: 4,
+		});
+		assert.equal(rejectedShort.valid, false);
+		assert.equal(rejectedShort.errorCode, "SIGNATURE_TOO_SHORT_OR_EMPTY");
+
+		const validSig = createTouchWetSignatureProof({
+			jobId: "JOB-801",
+			signerName: "Selim Karaca 0532 123 45 67",
+			strokePointsCount: 36,
+			boundingBoxWidth: 195,
+			boundingBoxHeight: 68,
+			timestampIso: "2026-11-25T18:00:00.000Z",
+		});
+		assert.equal(validSig.valid, true);
+		assert.equal(validSig.proofCode.startsWith("SIG-2026-"), true);
+		assert.equal(validSig.escrowAction, "RELEASE_88_PERCENT_TO_PRO_IBAN");
+		assert.equal(validSig.signerName.includes("0532 123 45 67"), false);
+
+		const ergo = evaluateMobileViewportErgonomics({
+			viewportWidthPx: 360,
+			documentScrollWidthPx: 360,
+			minTapTargetPx: 44,
+			inputFontSizePx: 16,
+			hasSafeAreaInsets: true,
+		});
+		assert.equal(ergo.compliant, true);
+		assert.equal(ergo.horizontalDriftPx, 0);
+		assert.equal(ergo.grade, "A+_ZERO_SHIFT_MOBILE");
 	});
 });

@@ -2520,6 +2520,85 @@ export async function openSecurePaymentOrLegalUrl(url) {
 	return false;
 }
 
+export function createTouchWetSignatureProof(options = {}) {
+	const jobId = String(options.jobId || "JOB-801").trim();
+	const signerName = redactKvkkSensitiveText(
+		String(options.signerName || "Müşteri Teslim Onayı").trim(),
+	);
+	const strokePointsCount = Number(options.strokePointsCount || 0);
+	const boundingBoxWidth = Number(options.boundingBoxWidth || 0);
+	const boundingBoxHeight = Number(options.boundingBoxHeight || 0);
+	const timestampIso = String(
+		options.timestampIso || new Date().toISOString(),
+	).trim();
+
+	if (
+		strokePointsCount < 12 ||
+		boundingBoxWidth < 24 ||
+		boundingBoxHeight < 10
+	) {
+		return {
+			valid: false,
+			errorCode: "SIGNATURE_TOO_SHORT_OR_EMPTY",
+			messageTr:
+				"Lütfen ekrandaki imza alanına parmağınızla geçerli bir ıslak imza atınız.",
+		};
+	}
+
+	const rawSeed = `${jobId}|${signerName}|${strokePointsCount}|${boundingBoxWidth}x${boundingBoxHeight}|${timestampIso}`;
+	let hashAcc = 2166136261;
+	for (let i = 0; i < rawSeed.length; i += 1) {
+		hashAcc ^= rawSeed.charCodeAt(i);
+		hashAcc = Math.imul(hashAcc, 16777619) >>> 0;
+	}
+	const hexDigest = hashAcc.toString(16).toUpperCase().padStart(8, "0");
+
+	return {
+		valid: true,
+		jobId,
+		signerName,
+		strokePointsCount,
+		proofCode: `SIG-2026-${hexDigest}`,
+		escrowAction: "RELEASE_88_PERCENT_TO_PRO_IBAN",
+		timestampIso,
+		messageTr: `✓ Islak imza doğrulandı (SIG-2026-${hexDigest}). %88 uzman hakedişi TR IBAN hesabına aktarıma açıldı.`,
+	};
+}
+
+export function evaluateMobileViewportErgonomics(metrics = {}) {
+	const viewportWidthPx = Number(metrics.viewportWidthPx || 390);
+	const documentScrollWidthPx = Number(
+		metrics.documentScrollWidthPx || viewportWidthPx,
+	);
+	const minTapTargetPx = Number(metrics.minTapTargetPx || 44);
+	const inputFontSizePx = Number(metrics.inputFontSizePx || 16);
+	const hasSafeAreaInsets = Boolean(metrics.hasSafeAreaInsets ?? true);
+
+	const horizontalDriftPx = Math.max(
+		0,
+		documentScrollWidthPx - viewportWidthPx,
+	);
+	const zeroHorizontalShift = horizontalDriftPx === 0;
+	const tapTargetsCompliant = minTapTargetPx >= 44;
+	const zeroKeyboardZoomShift = inputFontSizePx >= 16;
+
+	const compliant =
+		zeroHorizontalShift &&
+		tapTargetsCompliant &&
+		zeroKeyboardZoomShift &&
+		hasSafeAreaInsets;
+
+	return {
+		compliant,
+		horizontalDriftPx,
+		zeroHorizontalShift,
+		tapTargetsCompliant,
+		zeroKeyboardZoomShift,
+		hasSafeAreaInsets,
+		grade: compliant ? "A+_ZERO_SHIFT_MOBILE" : "LAYOUT_DRIFT_DETECTED",
+	};
+}
+
 export function createSignaturePad(canvas) {
 	if (!canvas || typeof canvas.getContext !== "function") {
 		throw new Error("VALID_CANVAS_REQUIRED");
@@ -2527,6 +2606,19 @@ export function createSignaturePad(canvas) {
 	const ctx = canvas.getContext("2d");
 	let isDrawing = false;
 	let hasInk = false;
+	let strokePointsCount = 0;
+	let minX = Number.POSITIVE_INFINITY;
+	let maxX = 0;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxY = 0;
+
+	const recordPoint = (pt) => {
+		strokePointsCount += 1;
+		if (pt.x < minX) minX = pt.x;
+		if (pt.x > maxX) maxX = pt.x;
+		if (pt.y < minY) minY = pt.y;
+		if (pt.y > maxY) maxY = pt.y;
+	};
 
 	const getPoint = (event) => {
 		const rect = canvas.getBoundingClientRect();
@@ -2541,6 +2633,7 @@ export function createSignaturePad(canvas) {
 	const onPointerDown = (event) => {
 		if (!ctx) return;
 		const pt = getPoint(event);
+		recordPoint(pt);
 		ctx.beginPath();
 		ctx.moveTo(pt.x, pt.y);
 		isDrawing = true;
@@ -2550,10 +2643,11 @@ export function createSignaturePad(canvas) {
 	const onPointerMove = (event) => {
 		if (!isDrawing || !ctx) return;
 		const pt = getPoint(event);
-		ctx.lineWidth = 2.2;
+		recordPoint(pt);
+		ctx.lineWidth = 2.6;
 		ctx.lineCap = "round";
 		ctx.lineJoin = "round";
-		ctx.strokeStyle = "#153E49";
+		ctx.strokeStyle = "#10B981";
 		ctx.lineTo(pt.x, pt.y);
 		ctx.stroke();
 	};
@@ -2573,9 +2667,23 @@ export function createSignaturePad(canvas) {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 			}
 			hasInk = false;
+			strokePointsCount = 0;
+			minX = Number.POSITIVE_INFINITY;
+			maxX = 0;
+			minY = Number.POSITIVE_INFINITY;
+			maxY = 0;
 		},
 		isEmpty() {
 			return !hasInk;
+		},
+		getProof(jobId = "JOB-801", signerName = "Müşteri Teslim Onayı") {
+			return createTouchWetSignatureProof({
+				jobId,
+				signerName,
+				strokePointsCount,
+				boundingBoxWidth: hasInk ? Math.max(0, Math.round(maxX - minX)) : 0,
+				boundingBoxHeight: hasInk ? Math.max(0, Math.round(maxY - minY)) : 0,
+			});
 		},
 		toDataURL() {
 			return canvas.toDataURL("image/png");
@@ -2593,7 +2701,7 @@ export async function initUstanomiNativeShell(callbacks = {}) {
 	const statusBar = getCapacitorPlugin("StatusBar");
 	if (statusBar && typeof statusBar.setBackgroundColor === "function") {
 		try {
-			await statusBar.setBackgroundColor({ color: "#153E49" });
+			await statusBar.setBackgroundColor({ color: "#0A0F1D" });
 		} catch {
 			// Ignore on web
 		}
@@ -2690,6 +2798,8 @@ export const UstanomiNative = Object.freeze({
 	captureFieldPhoto,
 	getCurrentRadarLocation,
 	openSecurePaymentOrLegalUrl,
+	createTouchWetSignatureProof,
+	evaluateMobileViewportErgonomics,
 	createSignaturePad,
 	initUstanomiNativeShell,
 });

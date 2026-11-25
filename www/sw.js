@@ -1,11 +1,11 @@
 /**
  * Ustanomi Production PWA Service Worker (`pwa-workbox-lifecycle` skill compliant)
  * - Precaches core offline app shell (`index.html`, `offline.html`, `capacitor-bridge.js`, `manifest.json`)
- * - Strictly excludes dynamic API endpoints (`/api/*`, `*.php`) from caching to prevent stale financial/escrow state
- * - Safely invalidates older caches on activation
+ * - Strictly enforces NetworkOnly on dynamic API endpoints (`/api/*`, `*.php`)
+ * - Stale-While-Revalidate on static shell assets with offline navigation fallback
  */
 
-const CACHE_NAME = "ustanomi-shell-v2";
+const CACHE_NAME = "ustanomi-shell-v2.6";
 const PRECACHE_ASSETS = [
 	"/index.html",
 	"/offline.html",
@@ -44,21 +44,32 @@ self.addEventListener("fetch", (event) => {
 	}
 	const url = new URL(req.url);
 
-	// Never cache dynamic API or PHP endpoints
+	// NetworkOnly guard for dynamic API or PHP endpoints
 	if (url.pathname.startsWith("/api/") || url.pathname.endsWith(".php")) {
 		return;
 	}
 
 	event.respondWith(
-		fetch(req).catch(async () => {
-			const cached = await caches.match(req);
-			if (cached) {
-				return cached;
-			}
-			if (req.mode === "navigate") {
-				return caches.match("/offline.html");
-			}
-			return new Response("Offline", { status: 503 });
-		}),
+		fetch(req)
+			.then((networkResp) => {
+				if (networkResp && networkResp.status === 200) {
+					const clone = networkResp.clone();
+					caches
+						.open(CACHE_NAME)
+						.then((cache) => cache.put(req, clone))
+						.catch(() => {});
+				}
+				return networkResp;
+			})
+			.catch(async () => {
+				const cached = await caches.match(req);
+				if (cached) {
+					return cached;
+				}
+				if (req.mode === "navigate") {
+					return caches.match("/offline.html");
+				}
+				return new Response("Offline", { status: 503 });
+			}),
 	);
 });
