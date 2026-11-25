@@ -350,12 +350,17 @@ export function resolveUniversalProfessionCluster(query) {
 		return UNIVERSAL_PROFESSION_CLUSTERS[0];
 	}
 	const q = query.trim().toLocaleLowerCase("tr-TR");
+	const tokens = q.split(/\s+/).filter((t) => t.length >= 3);
 	for (const cluster of UNIVERSAL_PROFESSION_CLUSTERS) {
+		const haystack =
+			`${cluster.titleTr} ${cluster.professions.join(" ")}`.toLocaleLowerCase(
+				"tr-TR",
+			);
 		if (
 			cluster.id.toLocaleLowerCase("tr-TR") === q ||
 			cluster.code.toLocaleLowerCase("tr-TR") === q ||
-			cluster.titleTr.toLocaleLowerCase("tr-TR").includes(q) ||
-			cluster.professions.some((p) => p.toLocaleLowerCase("tr-TR").includes(q))
+			haystack.includes(q) ||
+			(tokens.length > 0 && tokens.every((tok) => haystack.includes(tok)))
 		) {
 			return cluster;
 		}
