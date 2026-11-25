@@ -1544,6 +1544,26 @@
         renderInstagramProfile();
         renderB2bTenders();
 
+        // Support deep-linking to any tab or drawer state via ?tab=...&adv=1&sync=1
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedTab = urlParams.get('tab');
+        if (requestedTab) {
+            const tabBtn = document.querySelector(`.nav-btn[data-target="${requestedTab}"]`);
+            if (tabBtn) tabBtn.click();
+        }
+        if (urlParams.get('adv') === '1') {
+            const drawer = document.getElementById('adv-filters-drawer');
+            if (drawer) drawer.style.display = 'block';
+        }
+        if (urlParams.get('sync') === 'sahibinden') {
+            const presetBtn = document.querySelector('.quick-import-preset');
+            if (presetBtn) presetBtn.click();
+        }
+        if (urlParams.get('auth') === 'forgot') {
+            const forgotBtn = document.querySelector('.auth-tab-btn[data-auth-mode="forgot"]');
+            if (forgotBtn) forgotBtn.click();
+        }
+
         // Bind Armut/Thumbtack Search Filters, Scope Wizard & Global Currency Switcher
         const refreshAllFeeds = () => {
             renderUrgentFeed();
