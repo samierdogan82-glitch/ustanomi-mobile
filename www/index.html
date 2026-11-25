@@ -396,13 +396,65 @@
                     <input type="checkbox" id="filter-open-only"> 🟢 Sadece Açık
                 </label>
                 <label style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#FDE68A;">
-                    <input type="checkbox" id="filter-kyc-only" checked> 🪪 Kimlik (KYC) Onaylı
+                    <input type="checkbox" id="filter-kyc-only" checked> 🪪 Kimlik (KYC)
                 </label>
                 <select id="filter-sort-select" class="input" style="width:auto;padding:5px 8px;font-size:0.72rem;">
                     <option value="TRENDING">🔥 Sırala: En Trend</option>
-                    <option value="PRICE_ASC">💰 En Uygun Fiyat</option>
+                    <option value="PRICE_ASC">💰 En Düşük Fiyat</option>
+                    <option value="PRICE_DESC">💎 Kapsamlı Paket</option>
+                    <option value="RATING_DESC">⭐ En Yüksek Puan</option>
                     <option value="FASTEST_ETA">⚡ En Hızlı Varış</option>
+                    <option value="DISTANCE_ASC">📍 En Yakın (km)</option>
                 </select>
+                <button type="button" id="toggle-adv-filters-btn" class="cluster-chip" style="padding:5px 9px;font-size:0.71rem;">
+                    🎛️ Tüm Filtreler (12)
+                </button>
+            </div>
+            <!-- 12-Dimension Full Advanced Filter Drawer (Armut + Sahibinden + B2B Standard) -->
+            <div id="adv-filters-drawer" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.16);font-size:0.72rem;">
+                <div class="bid-row" style="margin-bottom:6px;">
+                    <select id="filter-distance-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
+                        <option value="0">📍 Mesafe: Tüm Yarıçap</option>
+                        <option value="5">📍 En Fazla 5 km Yakın</option>
+                        <option value="15">📍 En Fazla 15 km</option>
+                        <option value="50">📍 En Fazla 50 km</option>
+                    </select>
+                    <select id="filter-warranty-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
+                        <option value="0">🛡️ Garanti: Tümü</option>
+                        <option value="6">🛡️ En Az 6 Ay Garanti</option>
+                        <option value="12">🛡️ En Az 12 Ay Garanti</option>
+                        <option value="24">🛡️ En Az 24 Ay Garanti</option>
+                    </select>
+                </div>
+                <div class="bid-row" style="margin-bottom:6px;">
+                    <select id="filter-origin-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
+                        <option value="ALL">⚙️ Parça/Malzeme: Tümü</option>
+                        <option value="ORIGINAL_OEM">⚙️ Orijinal OEM Parça</option>
+                        <option value="CERTIFIED_EQUIVALENT">⚙️ TSE Garantili Muadil</option>
+                        <option value="CUSTOM_MANUFACTURED">⚙️ Sıfır Özel İmalat</option>
+                    </select>
+                    <select id="filter-rating-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
+                        <option value="0">⭐ Puan: Tümü</option>
+                        <option value="4.5">⭐ 4.5+ Yıldız</option>
+                        <option value="4.8">⭐ 4.8+ Yıldız</option>
+                        <option value="4.9">⭐ 4.9+ Elit Uzman</option>
+                    </select>
+                </div>
+                <div class="bid-row" style="margin-bottom:6px;">
+                    <input type="number" id="filter-min-price" class="input" style="font-size:0.72rem;padding:6px 8px;" placeholder="Min Bütçe (₺)" min="0" step="100">
+                    <input type="number" id="filter-max-price" class="input" style="font-size:0.72rem;padding:6px 8px;" placeholder="Maks Bütçe (₺)" min="0" step="100">
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;color:#E2E8F0;">
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="checkbox" id="filter-efatura-only"> 🧾 GİB e-Fatura Kesilir
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="checkbox" id="filter-installment-only"> 💳 Kredi Kartına 12 Taksit
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#FDE68A;">
+                        <input type="checkbox" id="filter-onduty-only"> ⚡ Sadece 7/24 Nöbetçi
+                    </label>
+                </div>
             </div>
             <!-- Armut-Style 3-Second Smart Scope & Quote Estimator -->
             <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;font-size:0.73rem;">
@@ -483,9 +535,14 @@
                 </p>
                 <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
                     <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.sahibinden.com/maslak-oto-sanayi-servis" data-title="Maslak Oto Sanayi &amp; Orijinal Yedek Parça">🟡 Sahibinden</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.arabam.com/galeri/maslak-ekspertiz-motor" data-title="Arabam Oto Ekspertiz &amp; Motor Revizyon">🚘 Arabam.com</button>
                     <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.instagram.com/elif_visual_studio" data-title="Elif Visual Studio • 4K Reels &amp; Fotoğraf">📸 Instagram</button>
                     <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.tiktok.com/@selim_tesisat_pro" data-title="Selim Usta • Termal Su Kaçağı &amp; Kombi">🎬 TikTok</button>
                     <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.google.com/maps/place/kaan_oto_kurtarma" data-title="Kaan 7/24 Oto Çekici &amp; Yol Yardım">📍 Google Harita</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://wa.me/905320000000" data-title="WhatsApp Business Hızlı Yedek Parça Kataloğu">💬 WhatsApp</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.trendyol.com/magaza/ostim-yapi-elektrik" data-title="Trendyol &amp; Hepsiburada Toptan Yapı Market">🟠 Trendyol/HB</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.armut.com/hizmetveren/ustanomi-elit-servis" data-title="Armut &amp; Thumbtack Onaylı Hizmet Profili">🟢 Armut/Global</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.youtube.com/@ustanomi_sanayi_tv" data-title="YouTube Shorts &amp; LinkedIn Mühendislik Vitrini">▶️ YouTube/In</button>
                 </div>
                 <div class="bid-row">
                     <input type="url" id="ext-sync-url-input" class="input" placeholder="https://www.sahibinden.com/... veya instagram.com/...">
@@ -669,6 +726,15 @@
                 city: document.getElementById('market-city-select')?.value || 'ALL',
                 onlyOpenNow: Boolean(document.getElementById('filter-open-only')?.checked),
                 onlyKycVerified: Boolean(document.getElementById('filter-kyc-only')?.checked),
+                onlyEfatura: Boolean(document.getElementById('filter-efatura-only')?.checked),
+                onlyInstallment: Boolean(document.getElementById('filter-installment-only')?.checked),
+                onlyOnDuty247: Boolean(document.getElementById('filter-onduty-only')?.checked),
+                maxDistanceKm: Number(document.getElementById('filter-distance-select')?.value || 0),
+                minWarrantyMonths: Number(document.getElementById('filter-warranty-select')?.value || 0),
+                partOriginFilter: document.getElementById('filter-origin-select')?.value || 'ALL',
+                minRating: Number(document.getElementById('filter-rating-select')?.value || 0),
+                minPriceTl: Number(document.getElementById('filter-min-price')?.value || 0),
+                maxPriceTl: Number(document.getElementById('filter-max-price')?.value || 0),
                 sortBy: document.getElementById('filter-sort-select')?.value || 'TRENDING'
             };
         }
@@ -1490,7 +1556,32 @@
             triggerHapticImpact('LIGHT');
             refreshAllFeeds();
         });
-        ['market-search-input', 'market-city-select', 'filter-open-only', 'filter-kyc-only', 'filter-sort-select', 'wizard-scope-select', 'wizard-materials-check'].forEach((id) => {
+        document.getElementById('toggle-adv-filters-btn')?.addEventListener('click', () => {
+            const drawer = document.getElementById('adv-filters-drawer');
+            if (drawer) {
+                drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+                triggerHapticImpact('LIGHT');
+            }
+        });
+
+        [
+            'market-search-input',
+            'market-city-select',
+            'filter-open-only',
+            'filter-kyc-only',
+            'filter-sort-select',
+            'filter-distance-select',
+            'filter-warranty-select',
+            'filter-origin-select',
+            'filter-rating-select',
+            'filter-min-price',
+            'filter-max-price',
+            'filter-efatura-only',
+            'filter-installment-only',
+            'filter-onduty-only',
+            'wizard-scope-select',
+            'wizard-materials-check'
+        ].forEach((id) => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', refreshAllFeeds);

@@ -19,10 +19,12 @@ import {
 	evaluatePasswordStrength,
 	evaluateProAvailability,
 	evaluateWorkflowRoleAccess,
+	FULL_MARKETPLACE_FILTER_SCHEMA,
 	filterAndSearchMarketplace,
 	flushOfflineQueue,
 	formatInstagramProShowcase,
 	GLOBAL_LOCALES,
+	generateGibEfaturaQrSummary,
 	getOfflineQueue,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
@@ -31,11 +33,13 @@ import {
 	redactKvkkSensitiveText,
 	resolveOfferServiceCategory,
 	resolveUniversalProfessionCluster,
+	sanitizeInAppChatMessage,
 	UNIVERSAL_PROFESSION_CLUSTERS,
 	validateKycRegistrationPayload,
 	validateTurkishIban,
 	validateTurkishTckn,
 	validateTurkishVkn,
+	verifyWaybillAndEscrowRelease,
 } from "../www/capacitor-bridge.js";
 
 // Simple in-memory localStorage shim for Node test runner
@@ -417,13 +421,17 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 	});
 
 	it("auto-imports commercial profiles, ads, prices, and hours from Sahibinden, Instagram, TikTok, and Google Maps", () => {
-		assert.equal(Object.keys(EXTERNAL_COMMERCE_CONNECTORS).length, 6);
+		assert.equal(Object.keys(EXTERNAL_COMMERCE_CONNECTORS).length, 10);
 
-		// Detect Sahibinden store URL and reject untrusted SSRF URLs
+		// Detect Sahibinden & Arabam.com store URLs and reject untrusted SSRF URLs
 		const sahibindenConn = detectExternalPlatformConnector(
 			"https://www.sahibinden.com/maslak-bimmer-oto-servis",
 		);
 		assert.equal(sahibindenConn?.connector.code, "SAHIBINDEN_STORE");
+		const arabamConn = detectExternalPlatformConnector(
+			"https://www.arabam.com/galeri/maslak-ekspertiz",
+		);
+		assert.equal(arabamConn?.connector.code, "ARABAM_OTO_SANAYI");
 		assert.equal(
 			detectExternalPlatformConnector(
 				"http://169.254.169.254/latest/meta-data",
@@ -457,6 +465,91 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 			links.sahibindenAdEmbedSnippetTr.includes("USTANOMI GÜVENLİ HAVUZ"),
 			true,
 		);
+	});
+
+	it("enforces 12-dimension advanced filters, Cargo Waybill Escrow guard, GİB e-Fatura QR, and Chat Anti-Leak shield", () => {
+		assert.equal(FULL_MARKETPLACE_FILTER_SCHEMA.sortOptions.length, 6);
+
+		const listings = [
+			{
+				id: "item_oem",
+				title: "Orijinal OEM DSG Kavrama",
+				priceTl: 14000,
+				distanceKm: 4,
+				warrantyMonths: 24,
+				partOriginType: "ORIGINAL_OEM",
+				efaturaSupported: true,
+				installmentSupported: true,
+				availabilityMode: "ON_DUTY_24_7",
+				isProOpen: true,
+				isKycVerified: true,
+				rating: 4.9,
+			},
+			{
+				id: "item_equiv",
+				title: "Muadil Fren Balatası",
+				priceTl: 2200,
+				distanceKm: 35,
+				warrantyMonths: 6,
+				partOriginType: "CERTIFIED_EQUIVALENT",
+				efaturaSupported: false,
+				installmentSupported: false,
+				availabilityMode: "OPEN",
+				isProOpen: true,
+				isKycVerified: true,
+				rating: 4.6,
+			},
+		];
+
+		const filtered12D = filterAndSearchMarketplace(listings, {
+			maxDistanceKm: 10,
+			minWarrantyMonths: 12,
+			partOriginFilter: "ORIGINAL_OEM",
+			onlyEfatura: true,
+			onlyInstallment: true,
+			onlyOnDuty247: true,
+			minPriceTl: 5000,
+			maxPriceTl: 20000,
+		});
+		assert.equal(filtered12D.length, 1);
+		assert.equal(filtered12D[0].id, "item_oem");
+
+		// Cargo Waybill & Delivery Escrow Guard
+		const unshipped = verifyWaybillAndEscrowRelease({
+			carrierCode: "YURTICI",
+			trackingNumber: "",
+			buyerDeliveryConfirmed: false,
+			hasSignatureOrOtp: false,
+		});
+		assert.equal(unshipped.canReleaseEscrow, false);
+
+		const delivered = verifyWaybillAndEscrowRelease({
+			carrierCode: "YURTICI",
+			trackingNumber: "YK-99887766",
+			desiWeight: 12,
+			buyerDeliveryConfirmed: true,
+			hasSignatureOrOtp: true,
+		});
+		assert.equal(delivered.canReleaseEscrow, true);
+
+		// GİB UBL-TR 1.2 e-Fatura QR summary
+		const efatura = generateGibEfaturaQrSummary({
+			proformaRefCode: "PRF-2026-101",
+			supplierVknOrTckn: "10000000146",
+			buyerVknOrTckn: "10000000146",
+			subtotalTl: 10000,
+			kdvRatePercent: 20,
+		});
+		assert.equal(efatura.payableTotalTl, 12000);
+		assert.equal(efatura.qrJsonPayload.includes("EARSIVFATURA"), true);
+
+		// In-App Chat Anti-Leak Guard before Escrow lock
+		const leakAttempt = sanitizeInAppChatMessage(
+			"Havuz dışından bana 0532 111 22 33 numarasından ulaş, IBAN TR33 0006 1005 1978 6457 8413 26",
+			false,
+		);
+		assert.equal(leakAttempt.blockedLeakAttempt, true);
+		assert.equal(leakAttempt.cleanMessage.includes("0532 111 22 33"), false);
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

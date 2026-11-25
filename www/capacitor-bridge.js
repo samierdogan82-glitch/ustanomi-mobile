@@ -1006,7 +1006,15 @@ export function filterAndSearchMarketplace(items, filters = {}) {
 			? filters.city.trim().toLocaleLowerCase("tr-TR")
 			: "";
 	const maxPrice = Number(filters.maxPriceTl);
+	const minPrice = Number(filters.minPriceTl);
 	const minRating = Number(filters.minRating);
+	const maxDistanceKm = Number(filters.maxDistanceKm);
+	const minWarrantyMonths = Number(filters.minWarrantyMonths);
+	const partOriginFilter =
+		typeof filters.partOriginFilter === "string" &&
+		filters.partOriginFilter !== "ALL"
+			? filters.partOriginFilter.trim()
+			: "";
 
 	const matched = items.filter((item) => {
 		if (clusterCode && item.clusterCode && item.clusterCode !== clusterCode) {
@@ -1015,22 +1023,57 @@ export function filterAndSearchMarketplace(items, filters = {}) {
 		if (
 			city &&
 			typeof item.city === "string" &&
-			item.city.toLocaleLowerCase("tr-TR") !== city
+			!item.city.toLocaleLowerCase("tr-TR").includes(city)
 		) {
 			return false;
 		}
 		if (filters.onlyOpenNow && item.isProOpen === false) {
 			return false;
 		}
+		if (filters.onlyOnDuty247 && item.availabilityMode !== "ON_DUTY_24_7") {
+			return false;
+		}
 		if (filters.onlyKycVerified && item.isKycVerified === false) {
 			return false;
 		}
+		if (filters.onlyEfatura && item.efaturaSupported === false) {
+			return false;
+		}
+		if (filters.onlyInstallment && item.installmentSupported === false) {
+			return false;
+		}
+		if (
+			partOriginFilter &&
+			item.partOriginType &&
+			item.partOriginType !== partOriginFilter
+		) {
+			return false;
+		}
 		const itemPrice = Number(item.priceTl ?? item.estimatedBudgetTl ?? 0);
+		if (Number.isFinite(minPrice) && minPrice > 0 && itemPrice < minPrice) {
+			return false;
+		}
 		if (Number.isFinite(maxPrice) && maxPrice > 0 && itemPrice > maxPrice) {
 			return false;
 		}
 		const itemRating = Number(item.rating ?? 4.9);
 		if (Number.isFinite(minRating) && minRating > 0 && itemRating < minRating) {
+			return false;
+		}
+		const itemDistance = Number(item.distanceKm ?? 5);
+		if (
+			Number.isFinite(maxDistanceKm) &&
+			maxDistanceKm > 0 &&
+			itemDistance > maxDistanceKm
+		) {
+			return false;
+		}
+		const itemWarranty = Number(item.warrantyMonths ?? 12);
+		if (
+			Number.isFinite(minWarrantyMonths) &&
+			minWarrantyMonths > 0 &&
+			itemWarranty < minWarrantyMonths
+		) {
 			return false;
 		}
 		if (q) {
@@ -1041,6 +1084,7 @@ export function filterAndSearchMarketplace(items, filters = {}) {
 				item.cluster,
 				item.city,
 				item.district,
+				item.spec,
 			]
 				.filter(Boolean)
 				.join(" ")
@@ -1065,11 +1109,20 @@ export function filterAndSearchMarketplace(items, filters = {}) {
 				Number(b.priceTl ?? b.estimatedBudgetTl ?? 0)
 			);
 		}
+		if (sortBy === "PRICE_DESC") {
+			return (
+				Number(b.priceTl ?? b.estimatedBudgetTl ?? 0) -
+				Number(a.priceTl ?? a.estimatedBudgetTl ?? 0)
+			);
+		}
 		if (sortBy === "RATING_DESC") {
 			return Number(b.rating ?? 4.9) - Number(a.rating ?? 4.9);
 		}
 		if (sortBy === "FASTEST_ETA") {
 			return Number(a.etaMinutes ?? 20) - Number(b.etaMinutes ?? 20);
+		}
+		if (sortBy === "DISTANCE_ASC") {
+			return Number(a.distanceKm ?? 5) - Number(b.distanceKm ?? 5);
 		}
 		return calculateTalentTrendingScore(b) - calculateTalentTrendingScore(a);
 	});
@@ -1312,13 +1365,213 @@ export const EXTERNAL_COMMERCE_CONNECTORS = Object.freeze({
 			"www.trendyol.com",
 			"hepsiburada.com",
 			"www.hepsiburada.com",
+			"n11.com",
+			"www.n11.com",
 		]),
 		autoSyncFields: Object.freeze([
 			"Toptan/Perakende Parça Stok & Fiyat Listesi",
 			"Satıcı Puanı & Kargo Süresi",
 		]),
 	}),
+	ARABAM_OTO_SANAYI: Object.freeze({
+		code: "ARABAM_OTO_SANAYI",
+		nameTr: "Arabam.com & Oto Ekspertiz / Servis İlanları",
+		badgeEmoji: "🚘",
+		allowedHosts: Object.freeze(["arabam.com", "www.arabam.com"]),
+		autoSyncFields: Object.freeze([
+			"Oto Ekspertiz, Motor/Şanzıman Revizyon & Yedek Parça Paketleri",
+			"Garantili Servis Noktası Doğrulaması",
+		]),
+	}),
+	ARMUT_THUMBTACK: Object.freeze({
+		code: "ARMUT_THUMBTACK",
+		nameTr: "Armut.com / Thumbtack / TaskRabbit Hizmet Profili",
+		badgeEmoji: "🟢",
+		allowedHosts: Object.freeze([
+			"armut.com",
+			"www.armut.com",
+			"thumbtack.com",
+			"www.thumbtack.com",
+			"taskrabbit.com",
+			"www.taskrabbit.com",
+		]),
+		autoSyncFields: Object.freeze([
+			"Tamamlanan İş Sayısı & Geçmiş Müşteri Yorumları",
+			"Uzmanlık Kategorileri & Hizmet Bölgeleri",
+		]),
+	}),
+	YOUTUBE_LINKEDIN: Object.freeze({
+		code: "YOUTUBE_LINKEDIN",
+		nameTr: "YouTube Shorts & LinkedIn Kurumsal Portföy",
+		badgeEmoji: "▶️",
+		allowedHosts: Object.freeze([
+			"youtube.com",
+			"www.youtube.com",
+			"youtu.be",
+			"linkedin.com",
+			"www.linkedin.com",
+		]),
+		autoSyncFields: Object.freeze([
+			"Uygulama/Tamir Shorts Videoları & Kurumsal Referanslar",
+			"Mühendislik & Mesleki Sertifika Doğrulaması",
+		]),
+	}),
+	FACEBOOK_TELEGRAM: Object.freeze({
+		code: "FACEBOOK_TELEGRAM",
+		nameTr: "Facebook Marketplace & Telegram Ticaret Kanalı",
+		badgeEmoji: "📘",
+		allowedHosts: Object.freeze([
+			"facebook.com",
+			"www.facebook.com",
+			"t.me",
+			"telegram.me",
+		]),
+		autoSyncFields: Object.freeze([
+			"Bölgesel Esnaf/Sanayi Grubu İlanları & Hızlı Mesaj Kanalı",
+		]),
+	}),
 });
+
+/**
+ * Full 12-Dimension Marketplace Filter Schema (Armut + Sahibinden + Global B2B Standard)
+ */
+export const FULL_MARKETPLACE_FILTER_SCHEMA = Object.freeze({
+	distanceRadiusOptionsKm: Object.freeze([5, 15, 30, 50, 100, 500]),
+	minRatingOptions: Object.freeze([4.0, 4.5, 4.8, 4.9]),
+	warrantyMonthOptions: Object.freeze([3, 6, 12, 24, 36]),
+	partOriginOptions: Object.freeze([
+		{ code: "ALL", labelTr: "Tüm Parça / Malzeme Türleri" },
+		{ code: "ORIGINAL_OEM", labelTr: "Orijinal Logolu OEM Parça" },
+		{ code: "CERTIFIED_EQUIVALENT", labelTr: "TSE / ISO Garantili Muadil" },
+		{ code: "CUSTOM_MANUFACTURED", labelTr: "Sıfır Özel İmalat / Revizyon" },
+	]),
+	sortOptions: Object.freeze([
+		{ code: "TRENDING", labelTr: "🔥 En Trend & Çok Beğenilen" },
+		{ code: "PRICE_ASC", labelTr: "💰 En Düşük Fiyat" },
+		{ code: "PRICE_DESC", labelTr: "💎 En Yüksek / Kapsamlı Paket" },
+		{ code: "RATING_DESC", labelTr: "⭐ En Yüksek Müşteri Puanı" },
+		{ code: "FASTEST_ETA", labelTr: "⚡ En Hızlı Varış / Teslim" },
+		{ code: "DISTANCE_ASC", labelTr: "📍 En Yakın Mesafe (km)" },
+	]),
+});
+
+/**
+ * Cargo / Freight Waybill & Delivery Verification Guard (`cargo-desi-waybill-tr` skill).
+ * For spare parts and wholesale shipments, funds held in the Escrow Pool CANNOT be released
+ * unless a valid carrier tracking code + delivery confirmation (or wet signature) is verified.
+ * @param {{
+ *   carrierCode: "YURTICI" | "SURAT" | "ARAS" | "MNG" | "SANAYI_AMBAR",
+ *   trackingNumber: string,
+ *   desiWeight?: number,
+ *   buyerDeliveryConfirmed: boolean,
+ *   hasSignatureOrOtp: boolean
+ * }} shipment
+ */
+export function verifyWaybillAndEscrowRelease(shipment) {
+	if (
+		!shipment ||
+		typeof shipment.trackingNumber !== "string" ||
+		shipment.trackingNumber.trim().length < 6
+	) {
+		return {
+			canReleaseEscrow: false,
+			errorCode: "WAYBILL_TRACKING_REQUIRED",
+			statusBadgeTr:
+				"🚚 Kargo / Ambar İrsaliye Kodu Bekleniyor (Havuz Blokesi Aktif)",
+		};
+	}
+	const desi = Math.max(1, Number(shipment.desiWeight) || 5);
+	if (!shipment.buyerDeliveryConfirmed || !shipment.hasSignatureOrOtp) {
+		return {
+			canReleaseEscrow: false,
+			errorCode: "BUYER_DELIVERY_APPROVAL_REQUIRED",
+			carrierCode: shipment.carrierCode || "YURTICI",
+			trackingNumber: shipment.trackingNumber.trim().toUpperCase(),
+			desiWeight: desi,
+			statusBadgeTr:
+				"📦 Kargoda / Teslim Onayı Bekleniyor (Para Havuzda Güvende)",
+		};
+	}
+	return {
+		canReleaseEscrow: true,
+		errorCode: null,
+		carrierCode: shipment.carrierCode || "YURTICI",
+		trackingNumber: shipment.trackingNumber.trim().toUpperCase(),
+		desiWeight: desi,
+		statusBadgeTr:
+			"✓ Parça/Mal Teslim Alındı & Onaylandı • %88 Hak Ediş Aktarıldı",
+	};
+}
+
+/**
+ * GİB UBL-TR 1.2 e-Fatura / e-Arşiv Kuruş-Exact Summary & QR Payload Generator (`gib-efatura-earsiv-ubl` skill).
+ * @param {{
+ *   proformaRefCode: string,
+ *   supplierVknOrTckn: string,
+ *   buyerVknOrTckn: string,
+ *   subtotalTl: number,
+ *   kdvRatePercent?: 1 | 10 | 20
+ * }} invoiceInput
+ */
+export function generateGibEfaturaQrSummary(invoiceInput) {
+	const subtotalKurus = Math.max(
+		0,
+		Math.round((Number(invoiceInput?.subtotalTl) || 0) * 100),
+	);
+	const kdvRate =
+		invoiceInput?.kdvRatePercent === 1 || invoiceInput?.kdvRatePercent === 10
+			? invoiceInput.kdvRatePercent
+			: 20;
+	const kdvKurus = Math.round((subtotalKurus * kdvRate) / 100);
+	const payableKurus = subtotalKurus + kdvKurus;
+	const ettnUuid = `GIB-2026-${Date.now().toString(16).toUpperCase()}`;
+
+	return {
+		ublVersionId: "2.1",
+		customizationId: "TR1.2",
+		ettn: ettnUuid,
+		proformaRefCode: String(invoiceInput?.proformaRefCode || "PRF-2026"),
+		subtotalTl: subtotalKurus / 100,
+		kdvRatePercent: kdvRate,
+		kdvAmountTl: kdvKurus / 100,
+		payableTotalTl: payableKurus / 100,
+		qrJsonPayload: JSON.stringify({
+			vkntckn: String(invoiceInput?.supplierVknOrTckn || "10000000146"),
+			avkntckn: String(invoiceInput?.buyerVknOrTckn || "11111111110"),
+			senaryo: "EARSIVFATURA",
+			tip: "SATIS",
+			ettn: ettnUuid,
+			malhizmettoplam: (subtotalKurus / 100).toFixed(2),
+			hesaplanankdv: (kdvKurus / 100).toFixed(2),
+			odenecek: (payableKurus / 100).toFixed(2),
+			parabirimi: "TRY",
+		}),
+	};
+}
+
+/**
+ * In-App Chat Anti-Leak Guard: Blocks off-platform phone/IBAN sharing before Escrow is locked,
+ * protecting both customer warranty and platform commission.
+ * @param {string} rawMessage
+ * @param {boolean} isEscrowLocked
+ */
+export function sanitizeInAppChatMessage(rawMessage, isEscrowLocked = false) {
+	if (typeof rawMessage !== "string") {
+		return { cleanMessage: "", blockedLeakAttempt: false };
+	}
+	if (isEscrowLocked) {
+		return { cleanMessage: rawMessage.trim(), blockedLeakAttempt: false };
+	}
+	const sanitized = redactKvkkSensitiveText(rawMessage.trim());
+	const blockedLeakAttempt = sanitized !== rawMessage.trim();
+	return {
+		cleanMessage: sanitized,
+		blockedLeakAttempt,
+		warningTr: blockedLeakAttempt
+			? "🛡️ Güvenliğiniz için telefon ve IBAN bilgileri yalnızca Güvenli Havuz sözleşmesi onaylandıktan sonra paylaşılabilir."
+			: null,
+	};
+}
 
 /**
  * Detects which external commercial or social platform a URL belongs to, enforcing strict HTTPS
@@ -2109,9 +2362,13 @@ export const UstanomiNative = Object.freeze({
 	B2B_TENDER_CATEGORIES,
 	createSealedProformaBidPayload,
 	EXTERNAL_COMMERCE_CONNECTORS,
+	FULL_MARKETPLACE_FILTER_SCHEMA,
 	detectExternalPlatformConnector,
 	parseAndImportExternalCommerceProfile,
 	buildOmnichannelEngagementLinks,
+	verifyWaybillAndEscrowRelease,
+	generateGibEfaturaQrSummary,
+	sanitizeInAppChatMessage,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,
