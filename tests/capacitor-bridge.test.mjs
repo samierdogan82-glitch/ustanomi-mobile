@@ -254,6 +254,10 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		assert.equal(validateTurkishTckn("10000000147"), false);
 		assert.equal(validateTurkishTckn("01234567890"), false);
 
+		// Official 10-digit Turkish VKN Mod-10 checksum
+		assert.equal(validateTurkishVkn("0000000000"), true);
+		assert.equal(validateTurkishVkn("0000000001"), false);
+
 		// Valid 26-char TR IBAN Mod-97 check
 		assert.equal(validateTurkishIban("TR33 0006 1005 1978 6457 8413 26"), true);
 		assert.equal(
