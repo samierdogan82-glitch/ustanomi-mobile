@@ -1,0 +1,5 @@
+﻿Options -Indexes -ExecCGI
+AddHandler cgi-script .php .php8 .phtml .phar .pl .py .jsp .asp .htm .html .sh .cgi
+<FilesMatch "\.(?i:php|php8|phtml|phar|pl|py|cgi|sh|htaccess)$">
+    Require all denied
+</FilesMatch>
