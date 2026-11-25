@@ -350,7 +350,10 @@ export function resolveUniversalProfessionCluster(query) {
 		return UNIVERSAL_PROFESSION_CLUSTERS[0];
 	}
 	const q = query.trim().toLocaleLowerCase("tr-TR");
-	const tokens = q.split(/\s+/).filter((t) => t.length >= 3);
+	const tokens = q.split(/[\s,&/•-]+/).filter((t) => t.length >= 3);
+	let bestCluster = UNIVERSAL_PROFESSION_CLUSTERS[0];
+	let bestScore = 0;
+
 	for (const cluster of UNIVERSAL_PROFESSION_CLUSTERS) {
 		const haystack =
 			`${cluster.titleTr} ${cluster.professions.join(" ")}`.toLocaleLowerCase(
@@ -359,13 +362,22 @@ export function resolveUniversalProfessionCluster(query) {
 		if (
 			cluster.id.toLocaleLowerCase("tr-TR") === q ||
 			cluster.code.toLocaleLowerCase("tr-TR") === q ||
-			haystack.includes(q) ||
-			(tokens.length > 0 && tokens.every((tok) => haystack.includes(tok)))
+			haystack.includes(q)
 		) {
 			return cluster;
 		}
+		let score = 0;
+		for (const tok of tokens) {
+			if (haystack.includes(tok)) {
+				score += 1;
+			}
+		}
+		if (score > bestScore) {
+			bestScore = score;
+			bestCluster = cluster;
+		}
 	}
-	return UNIVERSAL_PROFESSION_CLUSTERS[0];
+	return bestCluster;
 }
 
 /**
