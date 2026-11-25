@@ -19,11 +19,11 @@
 		"allowMixedContent": false,
 		"captureInput": true,
 		"webContentsDebuggingEnabled": false,
-		"backgroundColor": "#0A0F1D"
+		"backgroundColor": "#FFFFFF"
 	},
 	"ios": {
 		"contentInset": "automatic",
-		"backgroundColor": "#0A0F1D",
+		"backgroundColor": "#FFFFFF",
 		"limitsNavigationsToAppBoundDomains": true,
 		"scheme": "Ustanomi"
 	},
@@ -31,14 +31,14 @@
 		"SplashScreen": {
 			"launchShowDuration": 1200,
 			"launchAutoHide": true,
-			"backgroundColor": "#0A0F1D",
+			"backgroundColor": "#FFFFFF",
 			"androidSplashResourceName": "splash",
 			"androidScaleType": "CENTER_CROP",
 			"showSpinner": false
 		},
 		"StatusBar": {
-			"style": "DARK",
-			"backgroundColor": "#0A0F1D",
+			"style": "LIGHT",
+			"backgroundColor": "#FFFFFF",
 			"overlaysWebView": false
 		},
 		"Keyboard": {

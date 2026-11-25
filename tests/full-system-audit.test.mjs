@@ -239,10 +239,8 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 			"utf8",
 		);
 		assert.equal(indexHtml.includes("overflow-x: hidden"), true);
-		assert.equal(
-			indexHtml.includes("grid-template-columns: minmax(0, 1fr) 46px"),
-			true,
-		);
+		assert.equal(indexHtml.includes("-apple-system"), true);
+		assert.equal(indexHtml.includes("fonts.googleapis"), false);
 		assert.equal(indexHtml.includes("font-size: 16px"), true);
 		assert.equal(indexHtml.includes("syncDiscoverStripVisibility"), true);
 	});

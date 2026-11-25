@@ -2647,7 +2647,7 @@ export function createSignaturePad(canvas) {
 		ctx.lineWidth = 2.6;
 		ctx.lineCap = "round";
 		ctx.lineJoin = "round";
-		ctx.strokeStyle = "#10B981";
+		ctx.strokeStyle = "#262626";
 		ctx.lineTo(pt.x, pt.y);
 		ctx.stroke();
 	};
@@ -2701,7 +2701,7 @@ export async function initUstanomiNativeShell(callbacks = {}) {
 	const statusBar = getCapacitorPlugin("StatusBar");
 	if (statusBar && typeof statusBar.setBackgroundColor === "function") {
 		try {
-			await statusBar.setBackgroundColor({ color: "#0A0F1D" });
+			await statusBar.setBackgroundColor({ color: "#FFFFFF" });
 		} catch {
 			// Ignore on web
 		}

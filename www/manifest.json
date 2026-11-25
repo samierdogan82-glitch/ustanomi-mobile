@@ -6,8 +6,8 @@
 	"start_url": "/index.html",
 	"display": "standalone",
 	"orientation": "portrait",
-	"background_color": "#153E49",
-	"theme_color": "#153E49",
+	"background_color": "#FFFFFF",
+	"theme_color": "#FFFFFF",
 	"icons": [
 		{
 			"src": "https://ustanomi-web-production.up.railway.app/app/icon-192.png",
