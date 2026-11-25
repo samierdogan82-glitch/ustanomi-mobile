@@ -199,4 +199,38 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 		assert.equal(customerWins.resolutionDecision, "FULL_REFUND_TO_CUSTOMER");
 		assert.equal(customerWins.customerRefundTl, 10000);
 	});
+
+	it("verifies Flutter Native layer (flutter_app/) implements all core skills and cloud CI workflow", () => {
+		const pubspec = fs.readFileSync(
+			path.join(projectRoot, "flutter_app/pubspec.yaml"),
+			"utf8",
+		);
+		assert.equal(pubspec.includes("name: ustanomi_flutter"), true);
+
+		const domainDart = fs.readFileSync(
+			path.join(projectRoot, "flutter_app/lib/core/ustanomi_domain.dart"),
+			"utf8",
+		);
+		assert.equal(domainDart.includes("calculateEscrowSplitKurus"), true);
+		assert.equal(domainDart.includes("validateTurkishTckn"), true);
+		assert.equal(domainDart.includes("validateTurkishVkn"), true);
+		assert.equal(domainDart.includes("validateTurkishIban"), true);
+		assert.equal(domainDart.includes("buildB2bProformaContract"), true);
+		assert.equal(domainDart.includes("evaluateCargoWaybillRelease"), true);
+		assert.equal(domainDart.includes("parseExternalCommerceListing"), true);
+
+		const mainDart = fs.readFileSync(
+			path.join(projectRoot, "flutter_app/lib/main.dart"),
+			"utf8",
+		);
+		assert.equal(mainDart.includes("PageView.builder"), true);
+		assert.equal(mainDart.includes("FontFeature.tabularFigures()"), true);
+
+		const workflowYml = fs.readFileSync(
+			path.join(projectRoot, "flutter_app/cloud-build-flutter.yml"),
+			"utf8",
+		);
+		assert.equal(workflowYml.includes("build-flutter:"), true);
+		assert.equal(workflowYml.includes("subosito/flutter-action@v2"), true);
+	});
 });

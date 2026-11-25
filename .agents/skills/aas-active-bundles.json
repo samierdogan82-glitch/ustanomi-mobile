@@ -1,0 +1,15 @@
+{
+	"version": "16.0.0",
+	"sourceRepo": "https://github.com/sickn33/agentic-awesome-skills",
+	"projectId": "ustanomi-mobile",
+	"detectedStack": "Capacitor",
+	"activatedBundles": [
+		"Essentials",
+		"Security",
+		"FinTech-ERP",
+		"Mobile-PWA",
+		"UI-UX-Design"
+	],
+	"totalSkillsActivated": 25,
+	"updatedAt": "2026-11-25T01:00:53.402Z"
+}

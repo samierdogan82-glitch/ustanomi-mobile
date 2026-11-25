@@ -3,7 +3,7 @@
 	"appName": "Ustanomi",
 	"webDir": "www",
 	"server": {
-		"url": "https://ustanomi-web-production.up.railway.app/app/",
+		"androidScheme": "https",
 		"cleartext": false,
 		"errorPath": "offline.html",
 		"allowNavigation": [
@@ -19,26 +19,26 @@
 		"allowMixedContent": false,
 		"captureInput": true,
 		"webContentsDebuggingEnabled": false,
-		"backgroundColor": "#153E49"
+		"backgroundColor": "#0A0F1D"
 	},
 	"ios": {
 		"contentInset": "automatic",
-		"backgroundColor": "#153E49",
+		"backgroundColor": "#0A0F1D",
 		"limitsNavigationsToAppBoundDomains": true,
 		"scheme": "Ustanomi"
 	},
 	"plugins": {
 		"SplashScreen": {
-			"launchShowDuration": 1600,
+			"launchShowDuration": 1200,
 			"launchAutoHide": true,
-			"backgroundColor": "#153E49",
+			"backgroundColor": "#0A0F1D",
 			"androidSplashResourceName": "splash",
 			"androidScaleType": "CENTER_CROP",
 			"showSpinner": false
 		},
 		"StatusBar": {
-			"style": "LIGHT",
-			"backgroundColor": "#153E49",
+			"style": "DARK",
+			"backgroundColor": "#0A0F1D",
 			"overlaysWebView": false
 		},
 		"Keyboard": {

@@ -1,0 +1,20 @@
+# ==============================================================================
+# GOOGLE ANTIGRAVITY IDE - SYSTEM RULES (MAXIMUM SPEED & MINIMUM TOKEN PROTOCOL)
+# ==============================================================================
+
+## 1. TOKEN & CONTEXT ECONOMY (CRITICAL)
+- NEVER read entire large files (>300 lines) blindly. First inspect file structure, exports, or line ranges around the target symbol.
+- NEVER read `package-lock.json`, `composer.lock`, `yarn.lock`, `pnpm-lock.yaml`, `node_modules/`, `vendor/`, `dist/`, or `.git/`.
+- When outputting code edits, return ONLY the modified functions/blocks with clear file paths and surrounding 2-3 anchor lines, unless creating a brand-new file or explicitly asked for the full file.
+- Before answering or coding, verify existing project dependencies and stack conventions in `package.json` or `composer.json` instead of introducing redundant libraries.
+
+## 2. ARCHITECTURE & CODE QUALITY STANDARDS
+- **Frontend / PWA**: Prefer TypeScript strict mode, Tailwind CSS utility classes, lightweight state (Zustand / local state), and offline-first resilience (IndexedDB / Dexie.js, Service Worker safe caching, iOS Safari `viewport-fit=cover` and safe-area insets).
+- **Backend / PHP & API**: Enforce strict input validation, prepared statements (PDO), CSRF/XSS protection, RBAC row-level isolation, and clean JSON error envelopes. Never hardcode secrets or API keys.
+- **Performance**: Optimize images (WebP conversion, proper dimensions), debounce user inputs, and avoid N+1 database queries.
+
+## 3. AGENTIC EXECUTION DISCIPLINE
+- **Plan Before Multi-File Edits**: For tasks touching >2 files, output a concise 3-5 bullet execution plan first, then execute cleanly in batches.
+- **Root-Cause First**: On bugs, inspect error logs, network payloads, and recent diffs before proposing fixes. Do not guess.
+- **Self-Verification**: After modifying code, run typecheck/linter (`biome check` or `tsc --noEmit` or `php -l`) when terminal access is available.
+- **Specialist Agent Pipeline (`~/.antigravity/agents/`)**: Follow `architect-auditor` (pre-change impact map via `rg`/`jq`) -> `local-worker` (zero-token local `biome`/`ruff`/`markitdown`/`ollama`) -> `security-shield` (auth/RBAC/input/WAF + `gitleaks`) -> `e2e-verifier` (build + tests + Chrome DevTools/Playwright) -> `lessons-curator` (append root cause to `~/.antigravity/lessons.md`).

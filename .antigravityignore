@@ -1,0 +1,21 @@
+# Antigravity IDE Context Ignore (Prevents Token Burn)
+node_modules/
+vendor/
+dist/
+build/
+.next/
+.nuxt/
+.git/
+*.lock
+package-lock.json
+composer.lock
+pnpm-lock.yaml
+yarn.lock
+*.min.js
+*.min.css
+*.map
+*.log
+*.sqlite
+*.db
+uploads/
+storage/logs/

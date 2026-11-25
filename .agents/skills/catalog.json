@@ -1,0 +1,38 @@
+{
+	"version": "16.0.0",
+	"engine": "vudovn/ag-kit + Sovereign-Core-v16",
+	"agentRolesCount": 20,
+	"workflowsCount": 11,
+	"skills": [
+		{
+			"id": "tailwind-v4-patterns",
+			"title": "Tailwind v4 & OKLCH Design Tokens (ag-kit)",
+			"summary": "CSS-first @theme configuration, OKLCH semantic color tokens, container queries (@container), Bento grids, and zero-CLS responsive layouts."
+		},
+		{
+			"id": "app-builder",
+			"title": "Full-Stack Modular App Builder (ag-kit)",
+			"summary": "End-to-end scaffolding combining multi-tenant DB schema, typed API routes, authentication, and accessible dashboard UI from _mit-kit."
+		},
+		{
+			"id": "mcp-builder",
+			"title": "Stateless MCP v2 Tool & Resource Builder (ag-kit)",
+			"summary": "2026-07-28 Streamable HTTP & stdio JSON-RPC 2.0 MCP server design with strict inputSchema validation and <5ms SQLite WAL caching."
+		},
+		{
+			"id": "skillify",
+			"title": "Autonomous Skill Distillation & Promotion (ag-kit + Voyager)",
+			"summary": "Extracts verified solutions and recurring root-cause fixes into reusable SKILL.md playbooks and Tier-0 executable_skills."
+		},
+		{
+			"id": "simple-english-ste100",
+			"title": "ASD-STE100 Technical Clarity & Compact Prompting (ag-kit)",
+			"summary": "High-signal, zero-fluff imperative technical documentation and agent instructions that minimize token consumption."
+		},
+		{
+			"id": "ui-ux-pro-max",
+			"title": "UI/UX Pro Max Design Intelligence & MASTER.md Generator (nextlevelbuilder/ui-ux-pro-max-skill)",
+			"summary": "Offline BM25 design database for industry palettes, OKLCH/Hex tokens, typography pairings, chart selection, and WCAG 2.1 AA anti-patterns."
+		}
+	]
+}

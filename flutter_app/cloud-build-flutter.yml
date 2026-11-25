@@ -1,0 +1,48 @@
+# Flutter Cloud Build Workflow Template (subosito/flutter-action@v2)
+name: Build Ustanomi Flutter Native APK & Web
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+jobs:
+  build-flutter:
+    name: Build Flutter Native APK & Web (Cloud SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Bootstrap Flutter platform runners, analyze & test
+        working-directory: flutter_app
+        run: |
+          cp -r lib /tmp/ustanomi_lib_backup
+          cp -r test /tmp/ustanomi_test_backup
+          cp pubspec.yaml /tmp/ustanomi_pubspec_backup
+          flutter create . --project-name ustanomi_flutter --org com.ustanomi --platforms=android,ios,web
+          cp -r /tmp/ustanomi_lib_backup/* lib/
+          cp -r /tmp/ustanomi_test_backup/* test/
+          cp /tmp/ustanomi_pubspec_backup pubspec.yaml
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Build Flutter Android Release APK & Web Bundle
+        working-directory: flutter_app
+        run: |
+          flutter build apk --release
+          flutter build web --release
+      - name: Upload Flutter Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ustanomi-flutter-release-apk
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload Flutter Web Bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ustanomi-flutter-web-bundle
+          path: flutter_app/build/web/
