@@ -1719,6 +1719,162 @@ export function calculateProWalletDashboard(jobs = []) {
 }
 
 /**
+ * WAF Rate-Limit & Honeypot Bot Shield (`waf-rate-limit-shield` skill).
+ * Protects OTP, Login, KYC, and Proforma submission forms against automated bot flooding.
+ * @param {{
+ *   honeypotValue?: string,
+ *   recentAttemptTimestampsMs?: number[],
+ *   maxAttempts?: number,
+ *   windowMs?: number,
+ *   nowMs?: number
+ * }} params
+ */
+export function evaluateWafRateLimitAndHoneypot(params = {}) {
+	const trap =
+		typeof params.honeypotValue === "string" ? params.honeypotValue.trim() : "";
+	if (trap !== "") {
+		return {
+			allowed: false,
+			httpStatus: 403,
+			errorCode: "BOT_HONEYPOT_TRIGGERED",
+			retryAfterSeconds: 0,
+		};
+	}
+
+	const nowMs = typeof params.nowMs === "number" ? params.nowMs : Date.now();
+	const windowMs =
+		typeof params.windowMs === "number" ? params.windowMs : 60000;
+	const maxAttempts =
+		typeof params.maxAttempts === "number" ? params.maxAttempts : 5;
+	const recent = (
+		Array.isArray(params.recentAttemptTimestampsMs)
+			? params.recentAttemptTimestampsMs
+			: []
+	).filter((ts) => typeof ts === "number" && nowMs - ts < windowMs);
+
+	if (recent.length >= maxAttempts) {
+		return {
+			allowed: false,
+			httpStatus: 429,
+			errorCode: "RATE_LIMIT_EXCEEDED",
+			retryAfterSeconds: Math.ceil(windowMs / 1000),
+		};
+	}
+
+	return {
+		allowed: true,
+		httpStatus: 200,
+		errorCode: null,
+		remainingAttempts: maxAttempts - (recent.length + 1),
+	};
+}
+
+/**
+ * Apple App Store Guideline 5.1.1(v), Google Play Data Safety & KVKK Article 7
+ * Account Deletion & PII Anonymization Eligibility Evaluator.
+ * Blocks account deletion if the user has active unresolved Escrow Pool funds (`FUNDS_HELD_IN_POOL`, `WORK_IN_PROGRESS`, `DISPUTED`).
+ * @param {{userId: number, activeEscrowStatuses?: string[]}} params
+ */
+export function evaluateAccountDeletionEligibility(params = {}) {
+	const blockingStatuses = new Set([
+		"FUNDS_HELD_IN_POOL",
+		"WORK_IN_PROGRESS",
+		"DISPUTED",
+	]);
+	const activeList = Array.isArray(params.activeEscrowStatuses)
+		? params.activeEscrowStatuses
+		: [];
+	const blocking = activeList.filter((st) =>
+		blockingStatuses.has(String(st).toUpperCase()),
+	);
+
+	if (blocking.length > 0) {
+		return {
+			canDeleteAccount: false,
+			httpStatus: 409,
+			errorCode: "ACTIVE_ESCROW_BLOCKS_DELETION",
+			blockingCount: blocking.length,
+			messageTr:
+				"Güvenli Havuzda devam eden veya bloke edilmiş bir işleminiz olduğu için önce aktif teslim sürecini tamamlamalısınız.",
+		};
+	}
+
+	return {
+		canDeleteAccount: true,
+		httpStatus: 200,
+		errorCode: null,
+		anonymizedEmail: `deleted_${Number(params.userId) || 0}@anon.ustanomi.local`,
+		messageTr:
+			"Hesabınız ve kimlik verileriniz KVKK Madde 7 kapsamında kalıcı olarak anonimleştirilebilir.",
+	};
+}
+
+/**
+ * Digital Escrow Arbitrator & Dispute Resolution Engine (`DISPUTED` state handler).
+ * Evaluates objective field proofs (Cargo Waybill delivery, Wet Signature, Before/After Photos)
+ * to calculate kuruş-exact payout or refund splits between Customer and Pro/Sanayici.
+ * @param {{
+ *   totalEscrowAmountTl: number,
+ *   hasBeforeAfterPhotoProof?: boolean,
+ *   hasCustomerWetSignatureOrOtp?: boolean,
+ *   hasVerifiedCargoDelivery?: boolean,
+ *   proCompletionRatioPercent?: number
+ * }} disputeInput
+ */
+export function resolveEscrowDisputeCase(disputeInput = {}) {
+	const totalKurus = Math.max(
+		0,
+		Math.round((Number(disputeInput.totalEscrowAmountTl) || 0) * 100),
+	);
+	if (totalKurus <= 0) {
+		throw new Error("DISPUTE_ESCROW_AMOUNT_REQUIRED");
+	}
+
+	// Case 1: Pro has full delivery proof (wet signature/OTP or verified cargo delivery + photo proof)
+	if (
+		disputeInput.hasCustomerWetSignatureOrOtp ||
+		(disputeInput.hasVerifiedCargoDelivery &&
+			disputeInput.hasBeforeAfterPhotoProof)
+	) {
+		const split = calculateSplitPaymentEscrow(totalKurus / 100);
+		return {
+			resolutionDecision: "RELEASE_FULL_TO_PRO",
+			nextEscrowState: "CUSTOMER_APPROVED_RELEASED",
+			customerRefundTl: 0,
+			proPayoutNetTl: split.subMerchantShareTl,
+			platformFeeTl: split.platformCommissionTl,
+		};
+	}
+
+	// Case 2: Partial work completion agreed by Digital Eksper (e.g. 50% milestone completed)
+	const ratio = Math.min(
+		100,
+		Math.max(0, Number(disputeInput.proCompletionRatioPercent) || 0),
+	);
+	if (ratio > 0 && disputeInput.hasBeforeAfterPhotoProof) {
+		const proGrossKurus = Math.round((totalKurus * ratio) / 100);
+		const customerRefundKurus = totalKurus - proGrossKurus;
+		const proSplit = calculateSplitPaymentEscrow(proGrossKurus / 100);
+		return {
+			resolutionDecision: "PARTIAL_SETTLEMENT",
+			nextEscrowState: "CUSTOMER_APPROVED_RELEASED",
+			customerRefundTl: customerRefundKurus / 100,
+			proPayoutNetTl: proSplit.subMerchantShareTl,
+			platformFeeTl: proSplit.platformCommissionTl,
+		};
+	}
+
+	// Case 3: No delivery or work proof -> 100% Full Refund to Customer
+	return {
+		resolutionDecision: "FULL_REFUND_TO_CUSTOMER",
+		nextEscrowState: "REFUNDED",
+		customerRefundTl: totalKurus / 100,
+		proPayoutNetTl: 0,
+		platformFeeTl: 0,
+	};
+}
+
+/**
  * Detects which external commercial or social platform a URL belongs to, enforcing strict HTTPS
  * and SSRF host whitelist validation.
  * @param {string} rawUrl
@@ -2517,6 +2673,9 @@ export const UstanomiNative = Object.freeze({
 	createDmProformaMessageCard,
 	buildFullScreenStoryDeck,
 	calculateProWalletDashboard,
+	evaluateWafRateLimitAndHoneypot,
+	evaluateAccountDeletionEligibility,
+	resolveEscrowDisputeCase,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,

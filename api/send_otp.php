@@ -7,7 +7,11 @@ if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
     json_response(['status' => 'error', 'message' => 'Yalnızca POST desteklenir.'], 405);
 }
 
-$payload      = read_json_body();
+$payload = read_json_body();
+require_valid_csrf($payload);
+enforce_honeypot_trap($payload);
+enforce_waf_rate_limit('send_otp', 5, 300);
+
 $phone        = preg_replace('/[^0-9+]/', '', (string)($payload['phone'] ?? ''));
 $serviceTitle = trim((string)($payload['serviceTitle'] ?? ''));
 $category     = trim((string)($payload['category'] ?? 'Genel Tadilat'));

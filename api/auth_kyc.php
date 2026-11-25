@@ -25,6 +25,8 @@ function is_valid_turkish_tckn(string $raw): bool {
 
 $payload = read_json_body();
 require_valid_csrf($payload);
+enforce_honeypot_trap($payload);
+enforce_waf_rate_limit('auth_kyc', 10, 300);
 
 $action = trim((string)($payload['action'] ?? 'login'));
 

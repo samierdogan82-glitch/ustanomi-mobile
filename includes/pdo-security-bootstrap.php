@@ -331,3 +331,47 @@ function validate_tckn_checksum(string $tckn): bool {
     return $d[9] === $d10 && $d[10] === (array_sum(array_slice($d, 0, 10)) % 10);
 }
 
+/**
+ * WAF Sliding-Window Rate Limiter & Brute-Force Shield (`waf-rate-limit-shield` skill).
+ * Blocks excessive requests per session/IP bucket with HTTP 429 Too Many Requests.
+ */
+function enforce_waf_rate_limit(string $bucket, int $maxAttempts = 10, int $windowSeconds = 60): void {
+    init_secure_session();
+    $now = time();
+    $key = '_waf_rl_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $bucket);
+    $timestamps = isset($_SESSION[$key]) && is_array($_SESSION[$key]) ? $_SESSION[$key] : [];
+
+    // Keep only timestamps within the active sliding window
+    $timestamps = array_values(array_filter($timestamps, static fn($ts): bool => is_int($ts) && ($now - $ts) < $windowSeconds));
+
+    if (count($timestamps) >= $maxAttempts) {
+        log_security_audit('WAF_RATE_LIMIT_EXCEEDED', 'ENDPOINT_BUCKET', $bucket, ['attempts' => count($timestamps)]);
+        header('Retry-After: ' . $windowSeconds);
+        json_response([
+            'status'    => 'error',
+            'errorCode' => 'RATE_LIMIT_EXCEEDED',
+            'message'   => 'Çok fazla istek gönderildi. Güvenliğiniz için lütfen ' . $windowSeconds . ' saniye bekleyip tekrar deneyin.',
+        ], 429);
+    }
+
+    $timestamps[] = $now;
+    $_SESSION[$key] = $timestamps;
+}
+
+/**
+ * WAF Honeypot Bot Trap (`waf-rate-limit-shield` skill).
+ * Rejects automated bots that fill hidden trap fields (`_hp_website` / `_honeypot`).
+ */
+function enforce_honeypot_trap(array $payload): void {
+    $trap = trim((string)($payload['_hp_website'] ?? ($payload['_honeypot'] ?? '')));
+    if ($trap !== '') {
+        log_security_audit('WAF_HONEYPOT_BOT_BLOCKED', 'BOT_TRAP', substr($trap, 0, 40));
+        json_response([
+            'status'    => 'error',
+            'errorCode' => 'BOT_ACTIVITY_DETECTED',
+            'message'   => 'Otomatik bot isteği güvenlik duvarı tarafından engellendi.',
+        ], 403);
+    }
+}
+
+
