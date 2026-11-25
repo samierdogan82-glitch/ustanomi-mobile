@@ -1574,6 +1574,151 @@ export function sanitizeInAppChatMessage(rawMessage, isEscrowLocked = false) {
 }
 
 /**
+ * Creates an interactive Instagram Direct (DM) Proforma Offer Card inside the chat thread.
+ * When the customer taps "Havuzda Onayla", the 88/12 split-payment is locked and direct phone/location
+ * sharing is unlocked (`isEscrowLocked: true`).
+ * @param {{
+ *   senderHandle: string,
+ *   recipientHandle: string,
+ *   serviceOrPartTitle: string,
+ *   partsAmountTl?: number,
+ *   laborAmountTl: number,
+ *   etaOrDeliveryLabel?: string,
+ *   warrantyMonths?: number,
+ *   isAcceptedInEscrow?: boolean
+ * }} input
+ */
+export function createDmProformaMessageCard(input) {
+	if (
+		!input ||
+		typeof input.serviceOrPartTitle !== "string" ||
+		input.serviceOrPartTitle.trim().length < 3
+	) {
+		throw new Error("DM_PROFORMA_TITLE_REQUIRED");
+	}
+	const partsKurus = Math.max(
+		0,
+		Math.round((Number(input.partsAmountTl) || 0) * 100),
+	);
+	const laborKurus = Math.max(
+		0,
+		Math.round((Number(input.laborAmountTl) || 0) * 100),
+	);
+	const totalKurus = partsKurus + laborKurus;
+	if (totalKurus <= 0) {
+		throw new Error("DM_PROFORMA_AMOUNT_REQUIRED");
+	}
+	const totalTl = totalKurus / 100;
+	const split = calculateSplitPaymentEscrow(totalTl);
+	const isLocked = Boolean(input.isAcceptedInEscrow);
+
+	return {
+		messageId: `DM-PRF-${Date.now().toString(36).toUpperCase()}`,
+		messageType: "PROFORMA_ESCROW_CARD",
+		senderHandle: input.senderHandle.startsWith("@")
+			? input.senderHandle
+			: `@${input.senderHandle}`,
+		recipientHandle: input.recipientHandle.startsWith("@")
+			? input.recipientHandle
+			: `@${input.recipientHandle}`,
+		serviceOrPartTitle: redactKvkkSensitiveText(
+			input.serviceOrPartTitle.trim(),
+		),
+		partsAmountTl: partsKurus / 100,
+		laborAmountTl: laborKurus / 100,
+		totalAmountTl: split.totalAmountTl,
+		proNetShareTl: split.subMerchantShareTl,
+		escrowFeeTl: split.platformCommissionTl,
+		etaOrDeliveryLabel: String(
+			input.etaOrDeliveryLabel || "Bugün • 30 dk içinde",
+		),
+		warrantyMonths: Math.max(1, Number(input.warrantyMonths) || 12),
+		isEscrowLocked: isLocked,
+		contactUnlocked: isLocked,
+		statusBadgeTr: isLocked
+			? "✓ Güvenli Havuzda Onaylandı • Konum & Telefon Kilidi Açıldı"
+			: "🔒 Havuz Onayı Bekleniyor (%88 Uzman / %12 Güvence)",
+	};
+}
+
+/**
+ * Builds the Full-Screen Instagram Story Deck with Nearby On-Duty Radar distance (`km`) and ETA.
+ * @param {Array<{name: string, handle?: string, emoji: string, open?: boolean, storyTitle?: string, priceTl?: number, distanceKm?: number, etaMinutes?: number}>} stories
+ */
+export function buildFullScreenStoryDeck(stories = []) {
+	if (!Array.isArray(stories)) {
+		return [];
+	}
+	return stories.map((s, idx) => {
+		const dist = Number(s.distanceKm ?? (idx + 1) * 1.4).toFixed(1);
+		const eta = Number(s.etaMinutes ?? (idx + 1) * 8 + 7);
+		const price = Math.max(250, Number(s.priceTl) || 850);
+		return {
+			storyId: `STORY-${idx + 1}`,
+			name: String(s.name || "Uzman Usta"),
+			handle:
+				s.handle ||
+				`@${String(s.name || "usta")
+					.toLowerCase()
+					.replace(/[^a-z0-9]/g, "_")}`,
+			emoji: s.emoji || "🛠️",
+			isOpen: s.open !== false,
+			availabilityBadgeTr:
+				s.open !== false
+					? "🟢 Şu An Açık • Nöbetçi Radar"
+					: "🔴 Mesai Dışı • Randevu Al",
+			radarDistanceLabelTr: `📍 ${dist} km yakında • ⚡ ${eta} dk varış`,
+			headlineTr:
+				s.storyTitle || `${s.name} • Garantili Öncesi / Sonrası İş Vitrini`,
+			startingPriceTl: price,
+			durationSeconds: 5,
+		};
+	});
+}
+
+/**
+ * Calculates a Pro/Sanayici Wallet & Escrow Payout Dashboard summary with kuruş-exact integer math.
+ * @param {Array<{id: string, title: string, amountTl: number, state: "IN_ESCROW_POOL" | "SHIPPED_WAYBILL" | "RELEASED_TO_IBAN", waybillCode?: string}>} jobs
+ */
+export function calculateProWalletDashboard(jobs = []) {
+	let heldInPoolKurus = 0;
+	let releasedNetKurus = 0;
+	let platformFeeTotalKurus = 0;
+	let activeWaybillsCount = 0;
+
+	const normalizedJobs = (Array.isArray(jobs) ? jobs : []).map((j) => {
+		const amountTl = Math.max(0, Number(j.amountTl) || 0);
+		const split = calculateSplitPaymentEscrow(amountTl || 100);
+		if (j.state === "RELEASED_TO_IBAN") {
+			releasedNetKurus += split.subMerchantShareKurus;
+		} else {
+			heldInPoolKurus += split.subMerchantShareKurus;
+		}
+		if (j.waybillCode) {
+			activeWaybillsCount += 1;
+		}
+		platformFeeTotalKurus += split.platformCommissionKurus;
+		return {
+			id: j.id,
+			title: j.title,
+			totalAmountTl: split.totalAmountTl,
+			proNetShareTl: split.subMerchantShareTl,
+			state: j.state,
+			waybillCode: j.waybillCode || null,
+		};
+	});
+
+	return {
+		heldInPoolNetTl: heldInPoolKurus / 100,
+		releasedToIbanNetTl: releasedNetKurus / 100,
+		platformEscrowFeeTotalTl: platformFeeTotalKurus / 100,
+		activeWaybillsCount,
+		efaturaReadyCount: normalizedJobs.length,
+		jobs: normalizedJobs,
+	};
+}
+
+/**
  * Detects which external commercial or social platform a URL belongs to, enforcing strict HTTPS
  * and SSRF host whitelist validation.
  * @param {string} rawUrl
@@ -2369,6 +2514,9 @@ export const UstanomiNative = Object.freeze({
 	verifyWaybillAndEscrowRelease,
 	generateGibEfaturaQrSummary,
 	sanitizeInAppChatMessage,
+	createDmProformaMessageCard,
+	buildFullScreenStoryDeck,
+	calculateProWalletDashboard,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,

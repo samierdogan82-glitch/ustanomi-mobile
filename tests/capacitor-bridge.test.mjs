@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import {
 	B2B_TENDER_CATEGORIES,
+	buildFullScreenStoryDeck,
 	buildOmnichannelEngagementLinks,
+	calculateProWalletDashboard,
 	calculateSplitPaymentEscrow,
 	calculateTalentTrendingScore,
 	canTransitionEscrow,
 	canTransitionLeadState,
 	canTransitionOfferState,
 	convertAndFormatGlobalPrice,
+	createDmProformaMessageCard,
 	createSealedProformaBidPayload,
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
@@ -550,6 +553,54 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		);
 		assert.equal(leakAttempt.blockedLeakAttempt, true);
 		assert.equal(leakAttempt.cleanMessage.includes("0532 111 22 33"), false);
+	});
+
+	it("builds Instagram DM Proforma Escrow cards, Fullscreen Story Radar decks, and Pro Wallet payout summaries", () => {
+		const dmCard = createDmProformaMessageCard({
+			senderHandle: "maslak_bimmer_servis",
+			recipientHandle: "musteri_1",
+			serviceOrPartTitle: "Orijinal OEM Triger Seti + İşçilik",
+			partsAmountTl: 6500,
+			laborAmountTl: 3500,
+			warrantyMonths: 12,
+			isAcceptedInEscrow: true,
+		});
+		assert.equal(dmCard.totalAmountTl, 10000);
+		assert.equal(dmCard.proNetShareTl, 8800);
+		assert.equal(dmCard.isEscrowLocked, true);
+		assert.equal(dmCard.contactUnlocked, true);
+
+		const deck = buildFullScreenStoryDeck([
+			{
+				name: "Selim Usta",
+				emoji: "🔧",
+				open: true,
+				priceTl: 850,
+				distanceKm: 1.4,
+				etaMinutes: 15,
+			},
+		]);
+		assert.equal(deck.length, 1);
+		assert.equal(deck[0].radarDistanceLabelTr.includes("1.4 km"), true);
+
+		const wallet = calculateProWalletDashboard([
+			{
+				id: "j1",
+				title: "Triger Seti",
+				amountTl: 10000,
+				state: "IN_ESCROW_POOL",
+				waybillCode: "YK-112233",
+			},
+			{
+				id: "j2",
+				title: "Kombi Bakımı",
+				amountTl: 5000,
+				state: "RELEASED_TO_IBAN",
+			},
+		]);
+		assert.equal(wallet.heldInPoolNetTl, 8800); // 88% of 10,000
+		assert.equal(wallet.releasedToIbanNetTl, 4400); // 88% of 5,000
+		assert.equal(wallet.activeWaybillsCount, 1);
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

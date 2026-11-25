@@ -365,3 +365,23 @@ CREATE TABLE IF NOT EXISTS external_commerce_connections (
   CONSTRAINT fk_ext_conn_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   UNIQUE KEY uq_user_connector (user_id, connector_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Instagram Direct (DM) Chat & In-Thread Proforma Escrow Approval Table
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS dm_messages (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  thread_code VARCHAR(48) NOT NULL,
+  sender_user_id INT UNSIGNED NOT NULL,
+  recipient_user_id INT UNSIGNED NOT NULL,
+  message_type ENUM('TEXT', 'PROFORMA_ESCROW_CARD', 'LOCATION_PIN') NOT NULL DEFAULT 'TEXT',
+  message_body TEXT NOT NULL,
+  proforma_total_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  pro_net_share_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  is_escrow_locked TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_dm_sender FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_dm_recipient FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_dm_thread_created (thread_code, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

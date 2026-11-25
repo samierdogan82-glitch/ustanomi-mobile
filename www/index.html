@@ -551,6 +551,9 @@
                 <button type="button" class="pill-btn" id="open-filter-sheet-btn">
                     🔍 Filtre
                 </button>
+                <button type="button" class="pill-btn" id="open-dm-view-btn" aria-label="Instagram Direct Mesajlar">
+                    💬 DM <span style="width:7px;height:7px;border-radius:50%;background:#F43F5E;display:inline-block;"></span>
+                </button>
                 <button type="button" class="pill-btn open" id="pro-mode-toggle">
                     🟢 Açık
                 </button>
@@ -636,6 +639,63 @@
                 <div id="auth-feedback-box" style="margin-top:10px;font-size:0.76rem;font-weight:700;" aria-live="polite"></div>
             </div>
         </section>
+
+        <!-- VIEW 6: SADE INSTAGRAM DIRECT (DM) & SOHBET İÇİ PROFORMA / HAVUZ ONAY KARTI -->
+        <section id="tab-dm" class="view" aria-label="Instagram Direct Mesajlar ve Proforma Havuz Onayı">
+            <div class="clean-post" style="padding:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:38px;height:38px;border-radius:50%;background:var(--surface-soft);display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🏎️</div>
+                        <div>
+                            <div style="font-size:0.86rem;font-weight:800;">@maslak_bimmer_servis <span class="verified-check">✓</span></div>
+                            <div style="font-size:0.7rem;color:#6EE7B7;">🟢 Şu An Açık • Yanıt süresi ~3 dk</div>
+                        </div>
+                    </div>
+                    <span class="badge-trend">🛡️ Havuz Korumalı DM</span>
+                </div>
+
+                <!-- Chat Thread Messages -->
+                <div id="dm-thread-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+
+                <!-- Quick Send Message / Proforma Card Row -->
+                <div class="row">
+                    <input type="text" id="dm-msg-input" class="input" style="margin:0;" placeholder="Mesaj yaz (Havuz öncesi tel/IBAN maskelenir)...">
+                    <button type="button" class="btn-minimal" id="dm-send-btn">Gönder</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FULLSCREEN INSTAGRAM STORY & ACİL NÖBETÇİ RADAR VIEWER -->
+    <div class="sheet-backdrop" id="story-modal" style="align-items:center;padding:16px;">
+        <div style="width:100%;max-width:400px;height:660px;border-radius:24px;background:linear-gradient(170deg,#153E49 0%,#090D16 100%);border:1px solid rgba(245,158,11,0.45);padding:16px;display:flex;flex-direction:column;justify-content:space-between;position:relative;box-shadow:0 24px 50px rgba(0,0,0,0.6);">
+            <div>
+                <!-- Story Progress Bar -->
+                <div style="height:3px;background:rgba(255,255,255,0.2);border-radius:99px;overflow:hidden;margin-bottom:12px;">
+                    <div style="width:72%;height:100%;background:#F59E0B;"></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div id="story-modal-emoji" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">🔧</div>
+                        <div>
+                            <div id="story-modal-name" style="font-size:0.88rem;font-weight:800;">Selim Usta ✓</div>
+                            <div id="story-modal-radar" style="font-size:0.71rem;color:#6EE7B7;">📍 1.4 km yakında • ⚡ 15 dk varış</div>
+                        </div>
+                    </div>
+                    <button type="button" class="pill-btn" id="close-story-modal-btn">✕</button>
+                </div>
+            </div>
+
+            <div style="text-align:center;padding:20px 10px;">
+                <span class="badge-open" id="story-modal-avail" style="display:inline-block;margin-bottom:12px;">🟢 Şu An Açık • Acil Nöbetçi Radar</span>
+                <h2 id="story-modal-headline" style="font-size:1.25rem;margin:0 0 10px;line-height:1.35;">Kırmadan Termal Kameralı Kaçak Tespiti &amp; Onarımı</h2>
+                <div id="story-modal-price" class="price-chip" style="font-size:0.86rem;">🏷️ Başlangıç: 850 ₺ • 🛡️ %88/%12 Havuz Güvencesi</div>
+            </div>
+
+            <div class="row">
+                <button type="button" class="cta-work-btn" id="story-hire-dm-btn">💬 DM Gönder &amp; Seninle Çalışalım</button>
+            </div>
+        </div>
     </div>
 
     <!-- CLEAN BOTTOM SHEET 1: SEARCH & 12D FILTERS (Only opens when user taps 🔍 Filtre) -->
@@ -739,9 +799,12 @@
     <script type="module">
         import {
             B2B_TENDER_CATEGORIES,
+            buildFullScreenStoryDeck,
             buildOmnichannelEngagementLinks,
+            calculateProWalletDashboard,
             calculateSplitPaymentEscrow,
             convertAndFormatGlobalPrice,
+            createDmProformaMessageCard,
             createSealedProformaBidPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
@@ -752,6 +815,7 @@
             parseAndImportExternalCommerceProfile,
             rankTalentShowcasePosts,
             resolveUniversalProfessionCluster,
+            sanitizeInAppChatMessage,
             triggerHapticImpact,
             UNIVERSAL_PROFESSION_CLUSTERS,
             validateKycRegistrationPayload,
@@ -892,19 +956,41 @@
             };
         }
 
+        const storyDeck = buildFullScreenStoryDeck(storyPros);
+        const storyModal = document.getElementById('story-modal');
+
+        function openStoryViewer(storyItem) {
+            document.getElementById('story-modal-emoji').textContent = storyItem.emoji;
+            document.getElementById('story-modal-name').textContent = `${storyItem.name} (${storyItem.handle}) ✓`;
+            document.getElementById('story-modal-radar').textContent = storyItem.radarDistanceLabelTr;
+            document.getElementById('story-modal-avail').textContent = storyItem.availabilityBadgeTr;
+            document.getElementById('story-modal-headline').textContent = storyItem.headlineTr;
+            const pFmt = convertAndFormatGlobalPrice(storyItem.startingPriceTl, activeRegionCode).formatted;
+            document.getElementById('story-modal-price').textContent = `🏷️ Başlangıç: ${pFmt} • 🛡️ Güvenli Havuz`;
+            storyModal.classList.add('open');
+        }
+
+        document.getElementById('close-story-modal-btn')?.addEventListener('click', () => {
+            storyModal.classList.remove('open');
+        });
+        document.getElementById('story-hire-dm-btn')?.addEventListener('click', () => {
+            storyModal.classList.remove('open');
+            document.getElementById('open-dm-view-btn')?.click();
+        });
+
         function renderStories() {
             storiesBar.innerHTML = '';
-            for (const s of storyPros) {
+            for (const s of storyDeck) {
                 const div = document.createElement('div');
                 div.className = 'story';
                 div.innerHTML = `
-                    <div class="story-ring ${s.open ? '' : 'closed'}">
+                    <div class="story-ring ${s.isOpen ? '' : 'closed'}">
                         <div class="story-inner">${s.emoji}</div>
                     </div>
                     <div class="story-lbl">${s.name}</div>
                 `;
                 div.addEventListener('click', () => {
-                    document.querySelector('[data-target="tab-profile"]')?.click();
+                    openStoryViewer(s);
                 });
                 storiesBar.appendChild(div);
             }
@@ -1085,6 +1171,131 @@
             }
         }
 
+        const walletJobs = [
+            { id: 'JOB-801', title: 'BMW F30 Orijinal OEM Triger & Fren Seti', amountTl: 19000, state: 'SHIPPED_WAYBILL', waybillCode: 'YK-90887766' },
+            { id: 'JOB-802', title: 'Kadıköy Termal Su Kaçağı & Kombi Bakımı', amountTl: 2250, state: 'RELEASED_TO_IBAN', waybillCode: null },
+            { id: 'JOB-803', title: 'Beşiktaş Kafe 4K Drone & Reels Çekimi', amountTl: 3200, state: 'RELEASED_TO_IBAN', waybillCode: null }
+        ];
+
+        function renderWalletSubTabHtml() {
+            const summary = calculateProWalletDashboard(walletJobs);
+            const heldFmt = convertAndFormatGlobalPrice(summary.heldInPoolNetTl, activeRegionCode).formatted;
+            const releasedFmt = convertAndFormatGlobalPrice(summary.releasedToIbanNetTl, activeRegionCode).formatted;
+
+            const rows = summary.jobs.map((j) => {
+                const netFmt = convertAndFormatGlobalPrice(j.proNetShareTl, activeRegionCode).formatted;
+                const isReleased = j.state === 'RELEASED_TO_IBAN';
+                return `
+                    <div class="clean-price-row">
+                        <div>
+                            <div style="font-size:0.81rem;font-weight:700;">${j.title}</div>
+                            <div style="font-size:0.7rem;color:${isReleased ? '#6EE7B7' : '#FDE68A'};">
+                                ${isReleased ? '✓ TR IBAN Hesabınıza Aktarıldı • 🧾 e-Fatura Hazır' : `🚚 Kargo İrsaliye: ${j.waybillCode} (Teslim Onayında Çözülür)`}
+                            </div>
+                        </div>
+                        <span style="font-size:0.86rem;font-weight:800;color:#6EE7B7;">${netFmt}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                    <div style="background:var(--surface);padding:12px;border-radius:12px;border:1px solid rgba(16,185,129,0.35);">
+                        <div style="font-size:0.7rem;color:var(--muted);">✅ IBAN'a Aktarılan (%88 Net)</div>
+                        <div style="font-size:1.05rem;font-weight:800;color:#6EE7B7;margin-top:3px;">${releasedFmt}</div>
+                    </div>
+                    <div style="background:var(--surface);padding:12px;border-radius:12px;border:1px solid rgba(245,158,11,0.35);">
+                        <div style="font-size:0.7rem;color:var(--muted);">🔒 Havuzda / Kargoda Bloke</div>
+                        <div style="font-size:1.05rem;font-weight:800;color:#FDE68A;margin-top:3px;">${heldFmt}</div>
+                    </div>
+                </div>
+                ${rows}
+            `;
+        }
+
+        // Instagram Direct (DM) Thread & In-Chat Proforma Escrow Approval
+        let dmEscrowLocked = false;
+        const dmMessages = [
+            { sender: 'CUSTOMER', text: 'Merhaba usta, 2021 BMW 320i triger ve ön fren balata değişimi için orijinal parça fiyatınız nedir?' },
+            {
+                sender: 'PRO',
+                proforma: createDmProformaMessageCard({
+                    senderHandle: 'maslak_bimmer_servis',
+                    recipientHandle: 'musteri_kadikoy',
+                    serviceOrPartTitle: 'Orijinal OEM Triger Seti + Brembo Ön Fren + İşçilik',
+                    partsAmountTl: 14500,
+                    laborAmountTl: 4500,
+                    etaOrDeliveryLabel: 'Bugün Teslim • 12 Ay Garanti',
+                    warrantyMonths: 12,
+                    isAcceptedInEscrow: false
+                })
+            }
+        ];
+
+        function renderDmThread() {
+            const listEl = document.getElementById('dm-thread-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            for (const m of dmMessages) {
+                if (m.proforma) {
+                    const p = m.proforma;
+                    const totalFmt = convertAndFormatGlobalPrice(p.totalAmountTl, activeRegionCode).formatted;
+                    const netFmt = convertAndFormatGlobalPrice(p.proNetShareTl, activeRegionCode).formatted;
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.4);border-radius:14px;padding:12px;';
+                    card.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:#6EE7B7;font-weight:800;margin-bottom:4px;">
+                            <span>📄 SOHBET İÇİ RESMİ PROFORMA TEKLİFİ</span>
+                            <span>${p.warrantyMonths} Ay Garanti</span>
+                        </div>
+                        <div style="font-size:0.86rem;font-weight:700;margin-bottom:4px;">${p.serviceOrPartTitle}</div>
+                        <div style="font-size:0.76rem;color:#FDE68A;font-weight:800;margin-bottom:8px;">
+                            Sabit Sözleşme Toplamı: ${totalFmt} (%88 Uzman Net: ${netFmt})
+                        </div>
+                        <button type="button" class="cta-work-btn dm-approve-escrow-btn" style="padding:9px 12px;font-size:0.79rem;">
+                            ${dmEscrowLocked ? '✓ Havuzda Onaylandı • Konum & Telefon Açık' : '🛡️ Güvenli Havuzda Onayla & İşi Başlat'}
+                        </button>
+                    `;
+                    card.querySelector('.dm-approve-escrow-btn').addEventListener('click', () => {
+                        dmEscrowLocked = true;
+                        triggerHapticImpact('MEDIUM');
+                        renderDmThread();
+                    });
+                    listEl.appendChild(card);
+                } else {
+                    const bubble = document.createElement('div');
+                    const isCustomer = m.sender === 'CUSTOMER';
+                    bubble.style.cssText = `align-self:${isCustomer ? 'flex-end' : 'flex-start'};max-width:85%;padding:10px 13px;border-radius:14px;font-size:0.8rem;background:${isCustomer ? '#1E293B' : '#153E49'};`;
+                    bubble.textContent = m.text;
+                    listEl.appendChild(bubble);
+                }
+            }
+        }
+
+        document.getElementById('open-dm-view-btn')?.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach((b) => {
+                b.classList.remove('active');
+            });
+            document.querySelectorAll('.view').forEach((v) => {
+                v.classList.remove('active');
+            });
+            document.getElementById('tab-dm')?.classList.add('active');
+            renderDmThread();
+        });
+
+        document.getElementById('dm-send-btn')?.addEventListener('click', () => {
+            const input = document.getElementById('dm-msg-input');
+            if (!input.value || !input.value.trim()) return;
+            const checked = sanitizeInAppChatMessage(input.value, dmEscrowLocked);
+            dmMessages.push({
+                sender: 'CUSTOMER',
+                text: checked.blockedLeakAttempt ? `${checked.cleanMessage} (${checked.warningTr})` : checked.cleanMessage
+            });
+            input.value = '';
+            renderDmThread();
+        });
+
         function renderInstagramProfile() {
             const currentMode = availabilityCycle[currentModeIndex];
             const baseProfile = customSyncedShowcase || {
@@ -1191,11 +1402,18 @@
                 <div class="ig-highlights">${highlightsHtml}</div>
 
                 <div class="ig-subtabs">
-                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'GRID' ? 'active' : ''}" data-subtab="GRID">⊞ VİTRİN &amp; REELS</button>
-                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'PRICES' ? 'active' : ''}" data-subtab="PRICES">🏷️ AÇIK FİYAT LİSTESİ</button>
+                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'GRID' ? 'active' : ''}" data-subtab="GRID">⊞ VİTRİN</button>
+                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'PRICES' ? 'active' : ''}" data-subtab="PRICES">🏷️ FİYATLAR</button>
+                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'WALLET' ? 'active' : ''}" data-subtab="WALLET">💳 CÜZDAN &amp; KARGO</button>
                 </div>
 
-                ${activeProfileSubTab === 'GRID' ? `<div class="ig-grid-3">${gridHtml}</div>` : `<div>${pricesHtml}</div>`}
+                ${
+                    activeProfileSubTab === 'GRID'
+                        ? `<div class="ig-grid-3">${gridHtml}</div>`
+                        : activeProfileSubTab === 'PRICES'
+                            ? `<div>${pricesHtml}</div>`
+                            : renderWalletSubTabHtml()
+                }
             `;
 
             igProfileContainer.querySelectorAll('.ig-subtab').forEach((btn) => {
@@ -1405,6 +1623,16 @@
         if (urlParams.get('prices') === '1') {
             activeProfileSubTab = 'PRICES';
             renderInstagramProfile();
+        }
+        if (urlParams.get('wallet') === '1') {
+            activeProfileSubTab = 'WALLET';
+            renderInstagramProfile();
+        }
+        if (urlParams.get('story') === '1') {
+            openStoryViewer(storyDeck[0]);
+        }
+        if (urlParams.get('dm') === '1') {
+            document.getElementById('open-dm-view-btn')?.click();
         }
         if (urlParams.get('sheet') === 'filter') {
             filterSheet.classList.add('open');
