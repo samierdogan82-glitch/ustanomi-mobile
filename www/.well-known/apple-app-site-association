@@ -1,0 +1,16 @@
+{
+	"applinks": {
+		"apps": [],
+		"details": [
+			{
+				"appIDs": ["USTANOMI26.com.ustanomi.app"],
+				"components": [
+					{ "/": "/app/*" },
+					{ "/": "/pro/*" },
+					{ "/": "/live/*" },
+					{ "/": "/tender/*" }
+				]
+			}
+		]
+	}
+}

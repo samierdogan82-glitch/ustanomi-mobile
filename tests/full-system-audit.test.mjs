@@ -123,6 +123,44 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 		);
 		assert.equal(swContent.includes('url.pathname.startsWith("/api/")'), true);
 		assert.equal(swContent.includes("/offline.html"), true);
+
+		// Verify offline.html reconnects to local bundled index.html and uses >= 16px input font size
+		const offlineHtml = fs.readFileSync(
+			path.join(projectRoot, "www/offline.html"),
+			"utf8",
+		);
+		assert.equal(
+			offlineHtml.includes("const TARGET_URL = 'index.html';"),
+			true,
+		);
+		assert.equal(offlineHtml.includes("font-size:16px"), true);
+
+		// Verify Android App Links (.well-known/assetlinks.json), iOS Universal Links, and Apple PrivacyInfo.xcprivacy
+		const assetLinks = JSON.parse(
+			fs.readFileSync(
+				path.join(projectRoot, "www/.well-known/assetlinks.json"),
+				"utf8",
+			),
+		);
+		assert.equal(assetLinks[0].target.package_name, "com.ustanomi.app");
+
+		const aasa = JSON.parse(
+			fs.readFileSync(
+				path.join(projectRoot, "www/.well-known/apple-app-site-association"),
+				"utf8",
+			),
+		);
+		assert.equal(
+			aasa.applinks.details[0].appIDs[0].endsWith("com.ustanomi.app"),
+			true,
+		);
+
+		const iosPrivacy = fs.readFileSync(
+			path.join(projectRoot, "ios/App/App/PrivacyInfo.xcprivacy"),
+			"utf8",
+		);
+		assert.equal(iosPrivacy.includes("NSPrivacyAccessedAPITypes"), true);
+		assert.equal(iosPrivacy.includes("CA92.1"), true);
 	});
 
 	it("enforces WAF Sliding-Window Rate Limiting and Honeypot Bot Trap", () => {

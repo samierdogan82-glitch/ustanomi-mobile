@@ -1243,6 +1243,10 @@ export function createSealedProformaBidPayload(input) {
 		input.viewerUserId === input.tenderOwnerUserId ||
 		input.viewerUserId === input.supplierUserId;
 
+	const rawHandle =
+		String(input.supplierHandle || "onayli_tedarikci").trim() ||
+		"onayli_tedarikci";
+
 	return {
 		proformaRefCode: proformaRef,
 		contractRefCode: contractRef,
@@ -1252,9 +1256,7 @@ export function createSealedProformaBidPayload(input) {
 		isPrivateSealedBid: true,
 		privacyBadgeTr:
 			"🔒 Özel Kapalı Zarf Proforma (Yalnızca İş Sahibine Görünür)",
-		supplierHandle: input.supplierHandle.startsWith("@")
-			? input.supplierHandle
-			: `@${input.supplierHandle}`,
+		supplierHandle: rawHandle.startsWith("@") ? rawHandle : `@${rawHandle}`,
 		supplierCompanyTitle: redactKvkkSensitiveText(
 			input.supplierCompanyTitle.trim(),
 		),
@@ -3210,6 +3212,117 @@ export function processLiveStreamGiftTransaction(input = {}) {
 	};
 }
 
+// ============================================================================
+// Apple App Store 3.1.1 / 3.1.3(e) & Google Play Billing Dual-Mode Compliance
+// + LiveKit (livekit/livekit, Apache-2.0) WebRTC SFU Room Configuration
+// ============================================================================
+
+export function resolveStoreCompliantGiftBillingMode(params = {}) {
+	const platform = String(params.platform || "WEB")
+		.trim()
+		.toUpperCase();
+	const linkedToPhysicalServiceContract = Boolean(
+		params.linkedToPhysicalServiceContract ?? true,
+	);
+	const coins = Math.max(10, Math.round(Number(params.coins) || 100));
+	const settlement = calculateLiveGiftSettlementKurus(coins, 1);
+
+	// Apple Guideline 3.1.3(e) & Google Play Physical Goods/Services Exemption:
+	// When linked to a real-world physical craft/service contract ("İşçilik Ön Ödeme / Saha Desteği"),
+	// 3D Secure Escrow (iyzico/PayTR) is compliant without 30% store digital tax.
+	if (linkedToPhysicalServiceContract || platform === "WEB") {
+		return {
+			billingMode: "PHYSICAL_SERVICE_PREPAYMENT_ESCROW",
+			storeGuidelineRef: "APPLE_3_1_3_E_PHYSICAL_SERVICE_EXEMPT",
+			paymentGateway: "IYZICO_PAYTR_3DS_ESCROW",
+			storeTaxPercent: 0,
+			creatorNetSharePercent: 85,
+			platformFeePercent: 15,
+			skuId: `escrow_craft_support_${coins}`,
+			grossKurus: settlement.grossKurus,
+			creatorNetKurus: settlement.creatorNetKurus,
+			platformFeeKurus: settlement.platformFeeKurus,
+		};
+	}
+
+	// Pure standalone virtual coin purchase on iOS/Android native -> StoreKit 2 / Google Play Billing IAP
+	const storeTaxKurus = Math.round((settlement.grossKurus * 1500) / 10000); // 15% Small Business Program rate
+	const netAfterStoreKurus = settlement.grossKurus - storeTaxKurus;
+	const creatorNetKurus = Math.round((netAfterStoreKurus * 8500) / 10000);
+	const platformFeeKurus = netAfterStoreKurus - creatorNetKurus;
+
+	return {
+		billingMode:
+			platform === "IOS"
+				? "APPLE_STOREKIT2_CONSUMABLE_IAP"
+				: "GOOGLE_PLAY_BILLING_V7_IAP",
+		storeGuidelineRef:
+			platform === "IOS" ? "APPLE_3_1_1_IAP" : "GOOGLE_PLAY_BILLING_POLICY",
+		paymentGateway:
+			platform === "IOS" ? "STOREKIT_2_REVENUECAT" : "PLAY_BILLING_REVENUECAT",
+		storeTaxPercent: 15,
+		skuId: `com.ustanomi.app.jeton.${coins}`,
+		grossKurus: settlement.grossKurus,
+		storeTaxKurus,
+		creatorNetKurus,
+		platformFeeKurus,
+	};
+}
+
+export function createWebRtcLiveWorkRoomConfig(params = {}) {
+	const streamId = String(params.streamId || "LIVE-301").trim();
+	const role =
+		String(params.role || "VIEWER")
+			.trim()
+			.toUpperCase() === "STREAMER"
+			? "STREAMER"
+			: "VIEWER";
+	const clusterCode = String(params.clusterCode || "AUTO_LOGISTICS")
+		.trim()
+		.toUpperCase();
+
+	return {
+		engine: "LIVEKIT_WEBRTC_SFU",
+		license: "Apache-2.0",
+		roomName: `ustanomi_${streamId.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
+		signalingUrl: "wss://live.ustanomi.com",
+		hlsFallbackUrl: `https://cdn.ustanomi.com/hls/${encodeURIComponent(streamId)}/master.m3u8`,
+		iceServers: [
+			{ urls: ["stun:stun.ustanomi.com:3478"] },
+			{
+				urls: ["turns:turn.ustanomi.com:5349?transport=tcp"],
+				credentialType: "ephemeral_hmac",
+			},
+		],
+		simulcastLayers: [
+			{
+				quality: "HIGH",
+				width: 1920,
+				height: 1080,
+				fps: 60,
+				bitrateKbps: 4200,
+			},
+			{
+				quality: "MEDIUM",
+				width: 1280,
+				height: 720,
+				fps: 30,
+				bitrateKbps: 1800,
+			},
+			{ quality: "LOW", width: 640, height: 360, fps: 15, bitrateKbps: 550 },
+		],
+		permissions: {
+			role,
+			canPublishVideo: role === "STREAMER",
+			canPublishAudio: role === "STREAMER",
+			canSubscribe: true,
+			canSendDataChannelGifts: true,
+		},
+		clusterCode,
+		targetLatencyMs: 900,
+	};
+}
+
 export const UstanomiNative = Object.freeze({
 	OFFER_SERVICE_CATEGORIES,
 	UNIVERSAL_PROFESSION_CLUSTERS,
@@ -3275,6 +3388,8 @@ export const UstanomiNative = Object.freeze({
 	getProfessionGiftCatalog,
 	buildWorkInProgressLiveStreamDeck,
 	processLiveStreamGiftTransaction,
+	resolveStoreCompliantGiftBillingMode,
+	createWebRtcLiveWorkRoomConfig,
 });
 
 if (typeof window !== "undefined") {

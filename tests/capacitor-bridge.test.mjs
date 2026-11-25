@@ -18,6 +18,7 @@ import {
 	createSealedProformaBidPayload,
 	createTouchWetSignatureProof,
 	createUrgentJobPostPayload,
+	createWebRtcLiveWorkRoomConfig,
 	createWorkWithYouRequestPayload,
 	detectExternalPlatformConnector,
 	EXTERNAL_COMMERCE_CONNECTORS,
@@ -45,6 +46,7 @@ import {
 	rankTalentShowcasePosts,
 	redactKvkkSensitiveText,
 	resolveOfferServiceCategory,
+	resolveStoreCompliantGiftBillingMode,
 	resolveUniversalProfessionCluster,
 	sanitizeInAppChatMessage,
 	UNIVERSAL_PROFESSION_CLUSTERS,
@@ -763,5 +765,38 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		assert.equal(settlement.grossTl, 1000);
 		assert.equal(settlement.creatorNetTl, 850);
 		assert.equal(settlement.platformFeeTl, 150);
+
+		const physicalMode = resolveStoreCompliantGiftBillingMode({
+			platform: "IOS",
+			linkedToPhysicalServiceContract: true,
+			coins: 500,
+		});
+		assert.equal(
+			physicalMode.billingMode,
+			"PHYSICAL_SERVICE_PREPAYMENT_ESCROW",
+		);
+		assert.equal(physicalMode.storeTaxPercent, 0);
+
+		const iapMode = resolveStoreCompliantGiftBillingMode({
+			platform: "IOS",
+			linkedToPhysicalServiceContract: false,
+			coins: 500,
+		});
+		assert.equal(iapMode.billingMode, "APPLE_STOREKIT2_CONSUMABLE_IAP");
+		assert.equal(
+			iapMode.storeTaxKurus +
+				iapMode.creatorNetKurus +
+				iapMode.platformFeeKurus,
+			iapMode.grossKurus,
+		);
+
+		const liveKitRoom = createWebRtcLiveWorkRoomConfig({
+			streamId: "LIVE-301",
+			role: "STREAMER",
+			clusterCode: "AUTO_LOGISTICS",
+		});
+		assert.equal(liveKitRoom.engine, "LIVEKIT_WEBRTC_SFU");
+		assert.equal(liveKitRoom.permissions.canPublishVideo, true);
+		assert.equal(liveKitRoom.simulcastLayers.length, 3);
 	});
 });
