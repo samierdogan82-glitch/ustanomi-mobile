@@ -232,5 +232,18 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 		);
 		assert.equal(workflowYml.includes("build-flutter:"), true);
 		assert.equal(workflowYml.includes("subosito/flutter-action@v2"), true);
+
+		// Verify mobile zero-shift CSS rules in www/index.html
+		const indexHtml = fs.readFileSync(
+			path.join(projectRoot, "www/index.html"),
+			"utf8",
+		);
+		assert.equal(indexHtml.includes("overflow-x: hidden"), true);
+		assert.equal(
+			indexHtml.includes("grid-template-columns: minmax(0, 1fr) 46px"),
+			true,
+		);
+		assert.equal(indexHtml.includes("font-size: 16px"), true);
+		assert.equal(indexHtml.includes("syncDiscoverStripVisibility"), true);
 	});
 });
