@@ -1,0 +1,49 @@
+{
+	"version": 1,
+	"roles": ["SUPER_ADMIN", "FINANCE", "MODERATOR", "SUPPORT"],
+	"permissions": {
+		"dashboard.view": ["SUPER_ADMIN", "FINANCE", "MODERATOR", "SUPPORT"],
+		"users.view": ["SUPER_ADMIN", "FINANCE", "MODERATOR", "SUPPORT"],
+		"users.note": ["SUPER_ADMIN", "MODERATOR", "SUPPORT"],
+		"users.suspend": ["SUPER_ADMIN", "MODERATOR"],
+		"users.badge": ["SUPER_ADMIN", "MODERATOR"],
+		"users.delete": ["SUPER_ADMIN"],
+		"pii.reveal": ["SUPER_ADMIN", "FINANCE"],
+		"kyc.view": ["SUPER_ADMIN", "MODERATOR"],
+		"kyc.decide": ["SUPER_ADMIN", "MODERATOR"],
+		"escrow.view": ["SUPER_ADMIN", "FINANCE", "SUPPORT"],
+		"escrow.request": ["FINANCE"],
+		"escrow.approve": ["FINANCE"],
+		"disputes.view": ["SUPER_ADMIN", "FINANCE", "MODERATOR"],
+		"disputes.decide": ["FINANCE"],
+		"tenders.view": ["SUPER_ADMIN", "FINANCE", "MODERATOR"],
+		"tenders.view_sealed": ["SUPER_ADMIN", "FINANCE"],
+		"live.view": ["SUPER_ADMIN", "FINANCE", "MODERATOR"],
+		"live.suspend": ["SUPER_ADMIN", "MODERATOR"],
+		"moderation.view": ["SUPER_ADMIN", "MODERATOR"],
+		"moderation.act": ["SUPER_ADMIN", "MODERATOR"],
+		"finance.view": ["SUPER_ADMIN", "FINANCE"],
+		"finance.export": ["SUPER_ADMIN", "FINANCE"],
+		"finance.payout_create": ["FINANCE"],
+		"finance.payout_approve": ["FINANCE"],
+		"settings.view": ["SUPER_ADMIN", "FINANCE"],
+		"settings.edit": ["SUPER_ADMIN"],
+		"audit.view": ["SUPER_ADMIN"],
+		"admins.manage": ["SUPER_ADMIN"]
+	},
+	"moneyMovingPermissions": [
+		"escrow.request",
+		"escrow.approve",
+		"disputes.decide",
+		"finance.payout_create",
+		"finance.payout_approve"
+	],
+	"session": {
+		"idleTimeoutSeconds": 900,
+		"absoluteTimeoutSeconds": 28800
+	},
+	"loginRateLimit": {
+		"maxAttempts": 5,
+		"windowSeconds": 900
+	}
+}

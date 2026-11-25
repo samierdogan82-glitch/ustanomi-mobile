@@ -31,6 +31,7 @@ const report = {
 	phase2_securityAndPhpSql: { passed: 0, failed: 0 },
 	phase3_mobileViewports: { passed: 0, failed: 0, details: [] },
 	phase4_storeCompliance: { passed: 0, failed: 0 },
+	phase5_adminConsole: { passed: 0, failed: 0 },
 };
 
 function check(phaseObj, condition, label) {
@@ -403,16 +404,69 @@ check(
 	"iOS PrivacyInfo.xcprivacy, Universal/App Links & Store Graphics",
 );
 
+// ============================================================================
+// PHASE 5: Admin Console RBAC, Tables, Security & Isolation Audit
+// ============================================================================
+const adminTables = [
+	"admin_users",
+	"admin_sessions",
+	"admin_audit_log",
+	"moderation_reports",
+	"platform_settings",
+	"payout_batches",
+	"admin_dual_approvals",
+	"escrow_dispute_decisions",
+	"admin_user_notes",
+];
+for (const tbl of adminTables) {
+	check(
+		report.phase5_adminConsole,
+		schemaSql.includes(`CREATE TABLE IF NOT EXISTS ${tbl}`),
+		`Admin table ${tbl}`,
+	);
+}
+
+const adminPolicy = JSON.parse(
+	fs.readFileSync(
+		path.join(projectRoot, "includes/admin-rbac-policy.json"),
+		"utf8",
+	),
+);
+check(
+	report.phase5_adminConsole,
+	Array.isArray(adminPolicy.roles) &&
+		adminPolicy.roles.length === 4 &&
+		adminPolicy.session?.idleTimeoutSeconds === 900 &&
+		adminPolicy.loginRateLimit?.maxAttempts === 5,
+	"Admin RBAC policy, 15m idle timeout & 5/15m login rate limit",
+);
+
+const adminApiFiles = fs
+	.readdirSync(path.join(projectRoot, "api/admin"))
+	.filter((f) => f.endsWith(".php"));
+check(
+	report.phase5_adminConsole,
+	adminApiFiles.length >= 12 &&
+		fs.existsSync(path.join(projectRoot, "admin/index.html")) &&
+		fs.existsSync(path.join(projectRoot, "admin/login.html")) &&
+		fs.existsSync(path.join(projectRoot, "admin/vendor/tabulator.min.js")) &&
+		fs.existsSync(path.join(projectRoot, "admin/vendor/chart.umd.min.js")) &&
+		!fs.existsSync(path.join(wwwRoot, "admin")),
+	"Admin UI isolated from www/, MIT vendors present & 12+ PHP admin endpoints",
+);
+
 const totalPassed =
 	report.phase1_financialLedger.passed +
 	report.phase2_securityAndPhpSql.passed +
 	report.phase3_mobileViewports.passed +
-	report.phase4_storeCompliance.passed;
+	report.phase4_storeCompliance.passed +
+	report.phase5_adminConsole.passed;
 const totalFailed =
 	report.phase1_financialLedger.failed +
 	report.phase2_securityAndPhpSql.failed +
 	report.phase3_mobileViewports.failed +
-	report.phase4_storeCompliance.failed;
+	report.phase4_storeCompliance.failed +
+	report.phase5_adminConsole.failed;
 
 console.log(
 	JSON.stringify(
@@ -428,6 +482,7 @@ console.log(
 					failed: report.phase3_mobileViewports.failed,
 				},
 				phase4_storeCompliance: report.phase4_storeCompliance,
+				phase5_adminConsole: report.phase5_adminConsole,
 			},
 		},
 		null,

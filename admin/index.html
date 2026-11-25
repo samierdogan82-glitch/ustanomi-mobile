@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ustanomi Yönetim Paneli</title>
+	<link rel="icon" href="../www/favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="vendor/tabulator_simple.min.css">
+	<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+	<div class="admin-layout">
+		<aside class="sidebar" aria-label="Yönetim Menüsü">
+			<div class="brand-row" style="padding:4px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:6px;">
+				<img src="../www/favicon.svg" alt="" width="28" height="28">
+				<div>
+					<h1>Ustanomi</h1>
+					<div class="brand-sub">Yönetim Paneli</div>
+				</div>
+			</div>
+
+			<div class="nav-group-label">Genel</div>
+			<button type="button" class="nav-item active" data-view="dashboard" data-perm="dashboard.view"><span>Gösterge Paneli</span></button>
+
+			<div class="nav-group-label">Kullanıcı &amp; Güven</div>
+			<button type="button" class="nav-item" data-view="users" data-perm="users.view"><span>Kullanıcılar &amp; Ustalar</span></button>
+			<button type="button" class="nav-item" data-view="kyc" data-perm="kyc.view"><span>KYC Onay Kuyruğu</span><span class="nav-badge" id="badge-kyc">0</span></button>
+			<button type="button" class="nav-item" data-view="moderation" data-perm="moderation.view"><span>İçerik Moderasyonu</span><span class="nav-badge" id="badge-mod">0</span></button>
+
+			<div class="nav-group-label">Ticaret &amp; Finans</div>
+			<button type="button" class="nav-item" data-view="escrow" data-perm="escrow.view"><span>Güvenli Havuz (Escrow)</span><span class="nav-badge" id="badge-dual">0</span></button>
+			<button type="button" class="nav-item" data-view="disputes" data-perm="disputes.view"><span>Uyuşmazlık Merkezi</span><span class="nav-badge" id="badge-dispute">0</span></button>
+			<button type="button" class="nav-item" data-view="tenders" data-perm="tenders.view"><span>B2B İhaleler &amp; Proforma</span></button>
+			<button type="button" class="nav-item" data-view="live" data-perm="live.view"><span>Canlı Yayın &amp; Hediyeler</span><span class="nav-badge" id="badge-live">0</span></button>
+			<button type="button" class="nav-item" data-view="finance" data-perm="finance.view"><span>Finans &amp; Raporlama</span></button>
+
+			<div class="nav-group-label">Sistem</div>
+			<button type="button" class="nav-item" data-view="settings" data-perm="settings.view"><span>Ayarlar &amp; Katalog</span></button>
+			<button type="button" class="nav-item" data-view="audit" data-perm="audit.view"><span>Denetim Kaydı</span></button>
+			<button type="button" class="nav-item" data-view="admins" data-perm="admins.manage"><span>Yöneticiler</span></button>
+		</aside>
+
+		<div class="main-col">
+			<header class="topbar">
+				<div class="topbar-title" id="topbar-title">Gösterge Paneli</div>
+				<div class="topbar-right">
+					<span class="role-pill" id="admin-role-pill">SUPER_ADMIN</span>
+					<span id="admin-name-label" style="font-weight:600;">Yönetici</span>
+					<button type="button" class="btn btn-sm" id="logout-btn">Çıkış</button>
+				</div>
+			</header>
+
+			<main class="content">
+				<!-- a. Gösterge Paneli -->
+				<section class="view-pane active" id="view-dashboard">
+					<div class="kpi-grid" id="dashboard-kpi-grid"></div>
+					<div class="two-col">
+						<div class="card">
+							<div class="card-head">
+								<h2>7 Günlük Güvenli Havuz Cirosu</h2>
+								<span class="pill blue">Kuruş-Tam Muhasebe</span>
+							</div>
+							<div class="chart-wrap"><canvas id="chart-revenue"></canvas></div>
+						</div>
+						<div class="card">
+							<div class="card-head">
+								<h2>Canlı Hediye Dağılımı (%85 / %15)</h2>
+							</div>
+							<div class="chart-wrap"><canvas id="chart-gifts"></canvas></div>
+						</div>
+					</div>
+				</section>
+
+				<!-- b. Kullanıcılar & Ustalar -->
+				<section class="view-pane" id="view-users">
+					<div class="card">
+						<div class="card-head">
+							<h2>Kullanıcılar &amp; Ustalar</h2>
+							<div class="toolbar">
+								<input type="search" id="user-search-input" class="input" placeholder="Ad veya e-posta ara...">
+								<select id="user-role-filter" class="select" aria-label="Rol filtresi">
+									<option value="">Tüm Roller</option>
+									<option value="MASTER">Usta / Sanayici</option>
+									<option value="CUSTOMER">Müşteri</option>
+								</select>
+								<select id="user-status-filter" class="select" aria-label="Durum filtresi">
+									<option value="">Tüm Durumlar</option>
+									<option value="active">Aktif</option>
+									<option value="suspended">Askıda</option>
+								</select>
+							</div>
+						</div>
+						<div id="table-users"></div>
+					</div>
+					<div class="card">
+						<div class="card-head">
+							<h3>KVKK Hesap Silme Talebi Kuyruğu</h3>
+							<span class="pill warn">Havuzda parası olan hesap silinemez</span>
+						</div>
+						<div id="table-deletion-queue"></div>
+					</div>
+				</section>
+
+				<!-- c. KYC Onay Kuyruğu -->
+				<section class="view-pane" id="view-kyc">
+					<div class="card">
+						<div class="card-head">
+							<h2>KYC Onay Kuyruğu (TCKN / VKN / IBAN)</h2>
+							<span class="pill blue">Varsayılan Maskeli Görünüm</span>
+						</div>
+						<div id="table-kyc"></div>
+					</div>
+				</section>
+
+				<!-- d. Güvenli Havuz (Escrow) -->
+				<section class="view-pane" id="view-escrow">
+					<div class="card">
+						<div class="card-head">
+							<h2>Güvenli Havuz İşlemleri &amp; Etap (%30 / %40 / %30) Takibi</h2>
+							<span class="pill warn">Manuel Serbest Bırakma / İade: Çift İmza Zorunlu</span>
+						</div>
+						<div id="table-escrow"></div>
+					</div>
+					<div class="card">
+						<div class="card-head">
+							<h3>Bekleyen Çift İmza (Four-Eyes) Onayları</h3>
+						</div>
+						<div id="table-dual-approvals"></div>
+					</div>
+				</section>
+
+				<!-- e. Uyuşmazlık Merkezi -->
+				<section class="view-pane" id="view-disputes">
+					<div class="card">
+						<div class="card-head">
+							<h2>Uyuşmazlık Merkezi</h2>
+							<span class="pill blue">Kanıt İnceleme &amp; Nihai Karar</span>
+						</div>
+						<div id="table-disputes"></div>
+					</div>
+				</section>
+
+				<!-- f. B2B İhaleler & Proformalar -->
+				<section class="view-pane" id="view-tenders">
+					<div class="card">
+						<div class="card-head">
+							<h2>B2B Sanayi İhaleleri &amp; Kapalı Zarf Proformalar</h2>
+							<span class="pill" id="sealed-notice-pill">Yalnızca Yetkili Rol Tutarları Görür</span>
+						</div>
+						<div id="table-tenders"></div>
+					</div>
+				</section>
+
+				<!-- g. Canlı Yayın & Hediyeler -->
+				<section class="view-pane" id="view-live">
+					<div class="card">
+						<div class="card-head">
+							<h2>Aktif İş Başında Canlı Yayınlar</h2>
+							<span class="pill danger" id="gift-cycle-alert">Şüpheli Döngü Kontrolü</span>
+						</div>
+						<div id="table-live-streams"></div>
+					</div>
+					<div class="card">
+						<div class="card-head">
+							<h3>Mesleki Hediye İşlemleri (%85 Usta / %15 Platform)</h3>
+						</div>
+						<div id="table-live-gifts"></div>
+					</div>
+				</section>
+
+				<!-- h. İçerik Moderasyonu -->
+				<section class="view-pane" id="view-moderation">
+					<div class="card">
+						<div class="card-head">
+							<h2>İçerik Moderasyonu &amp; Şikâyetler</h2>
+						</div>
+						<div id="table-moderation"></div>
+					</div>
+				</section>
+
+				<!-- i. Finans & Raporlama -->
+				<section class="view-pane" id="view-finance">
+					<div class="card">
+						<div class="card-head">
+							<h2>Hak Ediş Ödeme Listesi &amp; Toplu Ödeme</h2>
+							<div class="toolbar">
+								<button type="button" class="btn btn-sm" id="export-payable-csv-btn">Hak Ediş CSV İndir</button>
+								<button type="button" class="btn btn-sm" id="export-commission-csv-btn">Komisyon CSV İndir</button>
+								<button type="button" class="btn btn-sm btn-primary" id="create-payout-batch-btn">Seçililerden Ödeme Paketi Oluştur</button>
+							</div>
+						</div>
+						<div id="table-finance-payable"></div>
+					</div>
+					<div class="two-col">
+						<div class="card">
+							<div class="card-head"><h3>Aylık Platform Komisyon Raporu</h3></div>
+							<div id="table-finance-commission"></div>
+						</div>
+						<div class="card">
+							<div class="card-head"><h3>GİB e-Fatura / e-Arşiv Durumu</h3></div>
+							<div id="table-finance-efatura"></div>
+						</div>
+					</div>
+				</section>
+
+				<!-- j. Ayarlar -->
+				<section class="view-pane" id="view-settings">
+					<div class="two-col">
+						<div class="card">
+							<div class="card-head">
+								<h2>Komisyon Oranları (Sürümlü)</h2>
+								<span class="pill warn">Geçmişe dönük çalışmaz</span>
+							</div>
+							<div class="field">
+								<label for="setting-escrow-bps">Güvenli Havuz Platform Komisyonu (bps · 1200 = %12)</label>
+								<input type="number" id="setting-escrow-bps" class="input num" value="1200" min="0" max="3000">
+							</div>
+							<div class="field">
+								<label for="setting-live-bps">Canlı Yayın Hediye Platform Payı (bps · 1500 = %15)</label>
+								<input type="number" id="setting-live-bps" class="input num" value="1500" min="0" max="3000">
+							</div>
+							<div class="field">
+								<label for="setting-reason">Değişiklik Gerekçesi (Zorunlu)</label>
+								<input type="text" id="setting-reason" class="input" placeholder="Örn: Q4 kampanya güncellemesi">
+							</div>
+							<button type="button" class="btn btn-primary" id="save-rates-btn">Yeni Sürüm Olarak Kaydet</button>
+						</div>
+						<div class="card">
+							<div class="card-head"><h2>18 Meslek Hediyesi Kataloğu</h2></div>
+							<div id="table-gift-catalog"></div>
+						</div>
+					</div>
+				</section>
+
+				<!-- k. Denetim Kaydı -->
+				<section class="view-pane" id="view-audit">
+					<div class="card">
+						<div class="card-head">
+							<h2>Değiştirilemez Denetim Kaydı (Hash Zincirli)</h2>
+							<div class="toolbar">
+								<button type="button" class="btn btn-sm" id="verify-chain-btn">Hash Zincirini Doğrula</button>
+							</div>
+						</div>
+						<div id="table-audit"></div>
+					</div>
+				</section>
+
+				<!-- Yöneticiler -->
+				<section class="view-pane" id="view-admins">
+					<div class="card">
+						<div class="card-head">
+							<h2>Yönetici Hesapları &amp; Roller</h2>
+							<button type="button" class="btn btn-sm btn-primary" id="new-admin-btn">Yeni Yönetici Ekle</button>
+						</div>
+						<div id="table-admins"></div>
+					</div>
+				</section>
+			</main>
+		</div>
+	</div>
+
+	<div class="modal-backdrop" id="admin-modal" role="dialog" aria-modal="true">
+		<div class="modal-card">
+			<div class="card-head">
+				<h3 id="modal-title">İşlem</h3>
+				<button type="button" class="btn btn-sm" id="modal-close-btn">Kapat</button>
+			</div>
+			<div id="modal-body"></div>
+		</div>
+	</div>
+
+	<div class="toast-box" id="toast-box" aria-live="polite"></div>
+
+	<script src="vendor/tabulator.min.js"></script>
+	<script src="vendor/chart.umd.min.js"></script>
+	<script type="module" src="admin-app.js"></script>
+</body>
+</html>

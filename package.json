@@ -13,8 +13,9 @@
 		"test": "node --test tests/*.test.mjs",
 		"brand:build": "node scripts/build-brand.mjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#0E1726\" --iconBackgroundColorDark \"#0E1726\" --splashBackgroundColor \"#0E1726\" --splashBackgroundColorDark \"#0E1726\"",
 		"brand:preview": "node scripts/preview-brand.mjs",
+		"admin:capture": "node scripts/capture-admin.mjs",
 		"audit:master": "node scripts/master-pro-audit.mjs",
-		"verify": "biome check www tests scripts package.json capacitor.config.json && node --test tests/*.test.mjs"
+		"verify": "biome check && node --test tests/*.test.mjs"
 	},
 	"dependencies": {
 		"@capacitor/android": "^6.2.0",
@@ -37,6 +38,8 @@
 	"devDependencies": {
 		"@capacitor/assets": "^4.0.0",
 		"@capacitor/cli": "^6.2.0",
-		"sharp": "^0.35.5"
+		"chart.js": "^4.6.2",
+		"sharp": "^0.35.5",
+		"tabulator-tables": "^6.7.1"
 	}
 }

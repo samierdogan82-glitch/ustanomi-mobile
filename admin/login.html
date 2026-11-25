@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ustanomi Yönetim Paneli — Giriş</title>
+	<link rel="icon" href="../www/favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+	<main class="login-shell">
+		<section class="login-card" aria-label="Yönetici Girişi">
+			<div class="brand-row">
+				<img src="../www/favicon.svg" alt="" width="32" height="32">
+				<div>
+					<h1>Ustanomi Yönetim</h1>
+					<div class="brand-sub">Yalnızca yetkili yöneticiler • Zorunlu 2FA</div>
+				</div>
+			</div>
+
+			<form id="step-credentials">
+				<div class="field">
+					<label for="login-email">Yönetici E-posta</label>
+					<input type="email" id="login-email" class="input" required autocomplete="username" placeholder="ad@ustanomi.com">
+				</div>
+				<div class="field">
+					<label for="login-password">Şifre</label>
+					<input type="password" id="login-password" class="input" required autocomplete="current-password" placeholder="••••••••••••">
+				</div>
+				<button type="submit" class="btn btn-primary" style="width:100%;">Devam et</button>
+			</form>
+
+			<form id="step-totp" style="display:none;">
+				<div class="field">
+					<label for="login-totp">2FA Doğrulama Kodu (6 haneli TOTP)</label>
+					<input type="text" id="login-totp" class="input num" inputmode="numeric" maxlength="6" pattern="\d{6}" required placeholder="000000">
+				</div>
+				<button type="submit" class="btn btn-primary" style="width:100%;">Oturumu aç</button>
+			</form>
+
+			<div id="login-feedback" class="feedback" role="alert"></div>
+		</section>
+	</main>
+
+	<script type="module">
+		const credForm = document.getElementById("step-credentials");
+		const totpForm = document.getElementById("step-totp");
+		const feedback = document.getElementById("login-feedback");
+
+		function showError(msg) {
+			feedback.style.color = "var(--red)";
+			feedback.textContent = msg;
+		}
+
+		credForm.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			feedback.textContent = "";
+			const email = document.getElementById("login-email").value.trim();
+			const password = document.getElementById("login-password").value;
+			try {
+				const res = await fetch("../api/admin/auth.php", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ action: "login", email, password }),
+				});
+				const data = await res.json();
+				if (!res.ok || !data.success) {
+					showError(data.message || "Giriş başarısız.");
+					return;
+				}
+				credForm.style.display = "none";
+				totpForm.style.display = "block";
+				document.getElementById("login-totp").focus();
+			} catch {
+				showError("Sunucuya bağlanılamadı.");
+			}
+		});
+
+		totpForm.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			feedback.textContent = "";
+			const code = document.getElementById("login-totp").value.trim();
+			try {
+				const res = await fetch("../api/admin/auth.php", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ action: "totp", code }),
+				});
+				const data = await res.json();
+				if (!res.ok || !data.success) {
+					showError(data.message || "Doğrulama kodu hatalı.");
+					return;
+				}
+				window.location.replace("index.html");
+			} catch {
+				showError("Doğrulama sırasında bağlantı hatası oluştu.");
+			}
+		});
+	</script>
+</body>
+</html>

@@ -3,7 +3,11 @@
 	"files": {
 		"includes": [
 			"www/**",
+			"admin/*.js",
+			"admin/*.css",
+			"admin/*.html",
 			"tests/**",
+			"scripts/**",
 			".agents/**/*.json",
 			"package.json",
 			"capacitor.config.json",

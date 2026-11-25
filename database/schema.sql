@@ -429,3 +429,206 @@ CREATE TABLE IF NOT EXISTS live_gift_transactions (
   CONSTRAINT fk_gift_streamer FOREIGN KEY (streamer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_gift_streamer_created (streamer_user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- MIGRATION 2026_11_26_001 — Admin Console (Yönetim Paneli)
+-- Additive only: new tables + ADD COLUMN / ENUM value extensions. No column is dropped.
+-- All money columns are BIGINT kuruş. Run once on an existing database.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name VARCHAR(150) NOT NULL,
+  role ENUM('SUPER_ADMIN', 'FINANCE', 'MODERATOR', 'SUPPORT') NOT NULL DEFAULT 'SUPPORT',
+  totp_secret_enc VARBINARY(255) NULL,
+  totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  linked_user_id INT UNSIGNED NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  failed_login_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  last_login_at DATETIME NULL,
+  created_by_admin_id INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_admin_linked_user FOREIGN KEY (linked_user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX idx_admin_role_active (role, is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_user_id INT UNSIGNED NOT NULL,
+  session_token_sha256 CHAR(64) NOT NULL UNIQUE,
+  csrf_token CHAR(64) NOT NULL,
+  totp_verified TINYINT(1) NOT NULL DEFAULT 0,
+  ip_address VARCHAR(45) NOT NULL,
+  user_agent VARCHAR(255) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_activity_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME NOT NULL,
+  revoked_at DATETIME NULL,
+  CONSTRAINT fk_admin_session_user FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX idx_admin_session_active (admin_user_id, revoked_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Append-only, hash-chained audit trail. The application exposes no UPDATE/DELETE path.
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_user_id INT UNSIGNED NULL,
+  admin_role VARCHAR(20) NOT NULL DEFAULT 'ANONYMOUS',
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(50) NOT NULL,
+  target_id VARCHAR(64) NULL,
+  -- LONGTEXT (not JSON) keeps the exact bytes that were hashed, so the chain can be re-verified.
+  before_json LONGTEXT NULL,
+  after_json LONGTEXT NULL,
+  reason VARCHAR(500) NOT NULL DEFAULT '',
+  ip_address VARCHAR(45) NOT NULL,
+  prev_hash CHAR(64) NOT NULL,
+  row_hash CHAR(64) NOT NULL UNIQUE,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_admin_audit_action (action, created_at),
+  INDEX idx_admin_audit_target (target_type, target_id),
+  INDEX idx_admin_audit_ip (ip_address, action, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS moderation_reports (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  reporter_user_id INT UNSIGNED NOT NULL,
+  target_type ENUM('TALENT_POST', 'COMMENT', 'DM_MESSAGE', 'LIVE_STREAM', 'PROFILE') NOT NULL,
+  target_id BIGINT UNSIGNED NOT NULL,
+  target_owner_user_id INT UNSIGNED NULL,
+  reason_code ENUM('SPAM', 'FRAUD', 'ABUSE', 'OFF_PLATFORM_PAYMENT', 'INAPPROPRIATE', 'OTHER') NOT NULL DEFAULT 'OTHER',
+  details VARCHAR(500) NOT NULL DEFAULT '',
+  status ENUM('OPEN', 'HIDDEN', 'DELETED', 'WARNED', 'DISMISSED') NOT NULL DEFAULT 'OPEN',
+  handled_by_admin_id INT UNSIGNED NULL,
+  handled_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_modrep_reporter FOREIGN KEY (reporter_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_modrep_admin FOREIGN KEY (handled_by_admin_id) REFERENCES admin_users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  INDEX idx_modrep_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Versioned settings: a new row per change. Readers pick the row whose effective_from
+-- is the latest one <= the transaction timestamp, so rate changes never apply retroactively.
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  setting_key VARCHAR(80) NOT NULL,
+  setting_value_json JSON NOT NULL,
+  effective_from DATETIME NOT NULL,
+  created_by_admin_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_settings_admin FOREIGN KEY (created_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  UNIQUE KEY uq_setting_version (setting_key, effective_from)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS payout_batches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  batch_code VARCHAR(40) NOT NULL UNIQUE,
+  idempotency_key VARCHAR(96) NOT NULL UNIQUE,
+  status ENUM('PENDING_APPROVAL', 'APPROVED', 'PAID', 'CANCELLED') NOT NULL DEFAULT 'PENDING_APPROVAL',
+  items_count INT UNSIGNED NOT NULL,
+  gross_kurus BIGINT UNSIGNED NOT NULL,
+  pro_net_kurus BIGINT UNSIGNED NOT NULL,
+  platform_fee_kurus BIGINT UNSIGNED NOT NULL,
+  items_json JSON NOT NULL,
+  created_by_admin_id INT UNSIGNED NOT NULL,
+  approved_by_admin_id INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  approved_at DATETIME NULL,
+  CONSTRAINT fk_payout_creator FOREIGN KEY (created_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_payout_approver FOREIGN KEY (approved_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT chk_payout_conservation CHECK (pro_net_kurus + platform_fee_kurus = gross_kurus),
+  CONSTRAINT chk_payout_four_eyes CHECK (approved_by_admin_id IS NULL OR approved_by_admin_id <> created_by_admin_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Four-eyes (çift imza) queue for manual escrow release/refund.
+CREATE TABLE IF NOT EXISTS admin_dual_approvals (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  idempotency_key VARCHAR(96) NOT NULL UNIQUE,
+  action_type ENUM('ESCROW_RELEASE', 'ESCROW_REFUND') NOT NULL,
+  service_request_id INT UNSIGNED NOT NULL,
+  amount_kurus BIGINT UNSIGNED NOT NULL,
+  pro_net_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  platform_fee_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  customer_refund_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  reason VARCHAR(500) NOT NULL,
+  status ENUM('PENDING', 'EXECUTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+  requested_by_admin_id INT UNSIGNED NOT NULL,
+  decided_by_admin_id INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  decided_at DATETIME NULL,
+  CONSTRAINT fk_dual_request FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_dual_requester FOREIGN KEY (requested_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_dual_decider FOREIGN KEY (decided_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT chk_dual_conservation CHECK (pro_net_kurus + platform_fee_kurus + customer_refund_kurus = amount_kurus),
+  CONSTRAINT chk_dual_four_eyes CHECK (decided_by_admin_id IS NULL OR decided_by_admin_id <> requested_by_admin_id),
+  INDEX idx_dual_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS escrow_dispute_decisions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  idempotency_key VARCHAR(96) NOT NULL UNIQUE,
+  service_request_id INT UNSIGNED NOT NULL UNIQUE,
+  total_kurus BIGINT UNSIGNED NOT NULL,
+  suggested_decision VARCHAR(40) NOT NULL,
+  final_decision ENUM('RELEASE_FULL_TO_PRO', 'PARTIAL_SETTLEMENT', 'FULL_REFUND_TO_CUSTOMER') NOT NULL,
+  customer_refund_kurus BIGINT UNSIGNED NOT NULL,
+  pro_payout_kurus BIGINT UNSIGNED NOT NULL,
+  platform_fee_kurus BIGINT UNSIGNED NOT NULL,
+  evidence_json JSON NOT NULL,
+  reason VARCHAR(500) NOT NULL,
+  decided_by_admin_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_dispute_request FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_dispute_admin FOREIGN KEY (decided_by_admin_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT chk_dispute_conservation CHECK (customer_refund_kurus + pro_payout_kurus + platform_fee_kurus = total_kurus)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_user_notes (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  admin_user_id INT UNSIGNED NOT NULL,
+  note VARCHAR(1000) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_note_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_note_admin FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_note_user (user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Additive column / ENUM extensions on existing tables
+ALTER TABLE users
+  ADD COLUMN is_suspended TINYINT(1) NOT NULL DEFAULT 0,
+  ADD COLUMN suspended_reason VARCHAR(500) NULL,
+  ADD COLUMN efatura_badge TINYINT(1) NOT NULL DEFAULT 0,
+  ADD COLUMN deletion_requested_at DATETIME NULL;
+
+ALTER TABLE user_kyc_identities
+  MODIFY COLUMN kyc_status ENUM('VERIFIED_ALGORITHMIC', 'NVİ_KPS_VERIFIED', 'SUSPENDED', 'PENDING_REVIEW', 'REJECTED') NOT NULL DEFAULT 'VERIFIED_ALGORITHMIC',
+  ADD COLUMN document_id BIGINT UNSIGNED NULL,
+  ADD COLUMN rejection_reason VARCHAR(500) NULL,
+  ADD COLUMN reviewed_by_admin_id INT UNSIGNED NULL,
+  ADD COLUMN reviewed_at DATETIME NULL;
+
+ALTER TABLE service_requests
+  ADD COLUMN released_milestones TINYINT UNSIGNED NOT NULL DEFAULT 0;
+
+ALTER TABLE escrow_transactions
+  ADD COLUMN efatura_status ENUM('NOT_ISSUED', 'QUEUED', 'ISSUED', 'FAILED') NOT NULL DEFAULT 'NOT_ISSUED',
+  ADD COLUMN efatura_uuid CHAR(36) NULL,
+  ADD COLUMN payout_batch_id BIGINT UNSIGNED NULL,
+  ADD INDEX idx_escrow_payout (status, payout_batch_id);
+
+ALTER TABLE uploaded_documents
+  MODIFY COLUMN doc_category ENUM('SITE_PHOTO', 'DAMAGE_REPORT', 'MEB_MYK_CERTIFICATE', 'BEFORE_PHOTO', 'AFTER_PHOTO', 'WET_SIGNATURE', 'CARGO_WAYBILL', 'KYC_DOCUMENT') NOT NULL;
+
+ALTER TABLE live_work_streams
+  ADD COLUMN suspended_by_admin_id INT UNSIGNED NULL,
+  ADD COLUMN suspended_reason VARCHAR(500) NULL;
+
+ALTER TABLE talent_posts
+  ADD COLUMN moderation_state ENUM('VISIBLE', 'HIDDEN', 'DELETED') NOT NULL DEFAULT 'VISIBLE';
+
+ALTER TABLE dm_messages
+  ADD COLUMN moderation_state ENUM('VISIBLE', 'HIDDEN', 'DELETED') NOT NULL DEFAULT 'VISIBLE';

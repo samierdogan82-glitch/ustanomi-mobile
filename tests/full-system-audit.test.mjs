@@ -12,7 +12,7 @@ const projectRoot = path.resolve(import.meta.dirname, "..");
 
 describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Compliance Audit", () => {
 	it("verifies every PHP file in api/ and includes/ has zero UTF-8 BOM, strict_types=1, and zero raw SQL interpolation", () => {
-		const dirs = ["api", "includes"];
+		const dirs = ["api", "api/admin", "includes"];
 		let checkedCount = 0;
 
 		for (const dir of dirs) {
@@ -93,6 +93,23 @@ describe("Ustanomi Pre-Launch Full System Security, PHP AST/CSRF, PWA & Store Co
 			"utf8",
 		);
 		assert.equal(webhookContent.includes("verify_webhook_hmac"), true);
+
+		const adminApiDir = path.join(projectRoot, "api/admin");
+		for (const file of fs
+			.readdirSync(adminApiDir)
+			.filter((f) => f.endsWith(".php") && f !== "auth.php")) {
+			const content = fs.readFileSync(path.join(adminApiDir, file), "utf8");
+			if (
+				content.includes("admin_method() !== 'POST'") ||
+				content.includes("if ($method !== 'POST'")
+			) {
+				assert.equal(
+					content.includes("require_admin_csrf"),
+					true,
+					`POST admin endpoint api/admin/${file} must call require_admin_csrf()`,
+				);
+			}
+		}
 	});
 
 	it("verifies AndroidManifest.xml, iOS Info.plist, capacitor.config.json, and PWA Service Worker compliance", () => {

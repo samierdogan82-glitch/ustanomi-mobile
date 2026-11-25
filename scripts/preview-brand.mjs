@@ -66,7 +66,9 @@ layers.push(bg(1300, 330, 160, 180, "#F4F4F4"));
 layers.push({ input: await sized(120, "squircle"), left: 1320, top: 360 });
 
 // Mark-only on light (dark variant) to prove contrast on white
-const markDark = await sharp(path.join(root, "assets/brand/ustanomi-mark-dark.svg"))
+const markDark = await sharp(
+	path.join(root, "assets/brand/ustanomi-mark-dark.svg"),
+)
 	.resize(300, 300)
 	.png()
 	.toBuffer();
