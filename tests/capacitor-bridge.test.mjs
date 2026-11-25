@@ -6,14 +6,18 @@ import {
 	canTransitionEscrow,
 	canTransitionLeadState,
 	canTransitionOfferState,
+	convertAndFormatGlobalPrice,
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
 	enqueueOfflineAction,
+	estimateArmutStyleSmartQuote,
 	evaluatePasswordStrength,
 	evaluateProAvailability,
 	evaluateWorkflowRoleAccess,
+	filterAndSearchMarketplace,
 	flushOfflineQueue,
 	formatInstagramProShowcase,
+	GLOBAL_LOCALES,
 	getOfflineQueue,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
@@ -295,6 +299,63 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		});
 		assert.equal(invalidKyc.valid, false);
 		assert.equal(invalidKyc.errorCode, "INVALID_TCKN_CHECKSUM");
+	});
+
+	it("filters marketplace with Armut/Thumbtack multi-filters, smart quote wizard, and Global FX (TRY/USD/EUR)", () => {
+		assert.equal(Object.keys(GLOBAL_LOCALES).length, 3);
+		const usdPrice = convertAndFormatGlobalPrice(1000, "US");
+		assert.equal(usdPrice.currency, "USD");
+		assert.equal(usdPrice.amount, 29);
+		assert.equal(usdPrice.formatted, "$29.00");
+
+		const eurQuote = estimateArmutStyleSmartQuote({
+			professionQuery: "tesisat",
+			scopeSize: "MEDIUM",
+			includeMaterials: true,
+			urgencyCode: "EMERGENCY_30M",
+			regionCode: "EU",
+		});
+		assert.equal(eurQuote.clusterCode, "HOME_TECH");
+		assert.equal(eurQuote.recommendedPriceTl > 1500, true);
+		assert.equal(eurQuote.formattedRecommended.startsWith("€"), true);
+
+		const sampleListing = [
+			{
+				id: "p1",
+				title: "Kadıköy Kombi Bakımı",
+				clusterCode: "HOME_TECH",
+				city: "İstanbul",
+				priceTl: 900,
+				etaMinutes: 25,
+				isProOpen: true,
+				isKycVerified: true,
+				likesCount: 200,
+			},
+			{
+				id: "p2",
+				title: "Berlin Smart Home Electrical",
+				clusterCode: "HOME_TECH",
+				city: "Berlin",
+				priceTl: 2400,
+				etaMinutes: 15,
+				isProOpen: false,
+				isKycVerified: true,
+				likesCount: 550,
+			},
+		];
+
+		const openOnly = filterAndSearchMarketplace(sampleListing, {
+			onlyOpenNow: true,
+		});
+		assert.equal(openOnly.length, 1);
+		assert.equal(openOnly[0].id, "p1");
+
+		const berlinSearch = filterAndSearchMarketplace(sampleListing, {
+			city: "Berlin",
+			onlyOpenNow: false,
+		});
+		assert.equal(berlinSearch.length, 1);
+		assert.equal(berlinSearch[0].id, "p2");
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

@@ -852,6 +852,220 @@ export function validateKycRegistrationPayload(payload) {
 }
 
 /**
+ * Global Multi-Locale & Multi-Currency Catalog (TR / EN / DE / Global hubs)
+ */
+export const GLOBAL_LOCALES = Object.freeze({
+	TR: Object.freeze({
+		code: "TR",
+		locale: "tr-TR",
+		currency: "TRY",
+		symbol: "₺",
+		fxRateFromTry: 1,
+		flag: "🇹🇷",
+		label: "TR • ₺ TRY",
+		cities: Object.freeze([
+			"İstanbul",
+			"Ankara",
+			"İzmir",
+			"Bursa",
+			"Antalya",
+			"Konya",
+		]),
+	}),
+	US: Object.freeze({
+		code: "US",
+		locale: "en-US",
+		currency: "USD",
+		symbol: "$",
+		fxRateFromTry: 0.029,
+		flag: "🌍",
+		label: "EN • $ USD",
+		cities: Object.freeze(["New York", "London", "Dubai", "Austin", "Toronto"]),
+	}),
+	EU: Object.freeze({
+		code: "EU",
+		locale: "de-DE",
+		currency: "EUR",
+		symbol: "€",
+		fxRateFromTry: 0.027,
+		flag: "🇪🇺",
+		label: "EU • € EUR",
+		cities: Object.freeze(["Berlin", "Amsterdam", "Munich", "Vienna", "Paris"]),
+	}),
+});
+
+/**
+ * Converts a TRY amount into the active global currency (TRY, USD, EUR) with exact 2-decimal precision.
+ * @param {number} amountTl
+ * @param {"TR" | "US" | "EU"} regionCode
+ */
+export function convertAndFormatGlobalPrice(amountTl, regionCode = "TR") {
+	const region = GLOBAL_LOCALES[regionCode] || GLOBAL_LOCALES.TR;
+	const base = Math.max(0, Number(amountTl) || 0);
+	const converted = Math.round(base * region.fxRateFromTry * 100) / 100;
+	return {
+		regionCode: region.code,
+		currency: region.currency,
+		symbol: region.symbol,
+		amount: converted,
+		formatted:
+			region.code === "TR"
+				? `${Math.round(converted)} ₺`
+				: `${region.symbol}${converted.toFixed(2)}`,
+	};
+}
+
+/**
+ * Armut / Thumbtack style Dynamic Scope & Smart Quote Estimator Wizard.
+ * Calculates min/recommended/max price range and 88% Pro / 12% Escrow split based on:
+ * - Profession cluster base rate
+ * - Scope size multiplier (Small/1 Room = 1.0x, Medium/2-3 Rooms = 1.75x, Large/Commercial = 2.8x)
+ * - Material inclusion (`includeMaterials`: +45%)
+ * - Urgency (`EMERGENCY_30M`: +25%)
+ * @param {{
+ *   professionQuery?: string,
+ *   scopeSize?: "SMALL" | "MEDIUM" | "LARGE",
+ *   includeMaterials?: boolean,
+ *   urgencyCode?: "EMERGENCY_30M" | "TODAY" | "SCHEDULED",
+ *   regionCode?: "TR" | "US" | "EU"
+ * }} params
+ */
+export function estimateArmutStyleSmartQuote(params = {}) {
+	const cluster = resolveUniversalProfessionCluster(
+		params.professionQuery || "",
+	);
+	const scopeMultipliers = { SMALL: 1.0, MEDIUM: 1.75, LARGE: 2.8 };
+	const scopeMult = scopeMultipliers[params.scopeSize] || 1.0;
+	const materialMult = params.includeMaterials ? 1.45 : 1.0;
+	const urgencyMult = params.urgencyCode === "EMERGENCY_30M" ? 1.25 : 1.0;
+
+	const recommendedTl = Math.round(
+		cluster.startingPriceTl * scopeMult * materialMult * urgencyMult,
+	);
+	const minTl = Math.round(recommendedTl * 0.85);
+	const maxTl = Math.round(recommendedTl * 1.2);
+	const split = calculateSplitPaymentEscrow(recommendedTl);
+	const regionCode = params.regionCode || "TR";
+
+	return {
+		clusterCode: cluster.code,
+		clusterTitleTr: cluster.titleTr,
+		minPriceTl: minTl,
+		recommendedPriceTl: recommendedTl,
+		maxPriceTl: maxTl,
+		proNetShareTl: split.subMerchantShareTl,
+		platformEscrowFeeTl: split.platformCommissionTl,
+		formattedRange: `${convertAndFormatGlobalPrice(minTl, regionCode).formatted} – ${convertAndFormatGlobalPrice(maxTl, regionCode).formatted}`,
+		formattedRecommended: convertAndFormatGlobalPrice(recommendedTl, regionCode)
+			.formatted,
+	};
+}
+
+/**
+ * Multi-dimensional Search & Filter Engine inspired by Armut, Thumbtack, and TaskRabbit.
+ * Supports keyword search (Turkish + English), profession cluster, city, max budget,
+ * minimum rating, "Open Now / 24-7 On-Duty Only", "KYC Verified Only", and 4 sort modes.
+ * @param {Array<Record<string, unknown>>} items
+ * @param {{
+ *   query?: string,
+ *   clusterCode?: string,
+ *   city?: string,
+ *   onlyOpenNow?: boolean,
+ *   onlyKycVerified?: boolean,
+ *   maxPriceTl?: number,
+ *   minRating?: number,
+ *   sortBy?: "TRENDING" | "PRICE_ASC" | "RATING_DESC" | "FASTEST_ETA"
+ * }} filters
+ */
+export function filterAndSearchMarketplace(items, filters = {}) {
+	if (!Array.isArray(items)) {
+		return [];
+	}
+	const q =
+		typeof filters.query === "string"
+			? filters.query.trim().toLocaleLowerCase("tr-TR")
+			: "";
+	const clusterCode =
+		typeof filters.clusterCode === "string" && filters.clusterCode !== "ALL"
+			? filters.clusterCode.trim()
+			: "";
+	const city =
+		typeof filters.city === "string" && filters.city !== "ALL"
+			? filters.city.trim().toLocaleLowerCase("tr-TR")
+			: "";
+	const maxPrice = Number(filters.maxPriceTl);
+	const minRating = Number(filters.minRating);
+
+	const matched = items.filter((item) => {
+		if (clusterCode && item.clusterCode && item.clusterCode !== clusterCode) {
+			return false;
+		}
+		if (
+			city &&
+			typeof item.city === "string" &&
+			item.city.toLocaleLowerCase("tr-TR") !== city
+		) {
+			return false;
+		}
+		if (filters.onlyOpenNow && item.isProOpen === false) {
+			return false;
+		}
+		if (filters.onlyKycVerified && item.isKycVerified === false) {
+			return false;
+		}
+		const itemPrice = Number(item.priceTl ?? item.estimatedBudgetTl ?? 0);
+		if (Number.isFinite(maxPrice) && maxPrice > 0 && itemPrice > maxPrice) {
+			return false;
+		}
+		const itemRating = Number(item.rating ?? 4.9);
+		if (Number.isFinite(minRating) && minRating > 0 && itemRating < minRating) {
+			return false;
+		}
+		if (q) {
+			const searchable = [
+				item.title,
+				item.description,
+				item.handle,
+				item.cluster,
+				item.city,
+				item.district,
+			]
+				.filter(Boolean)
+				.join(" ")
+				.toLocaleLowerCase("tr-TR");
+			const resolvedCluster = resolveUniversalProfessionCluster(q);
+			const clusterMatch =
+				item.clusterCode &&
+				item.clusterCode === resolvedCluster.code &&
+				q.length >= 3;
+			if (!searchable.includes(q) && !clusterMatch) {
+				return false;
+			}
+		}
+		return true;
+	});
+
+	const sortBy = filters.sortBy || "TRENDING";
+	matched.sort((a, b) => {
+		if (sortBy === "PRICE_ASC") {
+			return (
+				Number(a.priceTl ?? a.estimatedBudgetTl ?? 0) -
+				Number(b.priceTl ?? b.estimatedBudgetTl ?? 0)
+			);
+		}
+		if (sortBy === "RATING_DESC") {
+			return Number(b.rating ?? 4.9) - Number(a.rating ?? 4.9);
+		}
+		if (sortBy === "FASTEST_ETA") {
+			return Number(a.etaMinutes ?? 20) - Number(b.etaMinutes ?? 20);
+		}
+		return calculateTalentTrendingScore(b) - calculateTalentTrendingScore(a);
+	});
+
+	return matched;
+}
+
+/**
  * Validates whether a URL belongs to Ustanomi or an approved 3D Secure payment host (PayTR / iyzico).
  * @param {string} rawUrl
  * @returns {boolean}
@@ -1473,6 +1687,10 @@ export const UstanomiNative = Object.freeze({
 	validateTurkishIban,
 	evaluatePasswordStrength,
 	validateKycRegistrationPayload,
+	GLOBAL_LOCALES,
+	convertAndFormatGlobalPrice,
+	estimateArmutStyleSmartQuote,
+	filterAndSearchMarketplace,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,

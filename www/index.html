@@ -361,13 +361,65 @@
                 </div>
                 <div>
                     <h1 class="brand-title">USTANOMI</h1>
-                    <p class="brand-sub" id="queue-badge">Her İşin Uzmanı • Canlı Acil İş &amp; Vitrin</p>
+                    <p class="brand-sub" id="queue-badge">Global Skill &amp; Service Economy</p>
                 </div>
             </div>
-            <button type="button" class="status-toggle" id="pro-mode-toggle" title="Çalışma Durumunu Değiştir">
-                🟢 Açık (08:00-20:00)
-            </button>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <select id="global-region-select" class="status-toggle" style="background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.5);color:#FDE68A;" aria-label="Global Bölge ve Para Birimi">
+                    <option value="TR">🇹🇷 TR • ₺</option>
+                    <option value="US">🌍 EN • $</option>
+                    <option value="EU">🇪🇺 EU • €</option>
+                </select>
+                <button type="button" class="status-toggle" id="pro-mode-toggle" title="Çalışma Durumunu Değiştir">
+                    🟢 Açık
+                </button>
+            </div>
         </header>
+
+        <!-- Armut & Thumbtack Style Global Multi-Filter Search Bar -->
+        <section class="card" style="padding:12px;margin-bottom:10px;" aria-label="Armut ve Global Akıllı Arama Filtreleri">
+            <div class="bid-row" style="margin-bottom:7px;">
+                <input type="search" id="market-search-input" class="input" placeholder="🔍 Meslek, uzman veya iş ara (Örn: Tesisat, Reels, Oto, Berlin)...">
+                <select id="market-city-select" class="input" style="max-width:118px;">
+                    <option value="ALL">🌍 Tüm Şehirler</option>
+                    <option value="İstanbul">İstanbul</option>
+                    <option value="Ankara">Ankara</option>
+                    <option value="İzmir">İzmir</option>
+                    <option value="Berlin">Berlin (EU)</option>
+                    <option value="London">London (UK)</option>
+                    <option value="New York">New York (US)</option>
+                    <option value="Dubai">Dubai (UAE)</option>
+                </select>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;">
+                <label style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#A7F3D0;">
+                    <input type="checkbox" id="filter-open-only"> 🟢 Sadece Açık
+                </label>
+                <label style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#FDE68A;">
+                    <input type="checkbox" id="filter-kyc-only" checked> 🪪 Kimlik (KYC) Onaylı
+                </label>
+                <select id="filter-sort-select" class="input" style="width:auto;padding:5px 8px;font-size:0.72rem;">
+                    <option value="TRENDING">🔥 Sırala: En Trend</option>
+                    <option value="PRICE_ASC">💰 En Uygun Fiyat</option>
+                    <option value="FASTEST_ETA">⚡ En Hızlı Varış</option>
+                </select>
+            </div>
+            <!-- Armut-Style 3-Second Smart Scope & Quote Estimator -->
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;font-size:0.73rem;">
+                <div style="display:flex;gap:5px;align-items:center;">
+                    <span>📐 Kapsam:</span>
+                    <select id="wizard-scope-select" class="input" style="width:auto;padding:4px 7px;font-size:0.72rem;">
+                        <option value="SMALL">Küçük / 1 Oda</option>
+                        <option value="MEDIUM">Orta / 2-3 Oda</option>
+                        <option value="LARGE">Büyük / Ticari</option>
+                    </select>
+                    <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;">
+                        <input type="checkbox" id="wizard-materials-check"> +Malzeme
+                    </label>
+                </div>
+                <span id="wizard-quote-badge" style="color:#FDE68A;font-weight:800;">Tahmini: 553 ₺ – 780 ₺</span>
+            </div>
+        </section>
 
         <!-- Instagram Story Bar: Nearby Open & 24/7 On-Duty Professionals Across All Trades -->
         <section class="stories-bar" id="stories-bar" aria-label="Şu An Açık ve Nöbetçi Uzman Hikâyeleri"></section>
@@ -516,10 +568,13 @@
     <script type="module">
         import {
             calculateSplitPaymentEscrow,
+            convertAndFormatGlobalPrice,
             createUrgentJobPostPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
+            estimateArmutStyleSmartQuote,
             evaluatePasswordStrength,
+            filterAndSearchMarketplace,
             formatInstagramProShowcase,
             getOfflineQueue,
             initUstanomiNativeShell,
@@ -541,8 +596,36 @@
         const proModeToggle = document.getElementById('pro-mode-toggle');
 
         let activeClusterCode = 'ALL';
+        let activeRegionCode = 'TR';
         const availabilityCycle = ['OPEN', 'ON_DUTY_24_7', 'CLOSED'];
         let currentModeIndex = 0;
+
+        function getActiveSearchFilters() {
+            return {
+                query: document.getElementById('market-search-input')?.value || '',
+                clusterCode: activeClusterCode,
+                city: document.getElementById('market-city-select')?.value || 'ALL',
+                onlyOpenNow: Boolean(document.getElementById('filter-open-only')?.checked),
+                onlyKycVerified: Boolean(document.getElementById('filter-kyc-only')?.checked),
+                sortBy: document.getElementById('filter-sort-select')?.value || 'TRENDING'
+            };
+        }
+
+        function updateSmartQuoteWizard() {
+            const q = document.getElementById('market-search-input')?.value || activeClusterCode;
+            const scopeSize = document.getElementById('wizard-scope-select')?.value || 'SMALL';
+            const includeMaterials = Boolean(document.getElementById('wizard-materials-check')?.checked);
+            const est = estimateArmutStyleSmartQuote({
+                professionQuery: q,
+                scopeSize,
+                includeMaterials,
+                regionCode: activeRegionCode
+            });
+            const el = document.getElementById('wizard-quote-badge');
+            if (el) {
+                el.textContent = `Tahmini: ${est.formattedRange}`;
+            }
+        }
 
         const storyPros = [
             { name: 'Selim Usta', tag: '⚡ 7/24 Tesisat', emoji: '🔧', open: true },
@@ -682,19 +765,21 @@
 
         function renderUrgentFeed() {
             urgentFeedList.innerHTML = '';
-            const filtered = activeClusterCode === 'ALL'
-                ? urgentPosts
-                : urgentPosts.filter((p) => p.clusterCode === activeClusterCode);
+            updateSmartQuoteWizard();
+            const filtered = filterAndSearchMarketplace(urgentPosts, getActiveSearchFilters());
 
             for (const post of filtered) {
                 const card = document.createElement('article');
                 card.className = 'card';
+                const formattedBudget = convertAndFormatGlobalPrice(post.estimatedBudgetTl, activeRegionCode).formatted;
                 const offersHtml = post.offers.map((o) => {
                     const split = calculateSplitPaymentEscrow(o.priceTl);
+                    const formattedOffer = convertAndFormatGlobalPrice(o.priceTl, activeRegionCode).formatted;
+                    const formattedNet = convertAndFormatGlobalPrice(split.subMerchantShareTl, activeRegionCode).formatted;
                     return `
                         <div class="offer-pill">
                             <span><strong>${o.pro}</strong> • ${o.eta}</span>
-                            <span style="color:#FDE68A;font-weight:800;">${o.priceTl} ₺ (%88 Usta: ${split.subMerchantShareTl} ₺)</span>
+                            <span style="color:#FDE68A;font-weight:800;">${formattedOffer} (%88 Net: ${formattedNet})</span>
                         </div>
                     `;
                 }).join('');
@@ -707,8 +792,8 @@
                     <h2 class="card-title">${post.title}</h2>
                     <p class="card-desc">${post.description}</p>
                     <div class="meta-row">
-                        <span>💰 Müşteri Bütçesi: ~${post.estimatedBudgetTl} ₺</span>
-                        <span>🛡️ Güvenli Havuz (%88 Usta / %12 Güvence)</span>
+                        <span>💰 Müşteri Bütçesi: ~${formattedBudget}</span>
+                        <span>🛡️ Güvenli Havuz (%88 Uzman / %12 Güvence)</span>
                     </div>
                     <div class="bid-row">
                         <input type="number" class="input bid-price-input" placeholder="Fiyat Teklifiniz (₺)" min="100" step="50">
@@ -745,11 +830,14 @@
 
         function renderReels() {
             reelsFeedList.innerHTML = '';
-            const ranked = rankTalentShowcasePosts(reelsItems);
+            const filtered = filterAndSearchMarketplace(reelsItems, getActiveSearchFilters());
+            const ranked = rankTalentShowcasePosts(filtered);
 
             for (const r of ranked) {
                 const targetItem = reelsItems.find((item) => item.id === r.id) || r;
                 const split = calculateSplitPaymentEscrow(r.priceTl);
+                const formattedPrice = convertAndFormatGlobalPrice(r.priceTl, activeRegionCode).formatted;
+                const formattedNet = convertAndFormatGlobalPrice(split.subMerchantShareTl, activeRegionCode).formatted;
                 const el = document.createElement('article');
                 el.className = 'reel-card';
                 el.innerHTML = `
@@ -758,11 +846,11 @@
                         <span class="reel-tag">${r.availability}</span>
                     </div>
                     <div style="margin: 14px 0 10px;">
-                        <div style="font-size:0.78rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} ✓ • ${r.cluster}</div>
+                        <div style="font-size:0.78rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} 🪪 • ${r.cluster}</div>
                         <h3 style="margin:0 0 8px;font-size:1.02rem;">${r.title}</h3>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
                             <span style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);padding:4px 9px;border-radius:8px;font-size:0.76rem;color:#A7F3D0;font-weight:700;">
-                                🏷️ Başlangıç: ${r.priceTl} ₺ (%88 Uzman Payı: ${split.subMerchantShareTl} ₺)
+                                🏷️ Başlangıç: ${formattedPrice} (%88 Uzman Net: ${formattedNet})
                             </span>
                             <span style="font-size:0.73rem;color:#CBD5E1;">🤝 ${r.workRequestsCount} Kişi Çalışmak İstedi • Skor: ${r.trendingScore}</span>
                         </div>
@@ -1110,6 +1198,25 @@
         renderUrgentFeed();
         renderReels();
         renderInstagramProfile();
+
+        // Bind Armut/Thumbtack Search Filters, Scope Wizard & Global Currency Switcher
+        const refreshAllFeeds = () => {
+            renderUrgentFeed();
+            renderReels();
+            updateSmartQuoteWizard();
+        };
+        document.getElementById('global-region-select').addEventListener('change', (e) => {
+            activeRegionCode = e.target.value;
+            triggerHapticImpact('LIGHT');
+            refreshAllFeeds();
+        });
+        ['market-search-input', 'market-city-select', 'filter-open-only', 'filter-kyc-only', 'filter-sort-select', 'wizard-scope-select', 'wizard-materials-check'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', refreshAllFeeds);
+                el.addEventListener('change', refreshAllFeeds);
+            }
+        });
     </script>
 </body>
 </html>
