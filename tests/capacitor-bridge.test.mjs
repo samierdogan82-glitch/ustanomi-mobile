@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import {
+	B2B_TENDER_CATEGORIES,
 	calculateSplitPaymentEscrow,
 	calculateTalentTrendingScore,
 	canTransitionEscrow,
 	canTransitionLeadState,
 	canTransitionOfferState,
 	convertAndFormatGlobalPrice,
+	createSealedProformaBidPayload,
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
 	enqueueOfflineAction,
@@ -356,6 +358,58 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 		});
 		assert.equal(berlinSearch.length, 1);
 		assert.equal(berlinSearch[0].id, "p2");
+	});
+
+	it("creates Sealed Private B2B Proforma Invoices & Fixed-Price Escrow Contracts with Anti-IDOR privacy", () => {
+		assert.equal(Object.keys(B2B_TENDER_CATEGORIES).length, 3);
+
+		// Owner viewer (#10) sees full parts + labor + 20% KDV + 88/12 escrow breakdown
+		const ownerView = createSealedProformaBidPayload({
+			tenderId: "TND-901",
+			tenderCategory: "AUTO_REPAIR_PARTS",
+			supplierHandle: "maslak_bimmer_servis",
+			supplierCompanyTitle: "Maslak Bimmer Özel Servis Ltd.",
+			partsDescription: "Orijinal OEM Triger Seti + Devirdaim",
+			partOriginType: "ORIGINAL_OEM",
+			partsAmountTl: 6500,
+			laborAmountTl: 3500,
+			kdvRatePercent: 20,
+			warrantyMonths: 12,
+			deliveryDays: 2,
+			viewerUserId: 10,
+			tenderOwnerUserId: 10,
+			supplierUserId: 99,
+		});
+
+		assert.equal(ownerView.isPrivateSealedBid, true);
+		assert.equal(ownerView.proformaRefCode.startsWith("PRF-2026-"), true);
+		assert.equal(ownerView.contractRefCode.startsWith("SZL-2026-"), true);
+		assert.equal(ownerView.financials.subtotalNetTl, 10000);
+		assert.equal(ownerView.financials.kdvAmountTl, 2000);
+		assert.equal(ownerView.financials.grandTotalTl, 12000);
+		assert.equal(ownerView.financials.supplierNetShareTl, 10560); // 88% of 12,000 TL
+		assert.equal(ownerView.financials.escrowPoolFeeTl, 1440); // 12% of 12,000 TL
+
+		// Competing mechanic (#55) cannot see sealed price breakdown
+		const competitorView = createSealedProformaBidPayload({
+			tenderId: "TND-901",
+			tenderCategory: "AUTO_REPAIR_PARTS",
+			supplierHandle: "maslak_bimmer_servis",
+			supplierCompanyTitle: "Maslak Bimmer Özel Servis Ltd.",
+			partsDescription: "Orijinal OEM Triger Seti + Devirdaim",
+			partsAmountTl: 6500,
+			laborAmountTl: 3500,
+			viewerUserId: 55,
+			tenderOwnerUserId: 10,
+			supplierUserId: 99,
+		});
+		assert.equal(competitorView.financials.grandTotalTl, undefined);
+		assert.equal(
+			competitorView.financials.maskedNoticeTr.includes(
+				"Gizli Proforma Fiyatı",
+			),
+			true,
+		);
 	});
 
 	it("enforces AI Studio RBAC, Anti-IDOR ownership, and Role-Spoofing protection", () => {

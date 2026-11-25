@@ -539,6 +539,42 @@
                 <div id="auth-feedback-box" style="margin-top:10px;font-size:0.77rem;font-weight:700;" aria-live="polite"></div>
             </div>
         </section>
+
+        <!-- TAB 5: SANAYİ, OTO TAMİR, YEDEK PARÇA & MAL ALIM İHALELERİ (KAPALI ZARF PROFORMA + SÖZLEŞME + EMANET HAVUZ) -->
+        <section id="tab-b2b" class="view-section" aria-label="Sanayi, Oto Tamir, Yedek Parça ve Kapalı Zarf Proforma İhaleleri">
+            <!-- Escrow Payment Institution Trust Shield -->
+            <div class="card" style="border-color:rgba(16,185,129,0.5);background:linear-gradient(145deg,rgba(6,78,59,0.55),rgba(15,23,42,0.85));">
+                <div class="card-header">
+                    <span class="kyc-status-pill">🛡️ BDDK Lisanslı Emanet Ödeme Havuzu</span>
+                    <span style="font-size:0.7rem;color:#FDE68A;">iyzico / PayTR Escrow</span>
+                </div>
+                <h2 class="card-title">🔒 Kapalı Zarf Özel Proforma &amp; Sabit Fiyat Sözleşmesi</h2>
+                <p class="card-desc" style="margin-bottom:0;">
+                    Sanayiciler ve tedarikçiler araç tamiri, kritik yedek parça ve toptan mal alımlarına <strong>özelden (diğer rakipler görmeden)</strong> kalem kalem <strong>Resmi Proforma Fatura + Dijital Sözleşme</strong> ile fiyat verir. Ödeme havuzda bloke edilir; sürpriz/ek ücret çıkamaz, parça/araç teslim onayında <strong>%88 Sanayici hesabına</strong> aktarılır.
+                </p>
+            </div>
+
+            <!-- Open New Auto Repair / Spare Parts / Procurement Tender -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="urgent-badge today">🏭 Araç Tamiri / Parça / Mal Alım İhalesi Aç</span>
+                    <span style="font-size:0.7rem;color:#A7F3D0;">Özelden Teklif Topla</span>
+                </div>
+                <select id="b2b-cat-select" class="input" style="margin-bottom:7px;">
+                    <option value="AUTO_REPAIR_PARTS">🚗 Oto Sanayi: Araç Tamiri &amp; Yedek Parça İhalesi</option>
+                    <option value="INDUSTRIAL_MANUFACTURING">🏭 Sanayi &amp; İmalat: CNC, Kaynak, Kalıp &amp; Makine Revizyon</option>
+                    <option value="WHOLESALE_PROCUREMENT">📦 Toptan Mal &amp; Yapı/Elektrik Malzemesi Alımı</option>
+                </select>
+                <input type="text" id="b2b-title-input" class="input" style="margin-bottom:7px;" placeholder="İhale Başlığı (Örn: 2020 VW Passat DSG Kavrama + Triger Seti Değişimi)">
+                <div class="bid-row">
+                    <input type="text" id="b2b-spec-input" class="input" placeholder="Şasi/Parça No veya Malzeme Listesi (Örn: OEM 0AM198142)">
+                    <button type="button" class="btn-amber" id="b2b-create-tender-btn">İhale Aç</button>
+                </div>
+            </div>
+
+            <!-- Active Tenders & Private Sealed Proforma Submission List -->
+            <div id="b2b-tenders-list"></div>
+        </section>
     </div>
 
     <!-- Bottom Tab Navigation -->
@@ -547,9 +583,13 @@
             <span class="nav-icon">🚨</span>
             <span>Acil İşler</span>
         </button>
+        <button type="button" class="nav-btn" data-target="tab-b2b">
+            <span class="nav-icon">🏭</span>
+            <span>Sanayi/İhale</span>
+        </button>
         <button type="button" class="nav-btn" data-target="tab-reels">
             <span class="nav-icon">🎬</span>
-            <span>Yetenek Vitrin</span>
+            <span>Yetenek</span>
         </button>
         <button type="button" class="nav-btn" data-target="tab-profile">
             <span class="nav-icon">📸</span>
@@ -557,18 +597,16 @@
         </button>
         <button type="button" class="nav-btn" data-target="tab-auth">
             <span class="nav-icon">🪪</span>
-            <span>Kimlik &amp; Giriş</span>
-        </button>
-        <button type="button" class="nav-btn" id="open-live-cloud-btn">
-            <span class="nav-icon">🌐</span>
-            <span>Tam Ağ</span>
+            <span>Kimlik/KYC</span>
         </button>
     </nav>
 
     <script type="module">
         import {
+            B2B_TENDER_CATEGORIES,
             calculateSplitPaymentEscrow,
             convertAndFormatGlobalPrice,
+            createSealedProformaBidPayload,
             createUrgentJobPostPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
@@ -1062,8 +1100,174 @@
             });
         });
 
-        document.getElementById('open-live-cloud-btn').addEventListener('click', () => {
-            window.location.assign(LIVE_APP_URL);
+        const b2bTenders = [
+            {
+                id: 'TND-901',
+                tenderCategory: 'AUTO_REPAIR_PARTS',
+                title: '2021 BMW 320i Triger Seti, Devirdaim & Ön Fren Disk/Balata Değişimi',
+                spec: 'Şasi: WBA5R110... • Orijinal OEM veya Garantili Alman Muadil Parça + İşçilik',
+                city: 'İstanbul / Maslak Oto Sanayi',
+                sealedProformas: [
+                    createSealedProformaBidPayload({
+                        tenderId: 'TND-901',
+                        tenderCategory: 'AUTO_REPAIR_PARTS',
+                        supplierHandle: 'maslak_bimmer_servis',
+                        supplierCompanyTitle: 'Maslak BimmerMotor Özel Servis Ltd. Şti.',
+                        partsDescription: 'Orijinal OEM Triger Seti + Brembo Ön Disk/Balata Takımı + Antifriz',
+                        partOriginType: 'ORIGINAL_OEM',
+                        partsAmountTl: 14500,
+                        laborAmountTl: 4500,
+                        warrantyMonths: 12,
+                        deliveryDays: 1
+                    })
+                ]
+            },
+            {
+                id: 'TND-902',
+                tenderCategory: 'WHOLESALE_PROCUREMENT',
+                title: 'Şantiye Toptan 450m NYM Kablo, Sigorta Panosu & 60 Adet LED Armatür Alımı',
+                spec: 'TSE Belgeli • İrsaliyeli Şantiye Teslim Proforma İhalesi',
+                city: 'Ankara / Ostim OSB',
+                sealedProformas: [
+                    createSealedProformaBidPayload({
+                        tenderId: 'TND-902',
+                        tenderCategory: 'WHOLESALE_PROCUREMENT',
+                        supplierHandle: 'ostim_elektromarket_b2b',
+                        supplierCompanyTitle: 'Ostim ElektroMarket Toptan A.Ş.',
+                        partsDescription: '450m HES Kablo + Schneider Pano + 60x Philips LED Armatür',
+                        partOriginType: 'ORIGINAL_OEM',
+                        partsAmountTl: 38000,
+                        laborAmountTl: 0,
+                        warrantyMonths: 24,
+                        deliveryDays: 2
+                    })
+                ]
+            }
+        ];
+
+        const b2bListEl = document.getElementById('b2b-tenders-list');
+
+        function renderB2bTenders() {
+            if (!b2bListEl) return;
+            b2bListEl.innerHTML = '';
+
+            for (const t of b2bTenders) {
+                const catInfo = B2B_TENDER_CATEGORIES[t.tenderCategory] || B2B_TENDER_CATEGORIES.AUTO_REPAIR_PARTS;
+                const proformasHtml = t.sealedProformas.map((p) => {
+                    const f = p.financials;
+                    const totalFmt = convertAndFormatGlobalPrice(f.grandTotalTl, activeRegionCode).formatted;
+                    const netFmt = convertAndFormatGlobalPrice(f.supplierNetShareTl, activeRegionCode).formatted;
+                    const partsFmt = convertAndFormatGlobalPrice(f.partsAmountTl, activeRegionCode).formatted;
+                    const laborFmt = convertAndFormatGlobalPrice(f.laborAmountTl, activeRegionCode).formatted;
+                    const kdvFmt = convertAndFormatGlobalPrice(f.kdvAmountTl, activeRegionCode).formatted;
+
+                    return `
+                        <div style="margin-top:9px;padding:10px;border-radius:12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                <span style="font-weight:800;color:#A7F3D0;">📄 ${p.proformaRefCode} • ${p.supplierCompanyTitle}</span>
+                                <span style="font-size:0.68rem;background:rgba(0,0,0,0.45);padding:3px 8px;border-radius:99px;color:#FDE68A;">🔒 Özel Kapalı Zarf</span>
+                            </div>
+                            <div style="font-size:0.75rem;color:#E2E8F0;margin-bottom:5px;">
+                                <strong>Parça/Malzeme (${p.partOriginLabelTr}):</strong> ${p.partsDescription}
+                            </div>
+                            <div style="font-size:0.74rem;color:#FDE68A;margin-bottom:5px;font-variant-numeric:tabular-nums;">
+                                Parça: ${partsFmt} + İşçilik: ${laborFmt} + %${f.kdvRatePercent} KDV (${kdvFmt}) = <strong>Toplam: ${totalFmt}</strong>
+                            </div>
+                            <div style="font-size:0.71rem;color:#CBD5E1;background:rgba(15,23,42,0.65);padding:7px 9px;border-radius:8px;line-height:1.38;">
+                                ⚖️ <strong>${p.contractClauseTr}</strong><br>
+                                <span style="color:#A7F3D0;">🛡️ Havuz Koruması: İş/Parça teslim onayında %88 Net (${netFmt}) sanayiciye aktarılır.</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const card = document.createElement('article');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="urgent-badge today">${catInfo.titleTr}</span>
+                        <span style="font-size:0.72rem;color:#CBD5E1;">📍 ${t.city}</span>
+                    </div>
+                    <h3 class="card-title">${t.title}</h3>
+                    <p class="card-desc" style="margin-bottom:8px;">🔧 <strong>Teknik / Parça Özelliği:</strong> ${t.spec}</p>
+
+                    <div style="background:rgba(15,23,42,0.55);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px;margin-bottom:8px;">
+                        <div style="font-size:0.75rem;font-weight:800;color:#FDE68A;margin-bottom:6px;">
+                            🔒 Özelden Proforma &amp; Sabit Fiyat Sözleşmeli Teklif Ver (Rakipler Göremez)
+                        </div>
+                        <input type="text" class="input prf-company-input" style="margin-bottom:6px;" placeholder="Sanayi Servisi / Tedarikçi Firma Ünvanınız">
+                        <div class="bid-row" style="margin-bottom:6px;">
+                            <select class="input prf-origin-select" style="flex:1.2;">
+                                <option value="ORIGINAL_OEM">Orijinal OEM Parça/Mal</option>
+                                <option value="CERTIFIED_EQUIVALENT">TSE Garantili Muadil</option>
+                                <option value="CUSTOM_MANUFACTURED">Sıfır Özel İmalat</option>
+                            </select>
+                            <input type="text" class="input prf-parts-desc" style="flex:1.5;" placeholder="Parça Markası / Malzeme Detayı">
+                        </div>
+                        <div class="bid-row">
+                            <input type="number" class="input prf-parts-price" placeholder="Parça/Mal (₺)" min="0" step="100">
+                            <input type="number" class="input prf-labor-price" placeholder="İşçilik (₺)" min="0" step="100">
+                            <button type="button" class="btn-amber prf-submit-btn">🔒 Özel Proforma Gönder</button>
+                        </div>
+                    </div>
+
+                    <div>${proformasHtml}</div>
+                `;
+
+                const companyIn = card.querySelector('.prf-company-input');
+                const originSel = card.querySelector('.prf-origin-select');
+                const descIn = card.querySelector('.prf-parts-desc');
+                const partsPriceIn = card.querySelector('.prf-parts-price');
+                const laborPriceIn = card.querySelector('.prf-labor-price');
+
+                card.querySelector('.prf-submit-btn').addEventListener('click', async () => {
+                    const partsVal = Number(partsPriceIn.value) || 0;
+                    const laborVal = Number(laborPriceIn.value) || 0;
+                    if (partsVal + laborVal <= 0) return;
+
+                    const proforma = createSealedProformaBidPayload({
+                        tenderId: t.id,
+                        tenderCategory: t.tenderCategory,
+                        supplierHandle: 'sanayi_onayli_servis',
+                        supplierCompanyTitle: (companyIn.value || 'Onaylı Oto & Sanayi Servisi').trim(),
+                        partsDescription: (descIn.value || 'Garantili Yedek Parça + Tamir İşçiliği').trim(),
+                        partOriginType: originSel.value,
+                        partsAmountTl: partsVal,
+                        laborAmountTl: laborVal,
+                        warrantyMonths: 12,
+                        deliveryDays: 2
+                    });
+
+                    t.sealedProformas.unshift(proforma);
+                    triggerHapticImpact('MEDIUM');
+                    await enqueueOfflineAction('SEALED_B2B_PROFORMA_BID', proforma);
+                    renderB2bTenders();
+                });
+
+                b2bListEl.appendChild(card);
+            }
+        }
+
+        document.getElementById('b2b-create-tender-btn').addEventListener('click', async () => {
+            const catEl = document.getElementById('b2b-cat-select');
+            const titleEl = document.getElementById('b2b-title-input');
+            const specEl = document.getElementById('b2b-spec-input');
+            if (!titleEl.value || titleEl.value.trim().length < 4) return;
+
+            const newTender = {
+                id: `TND-${Date.now().toString(36).toUpperCase()}`,
+                tenderCategory: catEl.value,
+                title: titleEl.value.trim(),
+                spec: (specEl.value || 'Orijinal / Garantili Parça ve Sabit Fiyat Sözleşmeli').trim(),
+                city: 'İstanbul / Sanayi',
+                sealedProformas: []
+            };
+            b2bTenders.unshift(newTender);
+            triggerHapticImpact('LIGHT');
+            await enqueueOfflineAction('CREATE_B2B_TENDER', newTender);
+            titleEl.value = '';
+            specEl.value = '';
+            renderB2bTenders();
         });
 
         // Auth / KYC / Forgot Password Sub-Tab Switching & Live Validation
@@ -1198,11 +1402,13 @@
         renderUrgentFeed();
         renderReels();
         renderInstagramProfile();
+        renderB2bTenders();
 
         // Bind Armut/Thumbtack Search Filters, Scope Wizard & Global Currency Switcher
         const refreshAllFeeds = () => {
             renderUrgentFeed();
             renderReels();
+            renderB2bTenders();
             updateSmartQuoteWizard();
         };
         document.getElementById('global-region-select').addEventListener('change', (e) => {

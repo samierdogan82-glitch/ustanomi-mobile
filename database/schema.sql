@@ -293,3 +293,50 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   INDEX idx_reset_user_expires (user_id, expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- B2B Industrial / Auto Repair / Spare Parts Tenders & Sealed Private Proforma Bids
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS b2b_tenders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  tender_code VARCHAR(32) NOT NULL UNIQUE,
+  buyer_user_id INT UNSIGNED NOT NULL,
+  tender_category ENUM('AUTO_REPAIR_PARTS', 'INDUSTRIAL_MANUFACTURING', 'WHOLESALE_PROCUREMENT') NOT NULL DEFAULT 'AUTO_REPAIR_PARTS',
+  title VARCHAR(180) NOT NULL,
+  vehicle_or_machine_spec VARCHAR(180) NOT NULL,
+  parts_bom_list TEXT NOT NULL,
+  city VARCHAR(80) NOT NULL DEFAULT 'İstanbul',
+  status ENUM('OPEN_FOR_SEALED_BIDS', 'PROFORMA_CONTRACT_LOCKED', 'IN_ESCROW_POOL', 'DELIVERED_RELEASED', 'CANCELLED') NOT NULL DEFAULT 'OPEN_FOR_SEALED_BIDS',
+  locked_proforma_id BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_tender_buyer FOREIGN KEY (buyer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_tender_cat_status (tender_category, status, city)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS b2b_sealed_proforma_bids (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  proforma_ref_code VARCHAR(40) NOT NULL UNIQUE,
+  contract_ref_code VARCHAR(40) NOT NULL UNIQUE,
+  tender_id INT UNSIGNED NOT NULL,
+  supplier_user_id INT UNSIGNED NOT NULL,
+  supplier_company_title VARCHAR(160) NOT NULL,
+  part_origin_type ENUM('ORIGINAL_OEM', 'CERTIFIED_EQUIVALENT', 'CUSTOM_MANUFACTURED') NOT NULL DEFAULT 'ORIGINAL_OEM',
+  parts_description TEXT NOT NULL,
+  parts_amount_kurus BIGINT UNSIGNED NOT NULL,
+  labor_amount_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  kdv_rate_percent TINYINT UNSIGNED NOT NULL DEFAULT 20,
+  kdv_amount_kurus BIGINT UNSIGNED NOT NULL,
+  grand_total_kurus BIGINT UNSIGNED NOT NULL,
+  supplier_net_share_kurus BIGINT UNSIGNED NOT NULL,
+  escrow_pool_fee_kurus BIGINT UNSIGNED NOT NULL,
+  warranty_months SMALLINT UNSIGNED NOT NULL DEFAULT 12,
+  delivery_days SMALLINT UNSIGNED NOT NULL DEFAULT 2,
+  valid_until_date DATE NOT NULL,
+  escrow_provider ENUM('IYZICO_ESCROW', 'PAYTR_ESCROW') NOT NULL DEFAULT 'IYZICO_ESCROW',
+  status ENUM('SEALED_SUBMITTED', 'BUYER_ACCEPTED_ESCROW', 'REJECTED') NOT NULL DEFAULT 'SEALED_SUBMITTED',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_proforma_tender FOREIGN KEY (tender_id) REFERENCES b2b_tenders(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_proforma_supplier FOREIGN KEY (supplier_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_proforma_tender_supplier (tender_id, supplier_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

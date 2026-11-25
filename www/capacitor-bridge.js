@@ -1066,6 +1066,162 @@ export function filterAndSearchMarketplace(items, filters = {}) {
 }
 
 /**
+ * B2B Industrial, Auto Repair, Spare Parts & Wholesale Procurement Tender Categories
+ */
+export const B2B_TENDER_CATEGORIES = Object.freeze({
+	AUTO_REPAIR_PARTS: Object.freeze({
+		code: "AUTO_REPAIR_PARTS",
+		titleTr: "🚗 Oto Sanayi: Araç Tamiri & Yedek Parça İhalesi",
+		partSpecLabelTr: "Şasi (VIN) / OEM Parça No & Marka",
+		defaultWarrantyMonths: 12,
+	}),
+	INDUSTRIAL_MANUFACTURING: Object.freeze({
+		code: "INDUSTRIAL_MANUFACTURING",
+		titleTr: "🏭 Sanayi & İmalat: CNC, Kaynak, Kalıp & Makine Revizyon",
+		partSpecLabelTr: "Teknik Resim / Malzeme & Tolerans Özelliği",
+		defaultWarrantyMonths: 24,
+	}),
+	WHOLESALE_PROCUREMENT: Object.freeze({
+		code: "WHOLESALE_PROCUREMENT",
+		titleTr: "📦 Toptan Mal & Yapı/Elektrik Malzemesi Alım İhalesi",
+		partSpecLabelTr: "Stok / SKU Kodu, Miktar & Teslim Süresi",
+		defaultWarrantyMonths: 24,
+	}),
+});
+
+/**
+ * Creates a Sealed Private Proforma Invoice & Fixed-Price Escrow Contract Bid
+ * (`quotation-proforma-pdf` + `iyzico-paytr-escrow` compliant).
+ * - Prices are private (`isPrivateSealedBid: true`) — visible ONLY to the tender owner and the bidding supplier.
+ * - Separates Parts/Material cost (`partsAmountTl`) and Labor/Service cost (`laborAmountTl`), computes kuruş-exact
+ *   20% KDV, and locks the 88% Supplier / 12% Escrow Pool split under a legally binding proforma reference.
+ * @param {{
+ *   tenderId: string,
+ *   tenderCategory?: "AUTO_REPAIR_PARTS" | "INDUSTRIAL_MANUFACTURING" | "WHOLESALE_PROCUREMENT",
+ *   supplierHandle: string,
+ *   supplierCompanyTitle: string,
+ *   partsDescription: string,
+ *   partOriginType?: "ORIGINAL_OEM" | "CERTIFIED_EQUIVALENT" | "CUSTOM_MANUFACTURED",
+ *   partsAmountTl: number,
+ *   laborAmountTl?: number,
+ *   kdvRatePercent?: 1 | 10 | 20,
+ *   warrantyMonths?: number,
+ *   deliveryDays?: number,
+ *   escrowProvider?: "IYZICO_ESCROW" | "PAYTR_ESCROW",
+ *   viewerUserId?: number | null,
+ *   tenderOwnerUserId?: number | null,
+ *   supplierUserId?: number | null
+ * }} input
+ */
+export function createSealedProformaBidPayload(input) {
+	if (
+		!input ||
+		typeof input.supplierCompanyTitle !== "string" ||
+		input.supplierCompanyTitle.trim().length < 3
+	) {
+		throw new Error("SUPPLIER_COMPANY_TITLE_REQUIRED");
+	}
+	if (
+		typeof input.partsDescription !== "string" ||
+		input.partsDescription.trim().length < 3
+	) {
+		throw new Error("PROFORMA_PARTS_DESCRIPTION_REQUIRED");
+	}
+
+	const partsKurus = Math.max(
+		0,
+		Math.round((Number(input.partsAmountTl) || 0) * 100),
+	);
+	const laborKurus = Math.max(
+		0,
+		Math.round((Number(input.laborAmountTl) || 0) * 100),
+	);
+	const subtotalKurus = partsKurus + laborKurus;
+	if (subtotalKurus <= 0) {
+		throw new Error("PROFORMA_TOTAL_MUST_BE_POSITIVE");
+	}
+
+	const kdvRate =
+		input.kdvRatePercent === 1 || input.kdvRatePercent === 10
+			? input.kdvRatePercent
+			: 20;
+	const kdvKurus = Math.round((subtotalKurus * kdvRate) / 100);
+	const grandTotalKurus = subtotalKurus + kdvKurus;
+	const grandTotalTl = grandTotalKurus / 100;
+
+	const split = calculateSplitPaymentEscrow(grandTotalTl);
+	const cat =
+		B2B_TENDER_CATEGORIES[input.tenderCategory] ||
+		B2B_TENDER_CATEGORIES.AUTO_REPAIR_PARTS;
+	const warrantyMonths = Math.max(
+		1,
+		Number(input.warrantyMonths) || cat.defaultWarrantyMonths,
+	);
+	const deliveryDays = Math.max(1, Number(input.deliveryDays) || 2);
+	const proformaRef = `PRF-2026-${Date.now().toString(36).toUpperCase()}`;
+	const contractRef = `SZL-2026-${Date.now().toString(36).toUpperCase()}`;
+	const validUntilIso = new Date(Date.now() + 7 * 24 * 3600 * 1000)
+		.toISOString()
+		.slice(0, 10);
+
+	const originLabels = {
+		ORIGINAL_OEM: "Orijinal Logolu OEM Parça / Malzeme",
+		CERTIFIED_EQUIVALENT: "TSE / ISO Belgeli Garantili Muadil",
+		CUSTOM_MANUFACTURED: "Sıfır Özel İmalat / Revizyon",
+	};
+	const partOriginLabelTr =
+		originLabels[input.partOriginType] || originLabels.ORIGINAL_OEM;
+
+	// Anti-IDOR Sealed Bid Privacy check: only tender owner or bidding supplier can see exact price breakdown
+	const canViewerSeePrice =
+		input.viewerUserId == null ||
+		input.viewerUserId === input.tenderOwnerUserId ||
+		input.viewerUserId === input.supplierUserId;
+
+	return {
+		proformaRefCode: proformaRef,
+		contractRefCode: contractRef,
+		tenderId: String(input.tenderId || "TND-1001"),
+		tenderCategoryCode: cat.code,
+		tenderCategoryTitleTr: cat.titleTr,
+		isPrivateSealedBid: true,
+		privacyBadgeTr:
+			"🔒 Özel Kapalı Zarf Proforma (Yalnızca İş Sahibine Görünür)",
+		supplierHandle: input.supplierHandle.startsWith("@")
+			? input.supplierHandle
+			: `@${input.supplierHandle}`,
+		supplierCompanyTitle: redactKvkkSensitiveText(
+			input.supplierCompanyTitle.trim(),
+		),
+		partsDescription: redactKvkkSensitiveText(input.partsDescription.trim()),
+		partOriginType: input.partOriginType || "ORIGINAL_OEM",
+		partOriginLabelTr,
+		warrantyMonths,
+		deliveryDays,
+		validUntilDate: validUntilIso,
+		escrowProvider: input.escrowProvider || "IYZICO_ESCROW",
+		escrowTrustGuaranteeTr:
+			"🛡️ BDDK Lisanslı Ödeme Kuruluşu (iyzico / PayTR Emanet Havuzu) Güvencesi: Ödemeniz iş/parça eksiksiz teslim edilip onaylanana kadar havuzda bloke edilir.",
+		contractClauseTr: `Sabit Fiyat & Parça Garantisi Sözleşmesi (${contractRef}): ${input.supplierCompanyTitle.trim()}, belirtilen ${partOriginLabelTr} ve işçiliği toplam ${grandTotalTl.toFixed(2)} ₺ (KDV Dahil) sabit bedelle, ${deliveryDays} iş günü içinde teslim etmeyi ve ${warrantyMonths} ay garanti vermeyi taahhüt eder. Proforma harici sürpriz/ek ücret talep edilemez.`,
+		financials: canViewerSeePrice
+			? {
+					partsAmountTl: partsKurus / 100,
+					laborAmountTl: laborKurus / 100,
+					subtotalNetTl: subtotalKurus / 100,
+					kdvRatePercent: kdvRate,
+					kdvAmountTl: kdvKurus / 100,
+					grandTotalTl,
+					supplierNetShareTl: split.subMerchantShareTl,
+					escrowPoolFeeTl: split.platformCommissionTl,
+				}
+			: {
+					maskedNoticeTr:
+						"🔒 Gizli Proforma Fiyatı (Sadece İhale Sahibi Görebilir)",
+				},
+	};
+}
+
+/**
  * Validates whether a URL belongs to Ustanomi or an approved 3D Secure payment host (PayTR / iyzico).
  * @param {string} rawUrl
  * @returns {boolean}
@@ -1691,6 +1847,8 @@ export const UstanomiNative = Object.freeze({
 	convertAndFormatGlobalPrice,
 	estimateArmutStyleSmartQuote,
 	filterAndSearchMarketplace,
+	B2B_TENDER_CATEGORIES,
+	createSealedProformaBidPayload,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,
