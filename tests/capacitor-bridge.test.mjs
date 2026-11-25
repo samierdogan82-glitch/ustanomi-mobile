@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import {
 	B2B_TENDER_CATEGORIES,
+	buildOmnichannelEngagementLinks,
 	calculateSplitPaymentEscrow,
 	calculateTalentTrendingScore,
 	canTransitionEscrow,
@@ -11,6 +12,8 @@ import {
 	createSealedProformaBidPayload,
 	createUrgentJobPostPayload,
 	createWorkWithYouRequestPayload,
+	detectExternalPlatformConnector,
+	EXTERNAL_COMMERCE_CONNECTORS,
 	enqueueOfflineAction,
 	estimateArmutStyleSmartQuote,
 	evaluatePasswordStrength,
@@ -23,6 +26,7 @@ import {
 	getOfflineQueue,
 	isAllowedUstanomiUrl,
 	OFFER_SERVICE_CATEGORIES,
+	parseAndImportExternalCommerceProfile,
 	rankTalentShowcasePosts,
 	redactKvkkSensitiveText,
 	resolveOfferServiceCategory,
@@ -408,6 +412,49 @@ describe("Ustanomi Native Capacitor Bridge, Universal Professions & Instagram/Ti
 			competitorView.financials.maskedNoticeTr.includes(
 				"Gizli Proforma Fiyatı",
 			),
+			true,
+		);
+	});
+
+	it("auto-imports commercial profiles, ads, prices, and hours from Sahibinden, Instagram, TikTok, and Google Maps", () => {
+		assert.equal(Object.keys(EXTERNAL_COMMERCE_CONNECTORS).length, 6);
+
+		// Detect Sahibinden store URL and reject untrusted SSRF URLs
+		const sahibindenConn = detectExternalPlatformConnector(
+			"https://www.sahibinden.com/maslak-bimmer-oto-servis",
+		);
+		assert.equal(sahibindenConn?.connector.code, "SAHIBINDEN_STORE");
+		assert.equal(
+			detectExternalPlatformConnector(
+				"http://169.254.169.254/latest/meta-data",
+			),
+			null,
+		);
+
+		// Parse and import full Sahibinden store into Ustanomi Showcase & Price Menu
+		const imported = parseAndImportExternalCommerceProfile({
+			sourceUrl: "https://www.sahibinden.com/maslak-bimmer-oto-servis",
+			rawTitle: "Maslak Bimmer Oto Tamir & Yedek Parça",
+			rawItems: [
+				{ title: "BMW F30 Orijinal Triger Seti + Montaj", priceTl: 18500 },
+				{ title: "ZF 8HP Şanzıman Yağ & Filtre Bakımı", priceTl: 9200 },
+			],
+		});
+		assert.equal(imported.connectorCode, "SAHIBINDEN_STORE");
+		assert.equal(imported.clusterCode, "AUTO_LOGISTICS");
+		assert.equal(imported.importedItemsCount, 2);
+		assert.equal(imported.showcaseProfile.priceMenu.length, 2);
+		assert.equal(imported.showcaseProfile.priceMenu[0].effectivePriceTl, 18500);
+
+		// Generate bi-directional Escrow deep-link for Sahibinden ads & Instagram bio
+		const links = buildOmnichannelEngagementLinks({
+			proHandle: "maslak_bimmer_oto",
+			title: "BMW F30 Triger Seti + İşçilik",
+			priceTl: 18500,
+		});
+		assert.equal(links.escrowDirectCheckoutUrl.includes("escrow=1"), true);
+		assert.equal(
+			links.sahibindenAdEmbedSnippetTr.includes("USTANOMI GÜVENLİ HAVUZ"),
 			true,
 		);
 	});

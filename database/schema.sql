@@ -340,3 +340,28 @@ CREATE TABLE IF NOT EXISTS b2b_sealed_proforma_bids (
   CONSTRAINT fk_proforma_supplier FOREIGN KEY (supplier_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   INDEX idx_proforma_tender_supplier (tender_id, supplier_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Omnichannel Social Media & Commercial Marketplace Auto-Sync (Sahibinden, IG, TikTok, Maps, WA)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS external_commerce_connections (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  connector_code ENUM(
+    'SAHIBINDEN_STORE',
+    'INSTAGRAM_BUSINESS',
+    'TIKTOK_CREATOR',
+    'GOOGLE_BUSINESS_MAPS',
+    'WHATSAPP_CATALOG',
+    'TRENDYOL_HEPSIBURADA'
+  ) NOT NULL,
+  source_url VARCHAR(500) NOT NULL,
+  external_handle_or_store VARCHAR(140) NOT NULL,
+  imported_items_count INT UNSIGNED NOT NULL DEFAULT 0,
+  auto_sync_enabled TINYINT(1) NOT NULL DEFAULT 1,
+  synced_payload_json JSON NULL,
+  last_synced_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_ext_conn_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  UNIQUE KEY uq_user_connector (user_id, connector_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

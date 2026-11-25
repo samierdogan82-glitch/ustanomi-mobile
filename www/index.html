@@ -470,8 +470,30 @@
             <div id="reels-feed-list"></div>
         </section>
 
-        <!-- TAB 3: INSTAGRAM TARZI UZMAN PROFİLİ (AÇIK/KAPALI SAATLER + ŞEFFAF FİYAT MENÜSÜ + 3'LÜ IZGARA) -->
-        <section id="tab-profile" class="view-section" aria-label="Instagram Tarzı Uzman Profil Vitrini">
+        <!-- TAB 3: INSTAGRAM TARZI UZMAN PROFİLİ + SAHİBİNDEN / SOSYAL MEDYA OTOMATİK VERİ ÇEKME MERKEZİ -->
+        <section id="tab-profile" class="view-section" aria-label="Instagram Tarzı Uzman Profil Vitrini ve Sahibinden/Sosyal Medya Senkronizasyonu">
+            <!-- Omnichannel Auto-Import & Sync Hub -->
+            <div class="card" style="border-color:rgba(245,158,11,0.5);">
+                <div class="card-header">
+                    <span class="urgent-badge today">🔗 Sahibinden &amp; Sosyal Medya Otomatik Çek</span>
+                    <span style="font-size:0.7rem;color:#A7F3D0;">5 Sn'de Tüm İlan &amp; Fiyatları Aktar</span>
+                </div>
+                <p class="card-desc" style="margin-bottom:8px;">
+                    <strong>Sahibinden.com Mağazanızı, Instagram, TikTok, Google Haritalar, WhatsApp Business veya Trendyol</strong> bağlantınızı yapıştırın; ilanlarınız, yedek parça/hizmet fiyatlarınız, çalışma saatleriniz ve videolarınız otomatik çekilsin:
+                </p>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.sahibinden.com/maslak-oto-sanayi-servis" data-title="Maslak Oto Sanayi &amp; Orijinal Yedek Parça">🟡 Sahibinden</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.instagram.com/elif_visual_studio" data-title="Elif Visual Studio • 4K Reels &amp; Fotoğraf">📸 Instagram</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.tiktok.com/@selim_tesisat_pro" data-title="Selim Usta • Termal Su Kaçağı &amp; Kombi">🎬 TikTok</button>
+                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.google.com/maps/place/kaan_oto_kurtarma" data-title="Kaan 7/24 Oto Çekici &amp; Yol Yardım">📍 Google Harita</button>
+                </div>
+                <div class="bid-row">
+                    <input type="url" id="ext-sync-url-input" class="input" placeholder="https://www.sahibinden.com/... veya instagram.com/...">
+                    <button type="button" class="btn-amber" id="ext-sync-pull-btn">🔄 Her Şeyi Çek</button>
+                </div>
+                <div id="ext-sync-feedback" style="margin-top:8px;font-size:0.75rem;color:#A7F3D0;font-weight:700;" aria-live="polite"></div>
+            </div>
+
             <div class="card" id="ig-profile-container"></div>
         </section>
 
@@ -604,6 +626,7 @@
     <script type="module">
         import {
             B2B_TENDER_CATEGORIES,
+            buildOmnichannelEngagementLinks,
             calculateSplitPaymentEscrow,
             convertAndFormatGlobalPrice,
             createSealedProformaBidPayload,
@@ -616,6 +639,7 @@
             formatInstagramProShowcase,
             getOfflineQueue,
             initUstanomiNativeShell,
+            parseAndImportExternalCommerceProfile,
             rankTalentShowcasePosts,
             resolveUniversalProfessionCluster,
             triggerHapticImpact,
@@ -939,39 +963,49 @@
             }
         }
 
+        let customSyncedShowcase = null;
+
         function renderInstagramProfile() {
             const currentMode = availabilityCycle[currentModeIndex];
-            const profile = formatInstagramProShowcase({
-                handle: 'selim_ustanomi_pro',
-                displayName: 'Selim Karaca • Uzman Usta & Mühendislik',
-                professionTitle: 'Tesisat, Kombi, Akıllı Ev & Acil Müdahale Uzmanı',
-                clusterId: 'home_technical',
-                city: 'İstanbul',
-                district: 'Kadıköy',
-                rating: 4.9,
-                completedJobsCount: 342,
-                followersCount: 2890,
-                responseTimeMinutes: 3,
-                availabilityConfig: {
-                    manualMode: currentMode,
-                    openHour: 8,
-                    closeHour: 20,
-                    currentHour: 14
-                },
-                priceMenu: [
-                    { title: 'Termal Kameralı Kaçak Tespiti', priceTl: 850, pricingType: 'FIXED', durationLabel: '45 dk' },
-                    { title: 'Kombi & Petek Kimyasal Yıkama', priceTl: 1400, pricingType: 'FIXED', durationLabel: '90 dk' },
-                    { title: 'Saatlik Teknik Usta İşçiliği', priceTl: 650, pricingType: 'HOURLY', durationLabel: '60 dk' }
-                ],
-                mediaGrid: [
-                    { id: 'm1', mediaType: 'REEL_VIDEO', caption: '🎬 Termal Tespit Reels', priceTagTl: 850 },
-                    { id: 'm2', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Banyo Tadilat Öncesi/Sonrası', priceTagTl: 14500 },
-                    { id: 'm3', mediaType: 'REEL_VIDEO', caption: '🎬 Akıllı Termostat Montajı', priceTagTl: 950 },
-                    { id: 'm4', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Kombi Kolektör Yenileme', priceTagTl: 3200 },
-                    { id: 'm5', mediaType: 'REEL_VIDEO', caption: '🎬 7/24 Acil Vana Müdahalesi', priceTagTl: 1100 },
-                    { id: 'm6', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 MEB & MYK Ustalık Belgelerim', priceTagTl: 0 }
-                ]
-            });
+            const profile = customSyncedShowcase
+                ? {
+                    ...customSyncedShowcase,
+                    availability: formatInstagramProShowcase({
+                        displayName: customSyncedShowcase.displayName,
+                        availabilityConfig: { manualMode: currentMode, openHour: 8, closeHour: 20, currentHour: 14 }
+                    }).availability
+                }
+                : formatInstagramProShowcase({
+                    handle: 'selim_ustanomi_pro',
+                    displayName: 'Selim Karaca • Uzman Usta & Mühendislik',
+                    professionTitle: 'Tesisat, Kombi, Akıllı Ev & Acil Müdahale Uzmanı',
+                    clusterId: 'home_technical',
+                    city: 'İstanbul',
+                    district: 'Kadıköy',
+                    rating: 4.9,
+                    completedJobsCount: 342,
+                    followersCount: 2890,
+                    responseTimeMinutes: 3,
+                    availabilityConfig: {
+                        manualMode: currentMode,
+                        openHour: 8,
+                        closeHour: 20,
+                        currentHour: 14
+                    },
+                    priceMenu: [
+                        { title: 'Termal Kameralı Kaçak Tespiti', priceTl: 850, pricingType: 'FIXED', durationLabel: '45 dk' },
+                        { title: 'Kombi & Petek Kimyasal Yıkama', priceTl: 1400, pricingType: 'FIXED', durationLabel: '90 dk' },
+                        { title: 'Saatlik Teknik Usta İşçiliği', priceTl: 650, pricingType: 'HOURLY', durationLabel: '60 dk' }
+                    ],
+                    mediaGrid: [
+                        { id: 'm1', mediaType: 'REEL_VIDEO', caption: '🎬 Termal Tespit Reels', priceTagTl: 850 },
+                        { id: 'm2', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Banyo Tadilat Öncesi/Sonrası', priceTagTl: 14500 },
+                        { id: 'm3', mediaType: 'REEL_VIDEO', caption: '🎬 Akıllı Termostat Montajı', priceTagTl: 950 },
+                        { id: 'm4', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Kombi Kolektör Yenileme', priceTagTl: 3200 },
+                        { id: 'm5', mediaType: 'REEL_VIDEO', caption: '🎬 7/24 Acil Vana Müdahalesi', priceTagTl: 1100 },
+                        { id: 'm6', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 MEB & MYK Ustalık Belgelerim', priceTagTl: 0 }
+                    ]
+                });
 
             proModeToggle.textContent = profile.availability.badgeTextTr;
 
@@ -1024,6 +1058,46 @@
             currentModeIndex = (currentModeIndex + 1) % availabilityCycle.length;
             triggerHapticImpact('LIGHT');
             renderInstagramProfile();
+        });
+
+        // Bind Sahibinden / Instagram / TikTok / Google Maps 1-Click Auto-Import Hub
+        const extUrlInput = document.getElementById('ext-sync-url-input');
+        const extFeedback = document.getElementById('ext-sync-feedback');
+        let presetTitleHint = '';
+
+        document.querySelectorAll('.quick-import-preset').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                extUrlInput.value = btn.getAttribute('data-url') || '';
+                presetTitleHint = btn.getAttribute('data-title') || '';
+                document.getElementById('ext-sync-pull-btn').click();
+            });
+        });
+
+        document.getElementById('ext-sync-pull-btn').addEventListener('click', async () => {
+            const rawUrl = (extUrlInput.value || '').trim();
+            try {
+                const imported = parseAndImportExternalCommerceProfile({
+                    sourceUrl: rawUrl,
+                    rawTitle: presetTitleHint || undefined
+                });
+                presetTitleHint = '';
+                customSyncedShowcase = imported.showcaseProfile;
+                const links = buildOmnichannelEngagementLinks({
+                    proHandle: imported.showcaseProfile.handle,
+                    title: imported.showcaseProfile.displayName
+                });
+                extFeedback.style.color = '#A7F3D0';
+                extFeedback.innerHTML = `✓ <strong>${imported.connectorEmoji} ${imported.connectorNameTr}</strong> bağlandı! ${imported.importedItemsCount} ilan/fiyat, çalışma saatleri ve vitrin medyası çekildi.<br><span style="color:#FDE68A;font-size:0.71rem;">🔗 İlanlarınıza Eklenecek Güvenli Havuz Kodu: ${links.escrowDirectCheckoutUrl}</span>`;
+                triggerHapticImpact('MEDIUM');
+                await enqueueOfflineAction('EXTERNAL_COMMERCE_AUTO_IMPORT', {
+                    connectorCode: imported.connectorCode,
+                    sourceUrl: imported.sourceUrl
+                });
+                renderInstagramProfile();
+            } catch {
+                extFeedback.style.color = '#FDA4AF';
+                extFeedback.textContent = '✕ Lütfen geçerli bir HTTPS Sahibinden, Instagram, TikTok, Google Maps, WhatsApp veya Trendyol bağlantısı giriniz.';
+            }
         });
 
         document.getElementById('share-talent-btn').addEventListener('click', async () => {

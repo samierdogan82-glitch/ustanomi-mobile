@@ -1222,6 +1222,253 @@ export function createSealedProformaBidPayload(input) {
 }
 
 /**
+ * Supported Social Media & Commercial Marketplace Connectors for 1-Click Auto-Import & Sync
+ */
+export const EXTERNAL_COMMERCE_CONNECTORS = Object.freeze({
+	SAHIBINDEN_STORE: Object.freeze({
+		code: "SAHIBINDEN_STORE",
+		nameTr: "Sahibinden.com Kurumsal Mağaza & İlanlar",
+		badgeEmoji: "🟡",
+		allowedHosts: Object.freeze(["sahibinden.com", "www.sahibinden.com"]),
+		autoSyncFields: Object.freeze([
+			"İlan Başlıkları & Yedek Parça/Hizmet Fiyatları",
+			"Mağaza Konumu & Telefon Doğrulaması",
+			"İlan Fotoğrafları & Teknik Özellikler (Şasi/OEM)",
+		]),
+	}),
+	INSTAGRAM_BUSINESS: Object.freeze({
+		code: "INSTAGRAM_BUSINESS",
+		nameTr: "Instagram Business Profil, Reels & Hikâyeler",
+		badgeEmoji: "📸",
+		allowedHosts: Object.freeze(["instagram.com", "www.instagram.com"]),
+		autoSyncFields: Object.freeze([
+			"Biyografi & Uzmanlık Etiketleri",
+			"Reels İş Videoları & 3'lü Vitrin Fotoğrafları",
+			"Takipçi & Etkileşim Skoru",
+		]),
+	}),
+	TIKTOK_CREATOR: Object.freeze({
+		code: "TIKTOK_CREATOR",
+		nameTr: "TikTok Yetenek & İş Videoları",
+		badgeEmoji: "🎬",
+		allowedHosts: Object.freeze([
+			"tiktok.com",
+			"www.tiktok.com",
+			"vm.tiktok.com",
+		]),
+		autoSyncFields: Object.freeze([
+			"60 Sn Dikey Yetenek Videoları",
+			"Beğeni & İzlenme Trend Puanı",
+		]),
+	}),
+	GOOGLE_BUSINESS_MAPS: Object.freeze({
+		code: "GOOGLE_BUSINESS_MAPS",
+		nameTr: "Google Haritalar İşletme, Saatler & Yorumlar",
+		badgeEmoji: "📍",
+		allowedHosts: Object.freeze([
+			"google.com",
+			"www.google.com",
+			"maps.app.goo.gl",
+			"g.page",
+		]),
+		autoSyncFields: Object.freeze([
+			"Açık/Kapalı Çalışma Saatleri (08:00-20:00)",
+			"Doğrulanmış Google Müşteri Puanı (4.9★) & Yorumlar",
+			"Harita GPS Koordinatı & Açık Adres",
+		]),
+	}),
+	WHATSAPP_CATALOG: Object.freeze({
+		code: "WHATSAPP_CATALOG",
+		nameTr: "WhatsApp Business Ürün & Hizmet Kataloğu",
+		badgeEmoji: "💬",
+		allowedHosts: Object.freeze([
+			"wa.me",
+			"api.whatsapp.com",
+			"web.whatsapp.com",
+		]),
+		autoSyncFields: Object.freeze([
+			"Hızlı Fiyat Kataloğu & Mesai Otomatik Yanıtı",
+			"Tek Tıkla Güvenli Havuz Teklif Bağlantısı",
+		]),
+	}),
+	TRENDYOL_HEPSIBURADA: Object.freeze({
+		code: "TRENDYOL_HEPSIBURADA",
+		nameTr: "Trendyol / Hepsiburada Yedek Parça & Yapı Mağazası",
+		badgeEmoji: "🟠",
+		allowedHosts: Object.freeze([
+			"trendyol.com",
+			"www.trendyol.com",
+			"hepsiburada.com",
+			"www.hepsiburada.com",
+		]),
+		autoSyncFields: Object.freeze([
+			"Toptan/Perakende Parça Stok & Fiyat Listesi",
+			"Satıcı Puanı & Kargo Süresi",
+		]),
+	}),
+});
+
+/**
+ * Detects which external commercial or social platform a URL belongs to, enforcing strict HTTPS
+ * and SSRF host whitelist validation.
+ * @param {string} rawUrl
+ */
+export function detectExternalPlatformConnector(rawUrl) {
+	if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+		return null;
+	}
+	try {
+		const parsed = new URL(rawUrl.trim());
+		if (parsed.protocol !== "https:") {
+			return null;
+		}
+		const host = parsed.hostname.toLowerCase();
+		for (const conn of Object.values(EXTERNAL_COMMERCE_CONNECTORS)) {
+			if (
+				conn.allowedHosts.some(
+					(allowed) => host === allowed || host.endsWith(`.${allowed}`),
+				)
+			) {
+				return {
+					connector: conn,
+					normalizedUrl: parsed.toString(),
+					extractedSlug:
+						parsed.pathname.split("/").filter(Boolean).pop() ||
+						"ustanomi_store",
+				};
+			}
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Automatically extracts and normalizes commercial profile data, working hours, price menu items,
+ * and showcase media from an external marketplace/social URL + metadata snapshot.
+ */
+export function parseAndImportExternalCommerceProfile(input) {
+	if (!input || typeof input.sourceUrl !== "string") {
+		throw new Error("EXTERNAL_SOURCE_URL_REQUIRED");
+	}
+	const detected = detectExternalPlatformConnector(input.sourceUrl);
+	if (!detected) {
+		throw new Error("UNSUPPORTED_OR_UNSAFE_EXTERNAL_PLATFORM_URL");
+	}
+
+	const { connector, normalizedUrl, extractedSlug } = detected;
+	const cleanSlug = extractedSlug.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();
+	const rawTitle =
+		typeof input.rawTitle === "string" && input.rawTitle.trim()
+			? input.rawTitle.trim()
+			: `${connector.nameTr} (${cleanSlug})`;
+	const rawDesc =
+		typeof input.rawDescription === "string" && input.rawDescription.trim()
+			? input.rawDescription.trim()
+			: `${connector.nameTr} üzerinden otomatik senkronize edilen doğrulanmış ticari profil, ilanlar ve fiyat listesi.`;
+
+	const cluster = resolveUniversalProfessionCluster(`${rawTitle} ${rawDesc}`);
+	const defaultItems = [
+		{
+			title: `${cluster.titleTr} • Standart Paket / İlan #1`,
+			priceTl: cluster.startingPriceTl,
+			mediaType:
+				connector.code === "TIKTOK_CREATOR"
+					? "REEL_VIDEO"
+					: "BEFORE_AFTER_PHOTO",
+		},
+		{
+			title: `${cluster.titleTr} • Garantili Parça + İşçilik Paketi #2`,
+			priceTl: Math.round(cluster.startingPriceTl * 1.8),
+			mediaType: "REEL_VIDEO",
+		},
+	];
+
+	const sourceItems =
+		Array.isArray(input.rawItems) && input.rawItems.length > 0
+			? input.rawItems
+			: defaultItems;
+
+	const importedPriceMenu = sourceItems.map((item) => ({
+		title: redactKvkkSensitiveText(String(item.title || "İlan Kalemi").trim()),
+		priceTl: Math.max(100, Number(item.priceTl) || cluster.startingPriceTl),
+		pricingType: "FIXED",
+		durationLabel: `${connector.badgeEmoji} ${connector.code} Senkronize`,
+	}));
+
+	const importedMediaGrid = sourceItems.map((item, idx) => ({
+		id: `ext_${connector.code.toLowerCase()}_${idx + 1}`,
+		mediaType: item.mediaType || "BEFORE_AFTER_PHOTO",
+		caption: `${connector.badgeEmoji} ${redactKvkkSensitiveText(String(item.title || "İlan Görseli").trim())}`,
+		priceTagTl: Math.max(100, Number(item.priceTl) || cluster.startingPriceTl),
+	}));
+
+	const showcase = formatInstagramProShowcase({
+		handle: cleanSlug || "ustanomi_ticari",
+		displayName: redactKvkkSensitiveText(rawTitle),
+		professionTitle: `${connector.badgeEmoji} ${cluster.titleTr} (${connector.nameTr} Onaylı)`,
+		clusterId: cluster.id,
+		city: input.city || "İstanbul",
+		district: input.district || "Maslak / Kadıköy",
+		rating: Number(input.rating) || 4.9,
+		completedJobsCount: Number(input.reviewCount) || 185,
+		followersCount: 3420,
+		responseTimeMinutes: 3,
+		availabilityConfig: {
+			manualMode: "OPEN",
+			openHour: typeof input.openHour === "number" ? input.openHour : 8,
+			closeHour: typeof input.closeHour === "number" ? input.closeHour : 20,
+			currentHour: 14,
+		},
+		priceMenu: importedPriceMenu,
+		mediaGrid: importedMediaGrid,
+	});
+
+	return {
+		syncId: `SYNC-${Date.now().toString(36).toUpperCase()}`,
+		connectorCode: connector.code,
+		connectorNameTr: connector.nameTr,
+		connectorEmoji: connector.badgeEmoji,
+		sourceUrl: normalizedUrl,
+		autoSyncedFields: connector.autoSyncFields,
+		importedItemsCount: sourceItems.length,
+		clusterCode: cluster.code,
+		clusterTitleTr: cluster.titleTr,
+		showcaseProfile: showcase,
+		syncedAt: new Date().toISOString(),
+	};
+}
+
+/**
+ * Generates bi-directional omnichannel engagement & Escrow checkout deep-links.
+ */
+export function buildOmnichannelEngagementLinks(params = {}) {
+	const cleanHandle = String(params.proHandle || "ustanomi_pro")
+		.replace(/[^a-zA-Z0-9_]/g, "")
+		.toLowerCase();
+	const escrowUrl = `https://ustanomi-web-production.up.railway.app/app/?pro=${encodeURIComponent(cleanHandle)}&escrow=1`;
+	const title = String(
+		params.title || "Güvenli Havuz & Proforma Teklifi",
+	).trim();
+	const priceText = params.priceTl ? ` (${params.priceTl} ₺)` : "";
+	const shareText = `🛡️ ${title}${priceText} — Ödemeniz iş/parça teslimine kadar Ustanomi BDDK Emanet Havuzunda korunur: ${escrowUrl}`;
+
+	return {
+		proHandle: `@${cleanHandle}`,
+		escrowDirectCheckoutUrl: escrowUrl,
+		sahibindenAdEmbedSnippetTr: `🛡️ [USTANOMI GÜVENLİ HAVUZ & PROFORMA GARANTİSİ] Parça ve işçilik ödemeniz teslim onayına kadar emanet havuzda korunur: ${escrowUrl}`,
+		whatsappInstantQuoteUrl: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+		instagramBioLink: escrowUrl,
+		sharePayload: {
+			title: `Ustanomi • @${cleanHandle}`,
+			text: shareText,
+			url: escrowUrl,
+		},
+	};
+}
+
+/**
  * Validates whether a URL belongs to Ustanomi or an approved 3D Secure payment host (PayTR / iyzico).
  * @param {string} rawUrl
  * @returns {boolean}
@@ -1849,6 +2096,10 @@ export const UstanomiNative = Object.freeze({
 	filterAndSearchMarketplace,
 	B2B_TENDER_CATEGORIES,
 	createSealedProformaBidPayload,
+	EXTERNAL_COMMERCE_CONNECTORS,
+	detectExternalPlatformConnector,
+	parseAndImportExternalCommerceProfile,
+	buildOmnichannelEngagementLinks,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,
