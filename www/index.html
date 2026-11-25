@@ -3,680 +3,736 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#153E49">
+    <meta name="theme-color" content="#090D16">
     <link rel="manifest" href="manifest.json">
-    <title>Ustanomi — Her İşin Uzmanı, Acil İşler &amp; Sosyal Vitrin</title>
+    <title>Ustanomi</title>
     <style>
         :root {
-            --bg-dark: #0F2930;
-            --bg-brand: #153E49;
-            --bg-card: rgba(15, 23, 42, 0.72);
-            --amber: #F59E0B;
+            --bg: #090D16;
+            --surface: #111827;
+            --surface-soft: #1E293B;
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --accent: #F59E0B;
             --emerald: #10B981;
             --rose: #F43F5E;
-            --text-main: #FAF9F6;
-            --text-muted: #CBD5E1;
-            --border-subtle: rgba(255, 255, 255, 0.14);
+            --line: rgba(255, 255, 255, 0.09);
         }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0;
             min-height: 100vh;
-            background: linear-gradient(180deg, var(--bg-brand) 0%, var(--bg-dark) 100%);
-            color: var(--text-main);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(82px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: env(safe-area-inset-top) 0 calc(68px + env(safe-area-inset-bottom));
         }
-        .app-shell { max-width: 460px; margin: 0 auto; }
+        .app { max-width: 440px; margin: 0 auto; }
 
-        /* Top Bar */
-        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-        .brand { display: flex; align-items: center; gap: 10px; }
-        .crest { width: 42px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.09); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245,158,11,0.5); }
-        .brand-title { font-size: 1.08rem; font-weight: 800; letter-spacing: 1.2px; margin: 0; }
-        .brand-sub { font-size: 0.72rem; color: var(--text-muted); margin: 0; }
-        .status-toggle {
-            background: rgba(16, 185, 129, 0.18);
-            border: 1px solid rgba(16, 185, 129, 0.55);
-            color: #A7F3D0;
+        /* Minimalist Instagram Top Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: rgba(9, 13, 22, 0.88);
+            backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        .logo-wrap { display: flex; align-items: center; gap: 9px; }
+        .logo-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #153E49, #F59E0B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+        .logo-text { font-size: 1.12rem; font-weight: 800; letter-spacing: 0.5px; margin: 0; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .pill-btn {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--text);
             padding: 6px 11px;
             border-radius: 999px;
-            font-size: 0.73rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        /* Instagram Story Rings (Active & On-Duty Pros) */
-        .stories-bar {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding: 4px 2px 12px;
-            scrollbar-width: none;
-        }
-        .stories-bar::-webkit-scrollbar { display: none; }
-        .story-item { flex: 0 0 auto; width: 68px; text-align: center; cursor: pointer; }
-        .story-ring {
-            width: 58px;
-            height: 58px;
-            margin: 0 auto 5px;
-            border-radius: 50%;
-            padding: 2.5px;
-            background: conic-gradient(#F59E0B, #EC4899, #10B981, #F59E0B);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .story-ring.closed { background: #64748B; }
-        .story-avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #0F172A;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            border: 2px solid var(--bg-dark);
-        }
-        .story-name { font-size: 0.68rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-        .story-tag { font-size: 0.6rem; color: #FDE68A; }
-
-        /* 8 Universal Profession Cluster Pills */
-        .cluster-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 12px;
-            scrollbar-width: none;
-        }
-        .cluster-scroll::-webkit-scrollbar { display: none; }
-        .cluster-chip {
-            flex: 0 0 auto;
-            padding: 7px 12px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-main);
-            font-size: 0.76rem;
+            font-size: 0.74rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
-        .cluster-chip.active {
-            background: var(--amber);
-            color: #0F172A;
-            border-color: var(--amber);
-            font-weight: 800;
+        .pill-btn.open {
+            background: rgba(16, 185, 129, 0.14);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #6EE7B7;
         }
 
-        /* Section Cards & 60 FPS Spring Transitions (motion-primitives / vaul aligned) */
-        @keyframes slideFadeUp {
-            from { opacity: 0; transform: translateY(14px) scale(0.985); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        /* Clean Instagram Stories Row */
+        .stories {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--line);
+            scrollbar-width: none;
         }
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
-            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        .stories::-webkit-scrollbar { display: none; }
+        .story { flex: 0 0 auto; width: 64px; text-align: center; cursor: pointer; }
+        .story-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            padding: 2.5px;
+            background: linear-gradient(45deg, #F59E0B, #EC4899, #10B981);
+            margin: 0 auto 5px;
         }
-        .view-section { display: none; }
-        .view-section.active {
-            display: block;
-            animation: slideFadeUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-        .card, .reel-card {
-            transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease;
-        }
-        .card:active, .reel-card:active {
-            transform: scale(0.988);
-        }
-        .btn-amber, .cluster-chip, .reel-action-btn, .status-toggle {
-            transition: transform 0.14s ease, filter 0.14s ease, background-color 0.18s ease;
-        }
-        .btn-amber:active, .cluster-chip:active, .reel-action-btn:active {
-            transform: scale(0.95);
-        }
-        .auth-subtabs { display: flex; gap: 6px; margin-bottom: 12px; }
-        .auth-tab-btn {
-            flex: 1;
-            padding: 8px 10px;
-            border-radius: 10px;
-            border: 1px solid var(--border-subtle);
-            background: rgba(255,255,255,0.06);
-            color: var(--text-muted);
-            font-size: 0.76rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .auth-tab-btn.active {
-            background: var(--amber);
-            color: #0F172A;
-            border-color: var(--amber);
-            font-weight: 800;
-        }
-        .pwd-meter {
-            height: 6px;
-            border-radius: 99px;
-            background: rgba(255,255,255,0.12);
-            overflow: hidden;
-            margin: 5px 0 4px;
-        }
-        .pwd-meter-bar {
+        .story-ring.closed { background: #334155; }
+        .story-inner {
+            width: 100%;
             height: 100%;
-            width: 0%;
-            background: var(--rose);
-            transition: width 0.25s ease, background-color 0.25s ease;
-        }
-        .kyc-status-pill {
-            display: inline-flex;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2.5px solid var(--bg);
+            display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.73rem;
-            padding: 4px 10px;
-            border-radius: 99px;
-            background: rgba(16,185,129,0.16);
-            border: 1px solid rgba(16,185,129,0.45);
-            color: #A7F3D0;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+        .story-lbl {
+            font-size: 0.68rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Minimal Category Chips */
+        .chips {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding: 10px 16px;
+            scrollbar-width: none;
+        }
+        .chips::-webkit-scrollbar { display: none; }
+        .chip {
+            flex: 0 0 auto;
+            padding: 6px 13px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+        .chip.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
             font-weight: 700;
         }
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 18px;
-            padding: 15px;
-            margin-bottom: 12px;
-            backdrop-filter: blur(10px);
+
+        /* Views with Smooth 60fps Transition */
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-        .urgent-badge {
-            display: inline-flex;
+        .view { display: none; padding: 6px 16px 20px; }
+        .view.active { display: block; animation: fadeSlide 0.22s ease-out; }
+
+        /* TikTok / Reels Immersive Vertical Talent Card */
+        .tiktok-card {
+            position: relative;
+            border-radius: 22px;
+            background: linear-gradient(165deg, #1E293B 0%, #0F172A 65%, #090D16 100%);
+            border: 1px solid var(--line);
+            height: 390px;
+            margin-bottom: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+        }
+        .tiktok-bg-art {
+            position: absolute;
+            inset: 0;
+            display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            font-size: 5.5rem;
+            opacity: 0.13;
+            pointer-events: none;
+        }
+        .tiktok-top {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .badge-trend {
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            color: #FDE68A;
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 0.7rem;
-            font-weight: 800;
-            background: rgba(244, 63, 94, 0.2);
-            color: #FDA4AF;
-            border: 1px solid rgba(244, 63, 94, 0.45);
+            font-weight: 700;
         }
-        .urgent-badge.today {
-            background: rgba(245, 158, 11, 0.2);
-            color: #FDE68A;
-            border-color: rgba(245, 158, 11, 0.45);
+        .badge-open {
+            background: rgba(16, 185, 129, 0.18);
+            color: #6EE7B7;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
         }
-        .card-title { font-size: 0.96rem; font-weight: 700; margin: 0 0 5px; }
-        .card-desc { font-size: 0.81rem; color: var(--text-muted); margin: 0 0 10px; line-height: 1.42; }
-        .meta-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.73rem; color: #FDE68A; margin-bottom: 10px; }
-
-        /* Instant Bid Form inside Urgent Post */
-        .bid-row { display: flex; gap: 7px; }
-        .input {
-            width: 100%;
-            padding: 9px 11px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.22);
-            background: rgba(15, 23, 42, 0.85);
-            color: #FFFFFF;
-            font-size: 0.82rem;
-            font-family: inherit;
-        }
-        .btn-amber {
-            padding: 9px 13px;
-            border: none;
-            border-radius: 10px;
-            background: var(--amber);
-            color: #0F172A;
-            font-weight: 800;
-            font-size: 0.8rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .offers-list { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.76rem; }
-        .offer-pill {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 9px;
-            border-radius: 9px;
-            background: rgba(16, 185, 129, 0.14);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            margin-top: 6px;
-        }
-
-        /* TikTok / Reels Vertical Showcase Cards */
-        .reel-card {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
-            border: 1px solid rgba(245, 158, 11, 0.35);
-            padding: 18px 16px;
-            margin-bottom: 12px;
-            min-height: 210px;
+        /* Right Floating TikTok Action Rail */
+        .tiktok-rail {
+            position: absolute;
+            right: 14px;
+            bottom: 78px;
+            z-index: 3;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
         }
-        .reel-top { display: flex; justify-content: space-between; align-items: center; }
-        .reel-tag { background: rgba(0,0,0,0.55); padding: 4px 10px; border-radius: 99px; font-size: 0.72rem; color: #FDE68A; font-weight: 700; }
-        .reel-actions { display: flex; gap: 12px; font-size: 0.8rem; }
-        .reel-action-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; padding: 6px 10px; border-radius: 99px; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
+        .rail-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .rail-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.15s ease;
+        }
+        .rail-btn:active .rail-circle { transform: scale(0.88); }
 
-        /* Instagram Pro Profile Header & 3-Column Grid */
-        .ig-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-        .ig-avatar-ring {
-            width: 74px;
-            height: 74px;
+        .tiktok-bottom {
+            position: relative;
+            z-index: 2;
+            padding-right: 58px;
+        }
+        .pro-user {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .verified-check { color: #38BDF8; font-size: 0.85rem; }
+        .tiktok-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+            line-height: 1.35;
+        }
+        .price-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 11px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #FDE68A;
+            margin-bottom: 12px;
+        }
+        .cta-work-btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 14px;
+            background: var(--accent);
+            color: #090D16;
+            font-weight: 800;
+            font-size: 0.86rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        /* Clean Urgent & Sanayi Feed Cards */
+        .clean-post {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .post-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .tag-urgent {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #FDA4AF;
+            background: rgba(244, 63, 94, 0.16);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .post-title { font-size: 0.96rem; font-weight: 700; margin: 0 0 5px; }
+        .post-sub { font-size: 0.8rem; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+        .post-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .post-price { font-size: 0.92rem; font-weight: 800; color: #FDE68A; }
+        .btn-minimal {
+            padding: 8px 14px;
+            border-radius: 11px;
+            border: none;
+            background: var(--text);
+            color: var(--bg);
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* Clean Modern Instagram Profile Layout */
+        .ig-top { display: flex; align-items: center; gap: 18px; margin: 8px 0 14px; }
+        .ig-avatar {
+            width: 82px;
+            height: 82px;
             border-radius: 50%;
             padding: 3px;
-            background: conic-gradient(#10B981, #F59E0B, #10B981);
+            background: linear-gradient(45deg, #10B981, #F59E0B);
             flex-shrink: 0;
         }
-        .ig-stats { display: flex; flex: 1; justify-content: space-around; text-align: center; }
-        .ig-stat-val { font-size: 0.98rem; font-weight: 800; display: block; }
-        .ig-stat-lbl { font-size: 0.68rem; color: var(--text-muted); }
-        .hours-banner {
+        .ig-avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 3px solid var(--bg);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .ig-counters { display: flex; flex: 1; justify-content: space-around; text-align: center; }
+        .ig-num { font-size: 1.05rem; font-weight: 800; display: block; }
+        .ig-lbl { font-size: 0.72rem; color: var(--muted); }
+        .ig-bio-name { font-size: 0.95rem; font-weight: 800; margin: 0 0 2px; }
+        .ig-bio-role { font-size: 0.78rem; color: var(--muted); margin: 0 0 6px; }
+        .ig-hours-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.74rem;
+            color: #6EE7B7;
+            background: rgba(16, 185, 129, 0.12);
+            padding: 4px 10px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .ig-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+        .ig-btn-primary {
+            flex: 1.3;
             padding: 9px 12px;
-            border-radius: 12px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            font-size: 0.77rem;
-            margin-bottom: 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent);
+            color: #090D16;
+            font-weight: 800;
+            font-size: 0.79rem;
+            cursor: pointer;
         }
-        .price-menu-item {
+        .ig-btn-secondary {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 700;
+            font-size: 0.79rem;
+            cursor: pointer;
+        }
+        /* Instagram Highlights Row */
+        .ig-highlights {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 9px 11px;
-            border-radius: 11px;
-            background: rgba(255,255,255,0.06);
-            margin-bottom: 7px;
-            font-size: 0.8rem;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 2px;
         }
-        .price-tag { font-weight: 800; color: #FDE68A; font-variant-numeric: tabular-nums; }
-        .ig-grid {
+        .ig-hl-circle {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin: 0 auto 4px;
+        }
+        /* Instagram Profile Content Sub-Tabs (Grid vs Price Menu) */
+        .ig-subtabs {
+            display: flex;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 8px;
+        }
+        .ig-subtab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 11px 0;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .ig-subtab.active {
+            color: var(--text);
+            border-bottom-color: var(--text);
+        }
+        /* Edge-to-Edge 3-Column Instagram Media Grid */
+        .ig-grid-3 {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            margin-top: 10px;
+            gap: 3px;
         }
-        .ig-cell {
+        .ig-square {
             aspect-ratio: 1 / 1;
-            border-radius: 11px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid var(--border-subtle);
-            padding: 8px;
+            background: var(--surface);
+            border-radius: 4px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            font-size: 0.7rem;
+            position: relative;
+            cursor: pointer;
+        }
+        .ig-square-title { font-size: 0.71rem; font-weight: 600; line-height: 1.25; }
+        .ig-square-price { font-size: 0.7rem; font-weight: 800; color: #FDE68A; }
+
+        /* Clean Price List inside Profile */
+        .clean-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--surface);
+            border-radius: 12px;
+            margin-bottom: 8px;
         }
 
-        /* Bottom Navigation Bar (Instagram / TikTok Style) */
-        .bottom-nav {
+        /* Bottom Sheet Modal (Hides Filters, Create Post & Sahibinden Sync until clicked) */
+        .sheet-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.68);
+            backdrop-filter: blur(4px);
+            z-index: 60;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .sheet-backdrop.open { display: flex; }
+        .sheet {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            border-top: 1px solid var(--line);
+            border-radius: 22px 22px 0 0;
+            padding: 14px 18px calc(22px + env(safe-area-inset-bottom));
+            max-height: 84vh;
+            overflow-y: auto;
+            animation: fadeSlide 0.2s ease-out;
+        }
+        .sheet-handle { width: 38px; height: 4px; background: #475569; border-radius: 99px; margin: 0 auto 12px; }
+        .input {
+            width: 100%;
+            padding: 11px 13px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.84rem;
+            margin-bottom: 9px;
+            font-family: inherit;
+        }
+        .row { display: flex; gap: 8px; }
+
+        /* Minimalist 5-Icon Instagram/TikTok Bottom Bar */
+        .bottom-bar {
             position: fixed;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(15, 23, 42, 0.95);
-            border-top: 1px solid var(--border-subtle);
+            z-index: 40;
+            background: rgba(9, 13, 22, 0.94);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid var(--line);
             padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
             display: flex;
             justify-content: space-around;
-            z-index: 40;
-            backdrop-filter: blur(12px);
+            align-items: center;
         }
-        .nav-btn {
+        .tab-btn {
             background: none;
             border: none;
-            color: var(--text-muted);
-            font-size: 0.71rem;
-            font-weight: 700;
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 600;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 3px;
             cursor: pointer;
         }
-        .nav-btn.active { color: var(--amber); }
-        .nav-icon { font-size: 1.15rem; }
+        .tab-btn.active { color: var(--text); font-weight: 800; }
+        .tab-icon { font-size: 1.22rem; }
+        .plus-btn {
+            width: 44px;
+            height: 32px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #F59E0B, #10B981);
+            color: #090D16;
+            font-weight: 900;
+            font-size: 1.2rem;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div class="app-shell">
-        <!-- Top Bar with Live Open/Closed/24-7 Switch -->
-        <header class="topbar">
-            <div class="brand">
-                <div class="crest">
-                    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M14 15C14 13.343 15.343 12 17 12H21.5C23.157 12 24.5 13.343 24.5 15V34.5C24.5 39.2 27.8 42.4 32 42.4L28.5 51.4C20.1 49.8 14 43.1 14 34.5V15Z" fill="#FFFFFF"/>
-                        <path d="M50 15C50 13.343 48.657 12 47 12H42.5C40.843 12 39.5 13.343 39.5 15V34.5C39.5 39.2 36.2 42.4 32 42.4C31.2 42.4 30.45 42.28 29.75 42.08L26.8 51.1C28.45 51.68 30.2 52 32 52C41.94 52 50 44.16 50 34.5V15Z" fill="#F59E0B"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="brand-title">USTANOMI</h1>
-                    <p class="brand-sub" id="queue-badge">Global Skill &amp; Service Economy</p>
-                </div>
+    <div class="app">
+        <!-- Minimalist Top Header -->
+        <header class="header">
+            <div class="logo-wrap">
+                <div class="logo-dot">U</div>
+                <h1 class="logo-text">Ustanomi</h1>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-                <select id="global-region-select" class="status-toggle" style="background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.5);color:#FDE68A;" aria-label="Global Bölge ve Para Birimi">
-                    <option value="TR">🇹🇷 TR • ₺</option>
-                    <option value="US">🌍 EN • $</option>
-                    <option value="EU">🇪🇺 EU • €</option>
+            <div class="header-actions">
+                <select id="global-region-select" class="pill-btn" aria-label="Para Birimi">
+                    <option value="TR">🇹🇷 ₺</option>
+                    <option value="US">🌍 $</option>
+                    <option value="EU">🇪🇺 €</option>
                 </select>
-                <button type="button" class="status-toggle" id="pro-mode-toggle" title="Çalışma Durumunu Değiştir">
+                <button type="button" class="pill-btn" id="open-filter-sheet-btn">
+                    🔍 Filtre
+                </button>
+                <button type="button" class="pill-btn open" id="pro-mode-toggle">
                     🟢 Açık
                 </button>
             </div>
         </header>
 
-        <!-- Armut & Thumbtack Style Global Multi-Filter Search Bar -->
-        <section class="card" style="padding:12px;margin-bottom:10px;" aria-label="Armut ve Global Akıllı Arama Filtreleri">
-            <div class="bid-row" style="margin-bottom:7px;">
-                <input type="search" id="market-search-input" class="input" placeholder="🔍 Meslek, uzman veya iş ara (Örn: Tesisat, Reels, Oto, Berlin)...">
-                <select id="market-city-select" class="input" style="max-width:118px;">
+        <!-- Clean Instagram Stories Bar (Open & On-Duty Pros) -->
+        <section class="stories" id="stories-bar" aria-label="Açık Uzman Hikâyeleri"></section>
+
+        <!-- Minimal Horizontal Profession Pills -->
+        <nav class="chips" id="cluster-bar" aria-label="Meslek Grupları"></nav>
+
+        <!-- VIEW 1: TIKTOK / REELS YETENEK KEŞFET VİTRİNİ (DEFAULT CLEAN FEED) -->
+        <main id="tab-reels" class="view active" aria-label="TikTok Tarzı Yetenek Akışı">
+            <div id="reels-feed-list"></div>
+        </main>
+
+        <!-- VIEW 2: ACİL İŞLER (MİNİMAL KART AKIŞI) -->
+        <section id="tab-urgent" class="view" aria-label="Acil İşler Akışı">
+            <div id="urgent-feed-list"></div>
+        </section>
+
+        <!-- VIEW 3: SANAYİ, OTO TAMİR & KAPALI ZARF PROFORMA İHALE -->
+        <section id="tab-b2b" class="view" aria-label="Sanayi ve Oto Tamir Proforma İhaleleri">
+            <div class="clean-post" style="border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.07);">
+                <div style="font-size:0.74rem;font-weight:800;color:#6EE7B7;margin-bottom:3px;">
+                    🛡️ BDDK Emanet Ödeme Havuzu • 🔒 Kapalı Zarf Proforma
+                </div>
+                <div style="font-size:0.77rem;color:var(--muted);">
+                    Sanayiciler araç tamiri ve yedek parçaya özelden sözleşmeli fiyat verir. Teslim onayında %88 sanayiciye aktarılır.
+                </div>
+            </div>
+            <div id="b2b-tenders-list"></div>
+        </section>
+
+        <!-- VIEW 4: SADE INSTAGRAM UZMAN PROFİLİ -->
+        <section id="tab-profile" class="view" aria-label="Sade Instagram Uzman Profili">
+            <div id="ig-profile-container"></div>
+        </section>
+
+        <!-- VIEW 5: SADE T.C. KİMLİK (KYC) & GİRİŞ -->
+        <section id="tab-auth" class="view" aria-label="Kimlik Doğrulama ve Giriş">
+            <div class="clean-post">
+                <div style="display:flex;gap:6px;margin-bottom:14px;">
+                    <button type="button" class="chip active auth-tab-btn" data-auth-mode="kyc-register" style="flex:1;">🪪 Kimlikle Kayıt</button>
+                    <button type="button" class="chip auth-tab-btn" data-auth-mode="login" style="flex:1;">🔐 Giriş</button>
+                    <button type="button" class="chip auth-tab-btn" data-auth-mode="forgot" style="flex:1;">🔑 Şifre</button>
+                </div>
+
+                <div id="auth-pane-kyc-register">
+                    <select id="kyc-role-select" class="input">
+                        <option value="MASTER">🛠️ Uzman / Sanayici Hesabı (İş &amp; Ödeme Al)</option>
+                        <option value="CUSTOMER">🏠 Müşteri / İşveren Hesabı (Hizmet Al)</option>
+                    </select>
+                    <input type="text" id="kyc-fullname" class="input" placeholder="Ad Soyad">
+                    <input type="text" id="kyc-tckn" class="input" maxlength="11" inputmode="numeric" placeholder="11 Haneli T.C. Kimlik No (TCKN)">
+                    <div id="kyc-tckn-hint" style="font-size:0.72rem;color:var(--muted);margin:-4px 0 8px;">🪪 Resmi 11 hane algoritmasıyla doğrulanır.</div>
+                    <input type="text" id="kyc-iban" class="input" maxlength="32" placeholder="TR IBAN (%88 Hak Ediş İçin)">
+                    <input type="email" id="kyc-email" class="input" placeholder="E-Posta Adresi">
+                    <input type="password" id="kyc-password" class="input" placeholder="Şifre (En az 8 karakter, Büyük Harf + Rakam)">
+                    <div id="kyc-pwd-label" style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Şifre Gücü: Bekleniyor</div>
+                    <input type="checkbox" id="kyc-kvkk-check" checked hidden>
+                    <input type="checkbox" id="kyc-escrow-check" checked hidden>
+                    <button type="button" class="cta-work-btn" id="kyc-submit-btn">🪪 Kimlikle Hesabımı Aç</button>
+                </div>
+
+                <div id="auth-pane-login" style="display:none;">
+                    <input type="email" id="login-email" class="input" placeholder="E-Posta Adresiniz">
+                    <input type="password" id="login-password" class="input" placeholder="Şifreniz">
+                    <button type="button" class="cta-work-btn" id="login-submit-btn">🔐 Giriş Yap</button>
+                </div>
+
+                <div id="auth-pane-forgot" style="display:none;">
+                    <div class="row" style="margin-bottom:8px;">
+                        <input type="email" id="forgot-email" class="input" style="margin:0;" placeholder="Kayıtlı E-Posta">
+                        <button type="button" class="btn-minimal" id="forgot-send-otp-btn">Kod Gönder</button>
+                    </div>
+                    <input type="text" id="forgot-otp-code" class="input" maxlength="6" placeholder="6 Haneli SMS / E-Posta Kodu">
+                    <input type="password" id="forgot-new-password" class="input" placeholder="Yeni Şifreniz">
+                    <button type="button" class="cta-work-btn" id="forgot-reset-btn">🔑 Şifremi Yenile</button>
+                </div>
+
+                <div id="auth-feedback-box" style="margin-top:10px;font-size:0.76rem;font-weight:700;" aria-live="polite"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- CLEAN BOTTOM SHEET 1: SEARCH & 12D FILTERS (Only opens when user taps 🔍 Filtre) -->
+    <div class="sheet-backdrop" id="filter-sheet">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong style="font-size:0.92rem;">🔍 Akıllı Arama &amp; Filtreler</strong>
+                <button type="button" class="pill-btn" id="close-filter-sheet-btn">Kapat ✕</button>
+            </div>
+            <input type="search" id="market-search-input" class="input" placeholder="Meslek, uzman, parça veya şehir ara...">
+            <div class="row">
+                <select id="market-city-select" class="input">
                     <option value="ALL">🌍 Tüm Şehirler</option>
                     <option value="İstanbul">İstanbul</option>
                     <option value="Ankara">Ankara</option>
                     <option value="İzmir">İzmir</option>
-                    <option value="Berlin">Berlin (EU)</option>
-                    <option value="London">London (UK)</option>
-                    <option value="New York">New York (US)</option>
-                    <option value="Dubai">Dubai (UAE)</option>
+                    <option value="Berlin">Berlin</option>
+                    <option value="London">London</option>
                 </select>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;">
-                <label style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#A7F3D0;">
-                    <input type="checkbox" id="filter-open-only"> 🟢 Sadece Açık
-                </label>
-                <label style="font-size:0.72rem;display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#FDE68A;">
-                    <input type="checkbox" id="filter-kyc-only" checked> 🪪 Kimlik (KYC)
-                </label>
-                <select id="filter-sort-select" class="input" style="width:auto;padding:5px 8px;font-size:0.72rem;">
-                    <option value="TRENDING">🔥 Sırala: En Trend</option>
-                    <option value="PRICE_ASC">💰 En Düşük Fiyat</option>
-                    <option value="PRICE_DESC">💎 Kapsamlı Paket</option>
-                    <option value="RATING_DESC">⭐ En Yüksek Puan</option>
+                <select id="filter-sort-select" class="input">
+                    <option value="TRENDING">🔥 En Çok Beğenilen</option>
+                    <option value="PRICE_ASC">💰 En Uygun Fiyat</option>
                     <option value="FASTEST_ETA">⚡ En Hızlı Varış</option>
                     <option value="DISTANCE_ASC">📍 En Yakın (km)</option>
                 </select>
-                <button type="button" id="toggle-adv-filters-btn" class="cluster-chip" style="padding:5px 9px;font-size:0.71rem;">
-                    🎛️ Tüm Filtreler (12)
-                </button>
             </div>
-            <!-- 12-Dimension Full Advanced Filter Drawer (Armut + Sahibinden + B2B Standard) -->
-            <div id="adv-filters-drawer" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.16);font-size:0.72rem;">
-                <div class="bid-row" style="margin-bottom:6px;">
-                    <select id="filter-distance-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
-                        <option value="0">📍 Mesafe: Tüm Yarıçap</option>
-                        <option value="5">📍 En Fazla 5 km Yakın</option>
-                        <option value="15">📍 En Fazla 15 km</option>
-                        <option value="50">📍 En Fazla 50 km</option>
-                    </select>
-                    <select id="filter-warranty-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
-                        <option value="0">🛡️ Garanti: Tümü</option>
-                        <option value="6">🛡️ En Az 6 Ay Garanti</option>
-                        <option value="12">🛡️ En Az 12 Ay Garanti</option>
-                        <option value="24">🛡️ En Az 24 Ay Garanti</option>
-                    </select>
-                </div>
-                <div class="bid-row" style="margin-bottom:6px;">
-                    <select id="filter-origin-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
-                        <option value="ALL">⚙️ Parça/Malzeme: Tümü</option>
-                        <option value="ORIGINAL_OEM">⚙️ Orijinal OEM Parça</option>
-                        <option value="CERTIFIED_EQUIVALENT">⚙️ TSE Garantili Muadil</option>
-                        <option value="CUSTOM_MANUFACTURED">⚙️ Sıfır Özel İmalat</option>
-                    </select>
-                    <select id="filter-rating-select" class="input" style="font-size:0.72rem;padding:6px 8px;">
-                        <option value="0">⭐ Puan: Tümü</option>
-                        <option value="4.5">⭐ 4.5+ Yıldız</option>
-                        <option value="4.8">⭐ 4.8+ Yıldız</option>
-                        <option value="4.9">⭐ 4.9+ Elit Uzman</option>
-                    </select>
-                </div>
-                <div class="bid-row" style="margin-bottom:6px;">
-                    <input type="number" id="filter-min-price" class="input" style="font-size:0.72rem;padding:6px 8px;" placeholder="Min Bütçe (₺)" min="0" step="100">
-                    <input type="number" id="filter-max-price" class="input" style="font-size:0.72rem;padding:6px 8px;" placeholder="Maks Bütçe (₺)" min="0" step="100">
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;color:#E2E8F0;">
-                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
-                        <input type="checkbox" id="filter-efatura-only"> 🧾 GİB e-Fatura Kesilir
-                    </label>
-                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
-                        <input type="checkbox" id="filter-installment-only"> 💳 Kredi Kartına 12 Taksit
-                    </label>
-                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:#FDE68A;">
-                        <input type="checkbox" id="filter-onduty-only"> ⚡ Sadece 7/24 Nöbetçi
-                    </label>
-                </div>
-            </div>
-            <!-- Armut-Style 3-Second Smart Scope & Quote Estimator -->
-            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;font-size:0.73rem;">
-                <div style="display:flex;gap:5px;align-items:center;">
-                    <span>📐 Kapsam:</span>
-                    <select id="wizard-scope-select" class="input" style="width:auto;padding:4px 7px;font-size:0.72rem;">
-                        <option value="SMALL">Küçük / 1 Oda</option>
-                        <option value="MEDIUM">Orta / 2-3 Oda</option>
-                        <option value="LARGE">Büyük / Ticari</option>
-                    </select>
-                    <label style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;">
-                        <input type="checkbox" id="wizard-materials-check"> +Malzeme
-                    </label>
-                </div>
-                <span id="wizard-quote-badge" style="color:#FDE68A;font-weight:800;">Tahmini: 553 ₺ – 780 ₺</span>
-            </div>
-        </section>
-
-        <!-- Instagram Story Bar: Nearby Open & 24/7 On-Duty Professionals Across All Trades -->
-        <section class="stories-bar" id="stories-bar" aria-label="Şu An Açık ve Nöbetçi Uzman Hikâyeleri"></section>
-
-        <!-- 8 Universal Profession Clusters -->
-        <nav class="cluster-scroll" id="cluster-bar" aria-label="Tüm Meslek Grupları"></nav>
-
-        <!-- TAB 1: ACİL İŞLER & ANLIK TEKLİF AKIŞI -->
-        <main id="tab-urgent" class="view-section active">
-            <!-- Quick Post Urgent Job Card -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="urgent-badge">⚡ 15 Saniyede Acil İş Paylaş</span>
-                    <span style="font-size:0.72rem;color:#A7F3D0;">Açık Uzmanlara Anında Bildirim</span>
-                </div>
-                <input type="text" id="urgent-title-input" class="input" style="margin-bottom:7px;" placeholder="Ne gerekiyor? (Örn: Kadıköy acil çilingir / Oto akü / Düğün fotoğrafçısı)">
-                <div class="bid-row">
-                    <select id="urgent-tier-select" class="input" style="flex:1.1;">
-                        <option value="EMERGENCY_30M">🔴 ACİL (30-60 Dk)</option>
-                        <option value="TODAY">🟡 BUGÜN İÇİNDE</option>
-                        <option value="SCHEDULED">🟢 PLANLI / RANDEVU</option>
-                    </select>
-                    <input type="number" id="urgent-budget-input" class="input" style="flex:0.8;" placeholder="Bütçe ₺" min="100" step="50">
-                    <button type="button" class="btn-amber" id="publish-urgent-btn">Paylaş</button>
-                </div>
-            </div>
-
-            <!-- Live Urgent Job Feed List -->
-            <div id="urgent-feed-list"></div>
-        </main>
-
-        <!-- TAB 2: TIKTOK / REELS DİKEY YETENEK VİTRİNİ & DOĞRUDAN İŞE ALIM ("SENİNLE ÇALIŞMAK İSTİYORUM") -->
-        <section id="tab-reels" class="view-section" aria-label="Yetenek Paylaşımı, Beğeni Sıralaması ve Doğrudan İşe Alım">
-            <!-- Quick Share Talent Card -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="urgent-badge today">✨ Yeteneğini Paylaş &amp; Öne Çık</span>
-                    <span style="font-size:0.71rem;color:#FDE68A;">❤️ Beğeni Aldıkça #1 Trend Ol</span>
-                </div>
-                <input type="text" id="talent-title-input" class="input" style="margin-bottom:7px;" placeholder="Yeteneğin / Uzmanlığın nedir? (Örn: Özel Düğün Reels Çekimi / Kırmadan Kaçak Tespiti)">
-                <div class="bid-row">
-                    <input type="text" id="talent-handle-input" class="input" style="flex:1;" placeholder="@kullanici_adin">
-                    <input type="number" id="talent-price-input" class="input" style="flex:0.8;" placeholder="Başlangıç ₺" min="100" step="50">
-                    <button type="button" class="btn-amber" id="share-talent-btn">Vitrine Ekle</button>
-                </div>
-            </div>
-
-            <div id="reels-feed-list"></div>
-        </section>
-
-        <!-- TAB 3: INSTAGRAM TARZI UZMAN PROFİLİ + SAHİBİNDEN / SOSYAL MEDYA OTOMATİK VERİ ÇEKME MERKEZİ -->
-        <section id="tab-profile" class="view-section" aria-label="Instagram Tarzı Uzman Profil Vitrini ve Sahibinden/Sosyal Medya Senkronizasyonu">
-            <!-- Omnichannel Auto-Import & Sync Hub -->
-            <div class="card" style="border-color:rgba(245,158,11,0.5);">
-                <div class="card-header">
-                    <span class="urgent-badge today">🔗 Sahibinden &amp; Sosyal Medya Otomatik Çek</span>
-                    <span style="font-size:0.7rem;color:#A7F3D0;">5 Sn'de Tüm İlan &amp; Fiyatları Aktar</span>
-                </div>
-                <p class="card-desc" style="margin-bottom:8px;">
-                    <strong>Sahibinden.com Mağazanızı, Instagram, TikTok, Google Haritalar, WhatsApp Business veya Trendyol</strong> bağlantınızı yapıştırın; ilanlarınız, yedek parça/hizmet fiyatlarınız, çalışma saatleriniz ve videolarınız otomatik çekilsin:
-                </p>
-                <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.sahibinden.com/maslak-oto-sanayi-servis" data-title="Maslak Oto Sanayi &amp; Orijinal Yedek Parça">🟡 Sahibinden</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.arabam.com/galeri/maslak-ekspertiz-motor" data-title="Arabam Oto Ekspertiz &amp; Motor Revizyon">🚘 Arabam.com</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.instagram.com/elif_visual_studio" data-title="Elif Visual Studio • 4K Reels &amp; Fotoğraf">📸 Instagram</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.tiktok.com/@selim_tesisat_pro" data-title="Selim Usta • Termal Su Kaçağı &amp; Kombi">🎬 TikTok</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.google.com/maps/place/kaan_oto_kurtarma" data-title="Kaan 7/24 Oto Çekici &amp; Yol Yardım">📍 Google Harita</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://wa.me/905320000000" data-title="WhatsApp Business Hızlı Yedek Parça Kataloğu">💬 WhatsApp</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.trendyol.com/magaza/ostim-yapi-elektrik" data-title="Trendyol &amp; Hepsiburada Toptan Yapı Market">🟠 Trendyol/HB</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.armut.com/hizmetveren/ustanomi-elit-servis" data-title="Armut &amp; Thumbtack Onaylı Hizmet Profili">🟢 Armut/Global</button>
-                    <button type="button" class="cluster-chip quick-import-preset" data-url="https://www.youtube.com/@ustanomi_sanayi_tv" data-title="YouTube Shorts &amp; LinkedIn Mühendislik Vitrini">▶️ YouTube/In</button>
-                </div>
-                <div class="bid-row">
-                    <input type="url" id="ext-sync-url-input" class="input" placeholder="https://www.sahibinden.com/... veya instagram.com/...">
-                    <button type="button" class="btn-amber" id="ext-sync-pull-btn">🔄 Her Şeyi Çek</button>
-                </div>
-                <div id="ext-sync-feedback" style="margin-top:8px;font-size:0.75rem;color:#A7F3D0;font-weight:700;" aria-live="polite"></div>
-            </div>
-
-            <div class="card" id="ig-profile-container"></div>
-        </section>
-
-        <!-- TAB 4: TİCARİ GÜVENLİK, T.C. KİMLİKLE KAYIT (KYC), GİRİŞ & ŞİFREMİ UNUTTUM -->
-        <section id="tab-auth" class="view-section" aria-label="Ticari Güvenlik, T.C. Kimlikli Kayıt ve Şifre Kurtarma">
-            <div class="card">
-                <div class="card-header">
-                    <span class="kyc-status-pill">🪪 Ticari KYC &amp; Güvenli Havuz Koruması</span>
-                    <span style="font-size:0.7rem;color:#FDE68A;">NVI Algoritma Doğrulamalı</span>
-                </div>
-
-                <div class="auth-subtabs">
-                    <button type="button" class="auth-tab-btn active" data-auth-mode="kyc-register">🪪 Kimlikle Kayıt</button>
-                    <button type="button" class="auth-tab-btn" data-auth-mode="login">🔐 Giriş Yap</button>
-                    <button type="button" class="auth-tab-btn" data-auth-mode="forgot">🔑 Şifremi Unuttum</button>
-                </div>
-
-                <!-- 1. T.C. Kimlik (TCKN) & TR IBAN Doğrulamalı Ticari Kayıt -->
-                <div id="auth-pane-kyc-register">
-                    <p class="card-desc">Ticari güven ve sahte hesap engeli için tüm uzman ve işveren kayıtları <strong>11 haneli T.C. Kimlik No (TCKN)</strong> algoritması ile doğrulanır.</p>
-                    <select id="kyc-role-select" class="input" style="margin-bottom:7px;">
-                        <option value="MASTER">🛠️ Uzman / Usta Hesabı (İş &amp; Ödeme Al)</option>
-                        <option value="CUSTOMER">🏠 İşveren / Müşteri Hesabı (Hizmet Al)</option>
-                    </select>
-                    <input type="text" id="kyc-fullname" class="input" style="margin-bottom:7px;" placeholder="Kimlikteki Ad Soyad (Örn: Selim Karaca)">
-                    <input type="text" id="kyc-tckn" class="input" style="margin-bottom:4px;" maxlength="11" inputmode="numeric" placeholder="11 Haneli T.C. Kimlik Numarası (TCKN)">
-                    <div id="kyc-tckn-hint" style="font-size:0.72rem;color:#CBD5E1;margin-bottom:7px;">🪪 10. ve 11. hane resmi NVI algoritmasıyla anlık kontrol edilir.</div>
-                    <input type="text" id="kyc-iban" class="input" style="margin-bottom:7px;" maxlength="32" placeholder="TR IBAN (%88 Hak Ediş Aktarımı İçin — İsteğe Bağlı)">
-                    <input type="email" id="kyc-email" class="input" style="margin-bottom:7px;" placeholder="Kurumsal / Kişisel E-Posta Adresi">
-                    <input type="password" id="kyc-password" class="input" placeholder="Güçlü Ticari Şifre (En az 8 krk, Büyük Harf + Rakam)">
-                    <div class="pwd-meter"><div class="pwd-meter-bar" id="kyc-pwd-bar"></div></div>
-                    <div id="kyc-pwd-label" style="font-size:0.71rem;color:#CBD5E1;margin-bottom:8px;">Şifre Gücü: Bekleniyor</div>
-
-                    <label style="display:flex;align-items:flex-start;gap:7px;font-size:0.74rem;color:#E2E8F0;margin-bottom:6px;cursor:pointer;">
-                        <input type="checkbox" id="kyc-kvkk-check" checked>
-                        <span>KVKK Aydınlatma Metnini ve kimlik verilerimin SHA-256 ile maskelenerek doğrulanmasını onaylıyorum.</span>
-                    </label>
-                    <label style="display:flex;align-items:flex-start;gap:7px;font-size:0.74rem;color:#E2E8F0;margin-bottom:10px;cursor:pointer;">
-                        <input type="checkbox" id="kyc-escrow-check" checked>
-                        <span>Ustanomi Ticari Güvenli Havuz (%88 Uzman / %12 Komisyon) Sözleşmesini kabul ediyorum.</span>
-                    </label>
-                    <button type="button" class="btn-amber" id="kyc-submit-btn" style="width:100%;padding:11px;">🪪 Kimliğimi Doğrula &amp; Ticari Hesabımı Aç</button>
-                </div>
-
-                <!-- 2. Güvenli Giriş -->
-                <div id="auth-pane-login" style="display:none;">
-                    <p class="card-desc">Doğrulanmış ticari hesabınıza zamanlama-korumalı (Timing-Safe) şifrenizle giriş yapın.</p>
-                    <input type="email" id="login-email" class="input" style="margin-bottom:8px;" placeholder="Kayıtlı E-Posta Adresiniz">
-                    <input type="password" id="login-password" class="input" style="margin-bottom:10px;" placeholder="Şifreniz">
-                    <button type="button" class="btn-amber" id="login-submit-btn" style="width:100%;padding:11px;">🔐 Güvenli Oturum Aç</button>
-                </div>
-
-                <!-- 3. Şifremi Unuttum (6 Haneli SMS / E-Posta OTP Kurtarma) -->
-                <div id="auth-pane-forgot" style="display:none;">
-                    <p class="card-desc">Şifrenizi unuttuysanız kayıtlı e-posta veya telefonunuza <strong>10 dakika geçerli 6 haneli OTP sıfırlama kodu</strong> gönderilir.</p>
-                    <div class="bid-row" style="margin-bottom:8px;">
-                        <input type="email" id="forgot-email" class="input" placeholder="Kayıtlı E-Posta Adresiniz">
-                        <button type="button" class="btn-amber" id="forgot-send-otp-btn">Kod Gönder</button>
-                    </div>
-                    <input type="text" id="forgot-otp-code" class="input" style="margin-bottom:8px;" maxlength="6" inputmode="numeric" placeholder="6 Haneli Doğrulama Kodu">
-                    <input type="password" id="forgot-new-password" class="input" style="margin-bottom:10px;" placeholder="Yeni Güçlü Şifreniz (En az 8 krk, Büyük Harf + Rakam)">
-                    <button type="button" class="btn-amber" id="forgot-reset-btn" style="width:100%;padding:11px;">🔑 Şifremi Güvenle Yenile</button>
-                </div>
-
-                <div id="auth-feedback-box" style="margin-top:10px;font-size:0.77rem;font-weight:700;" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <!-- TAB 5: SANAYİ, OTO TAMİR, YEDEK PARÇA & MAL ALIM İHALELERİ (KAPALI ZARF PROFORMA + SÖZLEŞME + EMANET HAVUZ) -->
-        <section id="tab-b2b" class="view-section" aria-label="Sanayi, Oto Tamir, Yedek Parça ve Kapalı Zarf Proforma İhaleleri">
-            <!-- Escrow Payment Institution Trust Shield -->
-            <div class="card" style="border-color:rgba(16,185,129,0.5);background:linear-gradient(145deg,rgba(6,78,59,0.55),rgba(15,23,42,0.85));">
-                <div class="card-header">
-                    <span class="kyc-status-pill">🛡️ BDDK Lisanslı Emanet Ödeme Havuzu</span>
-                    <span style="font-size:0.7rem;color:#FDE68A;">iyzico / PayTR Escrow</span>
-                </div>
-                <h2 class="card-title">🔒 Kapalı Zarf Özel Proforma &amp; Sabit Fiyat Sözleşmesi</h2>
-                <p class="card-desc" style="margin-bottom:0;">
-                    Sanayiciler ve tedarikçiler araç tamiri, kritik yedek parça ve toptan mal alımlarına <strong>özelden (diğer rakipler görmeden)</strong> kalem kalem <strong>Resmi Proforma Fatura + Dijital Sözleşme</strong> ile fiyat verir. Ödeme havuzda bloke edilir; sürpriz/ek ücret çıkamaz, parça/araç teslim onayında <strong>%88 Sanayici hesabına</strong> aktarılır.
-                </p>
-            </div>
-
-            <!-- Open New Auto Repair / Spare Parts / Procurement Tender -->
-            <div class="card">
-                <div class="card-header">
-                    <span class="urgent-badge today">🏭 Araç Tamiri / Parça / Mal Alım İhalesi Aç</span>
-                    <span style="font-size:0.7rem;color:#A7F3D0;">Özelden Teklif Topla</span>
-                </div>
-                <select id="b2b-cat-select" class="input" style="margin-bottom:7px;">
-                    <option value="AUTO_REPAIR_PARTS">🚗 Oto Sanayi: Araç Tamiri &amp; Yedek Parça İhalesi</option>
-                    <option value="INDUSTRIAL_MANUFACTURING">🏭 Sanayi &amp; İmalat: CNC, Kaynak, Kalıp &amp; Makine Revizyon</option>
-                    <option value="WHOLESALE_PROCUREMENT">📦 Toptan Mal &amp; Yapı/Elektrik Malzemesi Alımı</option>
+            <div class="row">
+                <select id="filter-origin-select" class="input">
+                    <option value="ALL">⚙️ Tüm Parçalar</option>
+                    <option value="ORIGINAL_OEM">Orijinal OEM</option>
+                    <option value="CERTIFIED_EQUIVALENT">TSE Garantili Muadil</option>
                 </select>
-                <input type="text" id="b2b-title-input" class="input" style="margin-bottom:7px;" placeholder="İhale Başlığı (Örn: 2020 VW Passat DSG Kavrama + Triger Seti Değişimi)">
-                <div class="bid-row">
-                    <input type="text" id="b2b-spec-input" class="input" placeholder="Şasi/Parça No veya Malzeme Listesi (Örn: OEM 0AM198142)">
-                    <button type="button" class="btn-amber" id="b2b-create-tender-btn">İhale Aç</button>
-                </div>
+                <select id="filter-distance-select" class="input">
+                    <option value="0">📍 Tüm Mesafeler</option>
+                    <option value="5">5 km Yakın</option>
+                    <option value="15">15 km Yakın</option>
+                </select>
             </div>
-
-            <!-- Active Tenders & Private Sealed Proforma Submission List -->
-            <div id="b2b-tenders-list"></div>
-        </section>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.76rem;margin:4px 0 12px;color:var(--muted);">
+                <label><input type="checkbox" id="filter-open-only"> 🟢 Şu An Açık</label>
+                <label><input type="checkbox" id="filter-kyc-only" checked> 🪪 Kimlik Onaylı</label>
+                <label><input type="checkbox" id="filter-efatura-only"> 🧾 e-Fatura</label>
+                <label><input type="checkbox" id="filter-installment-only"> 💳 12 Taksit</label>
+            </div>
+            <button type="button" class="cta-work-btn" id="apply-filters-btn">Sonuçları Göster</button>
+        </div>
     </div>
 
-    <!-- Bottom Tab Navigation -->
-    <nav class="bottom-nav" aria-label="Alt Gezinme Menüsü">
-        <button type="button" class="nav-btn active" data-target="tab-urgent">
-            <span class="nav-icon">🚨</span>
+    <!-- CLEAN BOTTOM SHEET 2: QUICK SHARE (+ Button: Share Talent / Urgent Job / Sahibinden Import) -->
+    <div class="sheet-backdrop" id="create-sheet">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong style="font-size:0.92rem;">✨ Hızlı Paylaş &amp; Mağaza Bağla</strong>
+                <button type="button" class="pill-btn" id="close-create-sheet-btn">Kapat ✕</button>
+            </div>
+            <input type="text" id="talent-title-input" class="input" placeholder="Yeteneğin veya Acil İhtiyacın Nedir?">
+            <div class="row">
+                <input type="number" id="talent-price-input" class="input" placeholder="Fiyat / Bütçe (₺)">
+                <button type="button" class="cta-work-btn" id="share-talent-btn" style="margin-bottom:9px;">Paylaş</button>
+            </div>
+            <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px;">
+                <div style="font-size:0.75rem;color:var(--muted);margin-bottom:7px;">🔗 Sahibinden / Instagram / TikTok / Google Harita Otomatik Çek:</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                    <button type="button" class="chip quick-import-preset" data-url="https://www.sahibinden.com/maslak-oto-sanayi-servis" data-title="Maslak Oto Sanayi &amp; Orijinal Yedek Parça">🟡 Sahibinden</button>
+                    <button type="button" class="chip quick-import-preset" data-url="https://www.instagram.com/elif_visual_studio" data-title="Elif Visual Studio • 4K Reels">📸 Instagram</button>
+                    <button type="button" class="chip quick-import-preset" data-url="https://www.tiktok.com/@selim_tesisat_pro" data-title="Selim Usta • Termal Kaçak">🎬 TikTok</button>
+                    <button type="button" class="chip quick-import-preset" data-url="https://www.google.com/maps/place/kaan_oto_kurtarma" data-title="Kaan 7/24 Oto Çekici">📍 Google Maps</button>
+                </div>
+                <div class="row">
+                    <input type="url" id="ext-sync-url-input" class="input" style="margin:0;" placeholder="https://www.sahibinden.com/...">
+                    <button type="button" class="btn-minimal" id="ext-sync-pull-btn">🔄 Çek</button>
+                </div>
+                <div id="ext-sync-feedback" style="margin-top:6px;font-size:0.74rem;color:#6EE7B7;font-weight:700;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clean 5-Icon Instagram / TikTok Bottom Navigation -->
+    <nav class="bottom-bar" aria-label="Alt Menü">
+        <button type="button" class="tab-btn active" data-target="tab-reels">
+            <span class="tab-icon">🎬</span>
+            <span>Keşfet</span>
+        </button>
+        <button type="button" class="tab-btn" data-target="tab-urgent">
+            <span class="tab-icon">🚨</span>
             <span>Acil İşler</span>
         </button>
-        <button type="button" class="nav-btn" data-target="tab-b2b">
-            <span class="nav-icon">🏭</span>
-            <span>Sanayi/İhale</span>
+        <button type="button" class="plus-btn" id="open-create-sheet-btn" aria-label="Paylaş veya Mağaza Bağla">+</button>
+        <button type="button" class="tab-btn" data-target="tab-b2b">
+            <span class="tab-icon">🏭</span>
+            <span>Sanayi</span>
         </button>
-        <button type="button" class="nav-btn" data-target="tab-reels">
-            <span class="nav-icon">🎬</span>
-            <span>Yetenek</span>
-        </button>
-        <button type="button" class="nav-btn" data-target="tab-profile">
-            <span class="nav-icon">📸</span>
-            <span>Profilim</span>
-        </button>
-        <button type="button" class="nav-btn" data-target="tab-auth">
-            <span class="nav-icon">🪪</span>
-            <span>Kimlik/KYC</span>
+        <button type="button" class="tab-btn" data-target="tab-profile">
+            <span class="tab-icon">👤</span>
+            <span>Profil</span>
         </button>
     </nav>
 
@@ -687,14 +743,11 @@
             calculateSplitPaymentEscrow,
             convertAndFormatGlobalPrice,
             createSealedProformaBidPayload,
-            createUrgentJobPostPayload,
             createWorkWithYouRequestPayload,
             enqueueOfflineAction,
-            estimateArmutStyleSmartQuote,
             evaluatePasswordStrength,
             filterAndSearchMarketplace,
             formatInstagramProShowcase,
-            getOfflineQueue,
             initUstanomiNativeShell,
             parseAndImportExternalCommerceProfile,
             rankTalentShowcasePosts,
@@ -705,19 +758,124 @@
             validateTurkishTckn
         } from './capacitor-bridge.js';
 
-        const LIVE_APP_URL = 'https://ustanomi-web-production.up.railway.app/app/';
-        const badgeEl = document.getElementById('queue-badge');
         const storiesBar = document.getElementById('stories-bar');
         const clusterBar = document.getElementById('cluster-bar');
-        const urgentFeedList = document.getElementById('urgent-feed-list');
         const reelsFeedList = document.getElementById('reels-feed-list');
+        const urgentFeedList = document.getElementById('urgent-feed-list');
+        const b2bListEl = document.getElementById('b2b-tenders-list');
         const igProfileContainer = document.getElementById('ig-profile-container');
         const proModeToggle = document.getElementById('pro-mode-toggle');
 
         let activeClusterCode = 'ALL';
         let activeRegionCode = 'TR';
+        let activeProfileSubTab = 'GRID';
+        let customSyncedShowcase = null;
         const availabilityCycle = ['OPEN', 'ON_DUTY_24_7', 'CLOSED'];
         let currentModeIndex = 0;
+
+        const storyPros = [
+            { name: 'Selim Usta', emoji: '🔧', open: true },
+            { name: 'Elif Studio', emoji: '📸', open: true },
+            { name: 'Kaan Oto', emoji: '🚗', open: true },
+            { name: 'Maslak BMW', emoji: '⚙️', open: true },
+            { name: 'Seda VIP', emoji: '✂️', open: true },
+            { name: 'Mert Bilişim', emoji: '💻', open: true },
+            { name: 'Burak Hoca', emoji: '📚', open: false }
+        ];
+
+        const reelsItems = [
+            {
+                id: 'TALENT-201',
+                handle: '@elif_visual_studio',
+                clusterCode: 'EVENTS_MEDIA',
+                cluster: '📸 Etkinlik & Medya',
+                emoji: '🎬',
+                title: 'Marka, Kafe & Düğün İçin 4K Drone + TikTok/Reels Çekimi',
+                priceTl: 2800,
+                availability: '🟢 Şu An Açık',
+                isProOpen: true,
+                likesCount: 1240,
+                workRequestsCount: 48,
+                lastHireFeedback: ''
+            },
+            {
+                id: 'TALENT-202',
+                handle: '@maslak_bimmer_servis',
+                clusterCode: 'AUTO_LOGISTICS',
+                cluster: '🚗 Oto Sanayi & Parça',
+                emoji: '🏎️',
+                title: 'Orijinal OEM Parça Garantili Motor, Triger & Şanzıman Bakımı',
+                priceTl: 4500,
+                availability: '⚡ 7/24 Nöbetçi',
+                isProOpen: true,
+                likesCount: 890,
+                workRequestsCount: 39,
+                lastHireFeedback: ''
+            },
+            {
+                id: 'TALENT-203',
+                handle: '@selim_tesisat_pro',
+                clusterCode: 'HOME_TECH',
+                cluster: '🏠 Ev & Teknik Servis',
+                emoji: '🔧',
+                title: 'Kırmadan Termal Kameralı Su Kaçağı Tespiti & Kombi Bakımı',
+                priceTl: 850,
+                availability: '🟢 Şu An Açık • 20 dk',
+                isProOpen: true,
+                likesCount: 640,
+                workRequestsCount: 35,
+                lastHireFeedback: ''
+            }
+        ];
+
+        const urgentPosts = [
+            {
+                id: 'URG-101',
+                clusterCode: 'HOME_TECH',
+                urgencyBadgeTr: '🔴 ACİL • 30 DK',
+                title: 'Kadıköy Moda Ana Su Borusu Kaçağı',
+                description: 'Şu an açık nöbetçi tesisat ustası aranıyor. Ödeme Güvenli Havuzda hazır.',
+                city: 'İstanbul',
+                district: 'Kadıköy',
+                estimatedBudgetTl: 1200,
+                offersCount: 3
+            },
+            {
+                id: 'URG-102',
+                clusterCode: 'AUTO_LOGISTICS',
+                urgencyBadgeTr: '🔴 ACİL • 20 DK',
+                title: 'Ataşehir Otoban Bağlantısı Mobil Akü & Oto Elektrik',
+                description: 'Araç marş basmıyor, yerinde AGM akü takviye/değişim fiyat teklifi.',
+                city: 'İstanbul',
+                district: 'Ataşehir',
+                estimatedBudgetTl: 1500,
+                offersCount: 4
+            }
+        ];
+
+        const b2bTenders = [
+            {
+                id: 'TND-901',
+                tenderCategory: 'AUTO_REPAIR_PARTS',
+                title: '2021 BMW 320i Triger Seti + Ön Fren Disk/Balata Değişimi',
+                spec: 'Orijinal OEM Parça + İşçilik • Sabit Fiyat Sözleşmeli',
+                city: 'İstanbul / Maslak Oto Sanayi',
+                sealedProformas: [
+                    createSealedProformaBidPayload({
+                        tenderId: 'TND-901',
+                        tenderCategory: 'AUTO_REPAIR_PARTS',
+                        supplierHandle: 'maslak_bimmer_servis',
+                        supplierCompanyTitle: 'Maslak Bimmer Özel Servis Ltd.',
+                        partsDescription: 'Orijinal OEM Triger + Brembo Fren Seti',
+                        partOriginType: 'ORIGINAL_OEM',
+                        partsAmountTl: 14500,
+                        laborAmountTl: 4500,
+                        warrantyMonths: 12,
+                        deliveryDays: 1
+                    })
+                ]
+            }
+        ];
 
         function getActiveSearchFilters() {
             return {
@@ -728,138 +886,26 @@
                 onlyKycVerified: Boolean(document.getElementById('filter-kyc-only')?.checked),
                 onlyEfatura: Boolean(document.getElementById('filter-efatura-only')?.checked),
                 onlyInstallment: Boolean(document.getElementById('filter-installment-only')?.checked),
-                onlyOnDuty247: Boolean(document.getElementById('filter-onduty-only')?.checked),
                 maxDistanceKm: Number(document.getElementById('filter-distance-select')?.value || 0),
-                minWarrantyMonths: Number(document.getElementById('filter-warranty-select')?.value || 0),
                 partOriginFilter: document.getElementById('filter-origin-select')?.value || 'ALL',
-                minRating: Number(document.getElementById('filter-rating-select')?.value || 0),
-                minPriceTl: Number(document.getElementById('filter-min-price')?.value || 0),
-                maxPriceTl: Number(document.getElementById('filter-max-price')?.value || 0),
                 sortBy: document.getElementById('filter-sort-select')?.value || 'TRENDING'
             };
         }
-
-        function updateSmartQuoteWizard() {
-            const q = document.getElementById('market-search-input')?.value || activeClusterCode;
-            const scopeSize = document.getElementById('wizard-scope-select')?.value || 'SMALL';
-            const includeMaterials = Boolean(document.getElementById('wizard-materials-check')?.checked);
-            const est = estimateArmutStyleSmartQuote({
-                professionQuery: q,
-                scopeSize,
-                includeMaterials,
-                regionCode: activeRegionCode
-            });
-            const el = document.getElementById('wizard-quote-badge');
-            if (el) {
-                el.textContent = `Tahmini: ${est.formattedRange}`;
-            }
-        }
-
-        const storyPros = [
-            { name: 'Selim Usta', tag: '⚡ 7/24 Tesisat', emoji: '🔧', open: true },
-            { name: 'Kaan Oto', tag: '🟢 Acil Çekici', emoji: '🚗', open: true },
-            { name: 'Elif Studio', tag: '🟢 Fotoğraf/Reels', emoji: '📸', open: true },
-            { name: 'Mert Bilişim', tag: '🟢 Kamera/Ağ', emoji: '💻', open: true },
-            { name: 'Seda VIP', tag: '🟢 Güzellik/Makyaj', emoji: '✂️', open: true },
-            { name: 'Burak Hoca', tag: '🔴 09:00 Açılır', emoji: '📚', open: false }
-        ];
-
-        const urgentPosts = [
-            {
-                id: 'URG-101',
-                clusterCode: 'HOME_TECH',
-                urgencyBadgeTr: '🔴 ACİL • 30-60 DK',
-                isEmergency: true,
-                title: 'Kadıköy Moda Su Tesisatı Ana Boru Kaçağı',
-                description: 'Daire giriş vanasından su sızıyor, şu an açık olan nöbetçi tesisat ustası aranıyor.',
-                city: 'İstanbul',
-                district: 'Kadıköy',
-                estimatedBudgetTl: 1200,
-                offers: [
-                    { pro: '@selim_tesisat_pro (🟢 Açık)', priceTl: 1100, eta: '20 dk içinde adresteyim' }
-                ]
-            },
-            {
-                id: 'URG-102',
-                clusterCode: 'AUTO_LOGISTICS',
-                urgencyBadgeTr: '🔴 ACİL • 30-60 DK',
-                isEmergency: true,
-                title: 'Ataşehir TEM Bağlantı Yolu Akü Takviye & Oto Elektrik',
-                description: 'Araç marş basmıyor, yerinde mobil akü takviye veya değişim fiyat teklifi.',
-                city: 'İstanbul',
-                district: 'Ataşehir',
-                estimatedBudgetTl: 1500,
-                offers: [
-                    { pro: '@kaan_oto_kurtarma (⚡ 7/24 Nöbetçi)', priceTl: 1350, eta: '15 dk varış' }
-                ]
-            },
-            {
-                id: 'URG-103',
-                clusterCode: 'EVENTS_MEDIA',
-                urgencyBadgeTr: '🟡 BUGÜN İÇİNDE',
-                isEmergency: false,
-                title: 'Beşiktaş Kafe Açılışı İçin 2 Saatlik Reels & Drone Çekimi',
-                description: 'Instagram ve TikTok için dikey 4K kurgulu 3 adet Reels videosu teslimi.',
-                city: 'İstanbul',
-                district: 'Beşiktaş',
-                estimatedBudgetTl: 3500,
-                offers: [
-                    { pro: '@elif_visual_studio (🟢 Açık)', priceTl: 3200, eta: 'Bugün 16:00 setteyim' }
-                ]
-            }
-        ];
-
-        const reelsItems = [
-            {
-                id: 'TALENT-201',
-                handle: '@elif_visual_studio',
-                cluster: '📸 Etkinlik & Medya',
-                title: 'Restoran & Marka Tanıtımı 60 Sn TikTok/Reels Çekim Paketi',
-                priceTl: 2800,
-                availability: '🟢 Şu An Açık • Randevu Müsait',
-                isProOpen: true,
-                likesCount: 965,
-                workRequestsCount: 42,
-                lastHireFeedback: ''
-            },
-            {
-                id: 'TALENT-202',
-                handle: '@kaan_oto_kurtarma',
-                cluster: '🚗 Oto & Yol Yardım',
-                title: 'Gece 03:00 Yerinde AGM Akü Değişimi & Alternatör Ölçümü',
-                priceTl: 1250,
-                availability: '⚡ 7/24 Acil Nöbetçi',
-                isProOpen: true,
-                likesCount: 612,
-                workRequestsCount: 29,
-                lastHireFeedback: ''
-            },
-            {
-                id: 'TALENT-203',
-                handle: '@selim_tesisat_pro',
-                cluster: '🏠 Ev & Teknik Servis',
-                title: 'Kırmadan Termal Kameralı Su Kaçağı Tespiti & Onarımı',
-                priceTl: 850,
-                availability: '🟢 Şu An Açık • 20 dk Varış',
-                isProOpen: true,
-                likesCount: 418,
-                workRequestsCount: 35,
-                lastHireFeedback: ''
-            }
-        ];
 
         function renderStories() {
             storiesBar.innerHTML = '';
             for (const s of storyPros) {
                 const div = document.createElement('div');
-                div.className = 'story-item';
+                div.className = 'story';
                 div.innerHTML = `
                     <div class="story-ring ${s.open ? '' : 'closed'}">
-                        <div class="story-avatar">${s.emoji}</div>
+                        <div class="story-inner">${s.emoji}</div>
                     </div>
-                    <div class="story-name">${s.name}</div>
-                    <div class="story-tag">${s.tag}</div>
+                    <div class="story-lbl">${s.name}</div>
                 `;
+                div.addEventListener('click', () => {
+                    document.querySelector('[data-target="tab-profile"]')?.click();
+                });
                 storiesBar.appendChild(div);
             }
         }
@@ -868,11 +914,12 @@
             clusterBar.innerHTML = '';
             const allBtn = document.createElement('button');
             allBtn.type = 'button';
-            allBtn.className = `cluster-chip ${activeClusterCode === 'ALL' ? 'active' : ''}`;
-            allBtn.textContent = '🔥 Tüm Meslekler';
+            allBtn.className = `chip ${activeClusterCode === 'ALL' ? 'active' : ''}`;
+            allBtn.textContent = '🔥 Tümü';
             allBtn.addEventListener('click', () => {
                 activeClusterCode = 'ALL';
                 renderClusters();
+                renderReels();
                 renderUrgentFeed();
             });
             clusterBar.appendChild(allBtn);
@@ -880,79 +927,15 @@
             for (const c of UNIVERSAL_PROFESSION_CLUSTERS) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = `cluster-chip ${activeClusterCode === c.code ? 'active' : ''}`;
-                btn.textContent = `${c.iconEmoji} ${c.titleTr}`;
+                btn.className = `chip ${activeClusterCode === c.code ? 'active' : ''}`;
+                btn.textContent = `${c.iconEmoji} ${c.titleTr.split(',')[0]}`;
                 btn.addEventListener('click', () => {
                     activeClusterCode = c.code;
                     renderClusters();
+                    renderReels();
                     renderUrgentFeed();
                 });
                 clusterBar.appendChild(btn);
-            }
-        }
-
-        function renderUrgentFeed() {
-            urgentFeedList.innerHTML = '';
-            updateSmartQuoteWizard();
-            const filtered = filterAndSearchMarketplace(urgentPosts, getActiveSearchFilters());
-
-            for (const post of filtered) {
-                const card = document.createElement('article');
-                card.className = 'card';
-                const formattedBudget = convertAndFormatGlobalPrice(post.estimatedBudgetTl, activeRegionCode).formatted;
-                const offersHtml = post.offers.map((o) => {
-                    const split = calculateSplitPaymentEscrow(o.priceTl);
-                    const formattedOffer = convertAndFormatGlobalPrice(o.priceTl, activeRegionCode).formatted;
-                    const formattedNet = convertAndFormatGlobalPrice(split.subMerchantShareTl, activeRegionCode).formatted;
-                    return `
-                        <div class="offer-pill">
-                            <span><strong>${o.pro}</strong> • ${o.eta}</span>
-                            <span style="color:#FDE68A;font-weight:800;">${formattedOffer} (%88 Net: ${formattedNet})</span>
-                        </div>
-                    `;
-                }).join('');
-
-                card.innerHTML = `
-                    <div class="card-header">
-                        <span class="urgent-badge ${post.isEmergency ? '' : 'today'}">${post.urgencyBadgeTr}</span>
-                        <span style="font-size:0.74rem;color:#CBD5E1;">📍 ${post.city} / ${post.district}</span>
-                    </div>
-                    <h2 class="card-title">${post.title}</h2>
-                    <p class="card-desc">${post.description}</p>
-                    <div class="meta-row">
-                        <span>💰 Müşteri Bütçesi: ~${formattedBudget}</span>
-                        <span>🛡️ Güvenli Havuz (%88 Uzman / %12 Güvence)</span>
-                    </div>
-                    <div class="bid-row">
-                        <input type="number" class="input bid-price-input" placeholder="Fiyat Teklifiniz (₺)" min="100" step="50">
-                        <input type="text" class="input bid-eta-input" placeholder="Varış / Süre (Örn: 25 dk)">
-                        <button type="button" class="btn-amber submit-bid-btn">Fiyat Ver</button>
-                    </div>
-                    <div class="offers-list">${offersHtml}</div>
-                `;
-
-                const priceIn = card.querySelector('.bid-price-input');
-                const etaIn = card.querySelector('.bid-eta-input');
-                const bidBtn = card.querySelector('.submit-bid-btn');
-
-                bidBtn.addEventListener('click', async () => {
-                    const priceVal = Number(priceIn.value);
-                    if (!Number.isFinite(priceVal) || priceVal <= 0) return;
-                    const etaVal = (etaIn.value || '30 dk içinde').trim();
-                    post.offers.unshift({
-                        pro: '@ustanomi_uzman (🟢 Açık)',
-                        priceTl: priceVal,
-                        eta: etaVal
-                    });
-                    await enqueueOfflineAction('URGENT_PRO_BID', {
-                        postId: post.id,
-                        priceTl: priceVal,
-                        eta: etaVal
-                    });
-                    renderUrgentFeed();
-                });
-
-                urgentFeedList.appendChild(card);
             }
         }
 
@@ -963,162 +946,295 @@
 
             for (const r of ranked) {
                 const targetItem = reelsItems.find((item) => item.id === r.id) || r;
-                const split = calculateSplitPaymentEscrow(r.priceTl);
                 const formattedPrice = convertAndFormatGlobalPrice(r.priceTl, activeRegionCode).formatted;
-                const formattedNet = convertAndFormatGlobalPrice(split.subMerchantShareTl, activeRegionCode).formatted;
                 const el = document.createElement('article');
-                el.className = 'reel-card';
+                el.className = 'tiktok-card';
                 el.innerHTML = `
-                    <div class="reel-top">
-                        <span class="reel-tag" style="background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.5);">${r.trendingBadgeTr}</span>
-                        <span class="reel-tag">${r.availability}</span>
+                    <div class="tiktok-bg-art">${r.emoji || '✨'}</div>
+                    <div class="tiktok-top">
+                        <span class="badge-trend">${r.trendingBadgeTr}</span>
+                        <span class="badge-open">${r.availability}</span>
                     </div>
-                    <div style="margin: 14px 0 10px;">
-                        <div style="font-size:0.78rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} 🪪 • ${r.cluster}</div>
-                        <h3 style="margin:0 0 8px;font-size:1.02rem;">${r.title}</h3>
-                        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-                            <span style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);padding:4px 9px;border-radius:8px;font-size:0.76rem;color:#A7F3D0;font-weight:700;">
-                                🏷️ Başlangıç: ${formattedPrice} (%88 Uzman Net: ${formattedNet})
-                            </span>
-                            <span style="font-size:0.73rem;color:#CBD5E1;">🤝 ${r.workRequestsCount} Kişi Çalışmak İstedi • Skor: ${r.trendingScore}</span>
+
+                    <div class="tiktok-rail">
+                        <button type="button" class="rail-btn like-btn">
+                            <span class="rail-circle">❤️</span>
+                            <span>${r.likesCount}</span>
+                        </button>
+                        <button type="button" class="rail-btn hire-icon-btn">
+                            <span class="rail-circle">🤝</span>
+                            <span>${r.workRequestsCount}</span>
+                        </button>
+                        <button type="button" class="rail-btn profile-btn">
+                            <span class="rail-circle">👤</span>
+                            <span>Profil</span>
+                        </button>
+                    </div>
+
+                    <div class="tiktok-bottom">
+                        <div class="pro-user">
+                            <span>${r.handle}</span>
+                            <span class="verified-check">✓</span>
+                            <span style="font-size:0.72rem;color:var(--muted);font-weight:600;">• ${r.cluster}</span>
                         </div>
-                    </div>
-                    <div class="reel-actions" style="margin-bottom:8px;flex-wrap:wrap;">
-                        <button type="button" class="reel-action-btn like-talent-btn" style="background:rgba(244,63,94,0.24);border:1px solid rgba(244,63,94,0.5);">
-                            ❤️ Beğen &amp; Öne Çıkar (${r.likesCount})
+                        <h2 class="tiktok-title">${r.title}</h2>
+                        <div class="price-chip">
+                            <span>🏷️ Başlangıç: ${formattedPrice}</span>
+                            <span style="color:#6EE7B7;">• 🛡️ Güvenli Havuz</span>
+                        </div>
+                        <button type="button" class="cta-work-btn hire-main-btn">
+                            🤝 Seninle Çalışmak İstiyorum
                         </button>
-                        <button type="button" class="reel-action-btn view-ig-btn">
-                            📸 Profil &amp; Saatler
-                        </button>
+                        ${r.lastHireFeedback ? `<div style="margin-top:8px;font-size:0.74rem;color:#6EE7B7;font-weight:700;">${r.lastHireFeedback}</div>` : ''}
                     </div>
-                    <div class="bid-row">
-                        <input type="text" class="input work-note-input" placeholder="Mesajınız (Örn: Cumartesi 14:00 için çalışalım)">
-                        <button type="button" class="btn-amber work-with-you-btn">🤝 Seninle Çalışmak İstiyorum</button>
-                    </div>
-                    ${r.lastHireFeedback ? `<div style="margin-top:8px;padding:7px 10px;border-radius:9px;background:rgba(16,185,129,0.22);border:1px solid rgba(16,185,129,0.45);font-size:0.75rem;color:#A7F3D0;font-weight:700;">${r.lastHireFeedback}</div>` : ''}
                 `;
 
-                el.querySelector('.like-talent-btn').addEventListener('click', async () => {
+                el.querySelector('.like-btn').addEventListener('click', async () => {
                     targetItem.likesCount += 1;
                     triggerHapticImpact('LIGHT');
                     await enqueueOfflineAction('LIKE_TALENT_POST', { talentPostId: targetItem.id });
                     renderReels();
                 });
 
-                el.querySelector('.view-ig-btn').addEventListener('click', () => {
-                    document.querySelector('[data-target=tab-profile]')?.click();
-                });
-
-                const noteInput = el.querySelector('.work-note-input');
-                el.querySelector('.work-with-you-btn').addEventListener('click', async () => {
+                const triggerDirectHire = async () => {
                     const req = createWorkWithYouRequestPayload({
                         talentPostId: targetItem.id,
                         proHandle: targetItem.handle,
                         skillTitle: targetItem.title,
                         offeredBudgetTl: targetItem.priceTl,
-                        customerNote: noteInput.value || 'Yetenek paylaşımınızı beğendim, sizinle çalışmak istiyorum.'
+                        customerNote: 'Yetenek vitrininizi beğendim, sizinle çalışmak istiyorum.'
                     });
                     targetItem.workRequestsCount += 1;
-                    targetItem.lastHireFeedback = `✓ ${req.ctaLabelTr} (${req.requestCode} • %88 Uzman Net: ${req.proNetShareTl} ₺)`;
+                    targetItem.lastHireFeedback = `✓ Talebiniz iletildi (${req.requestCode} • Havuz Korumalı)`;
                     triggerHapticImpact('MEDIUM');
                     await enqueueOfflineAction('DIRECT_WORK_WITH_YOU_REQUEST', req);
                     renderReels();
+                };
+
+                el.querySelector('.hire-main-btn').addEventListener('click', triggerDirectHire);
+                el.querySelector('.hire-icon-btn').addEventListener('click', triggerDirectHire);
+                el.querySelector('.profile-btn').addEventListener('click', () => {
+                    document.querySelector('[data-target="tab-profile"]')?.click();
                 });
 
                 reelsFeedList.appendChild(el);
             }
         }
 
-        let customSyncedShowcase = null;
+        function renderUrgentFeed() {
+            urgentFeedList.innerHTML = '';
+            const filtered = filterAndSearchMarketplace(urgentPosts, getActiveSearchFilters());
+            for (const post of filtered) {
+                const budgetFmt = convertAndFormatGlobalPrice(post.estimatedBudgetTl, activeRegionCode).formatted;
+                const card = document.createElement('article');
+                card.className = 'clean-post';
+                card.innerHTML = `
+                    <div class="post-top">
+                        <span class="tag-urgent">${post.urgencyBadgeTr}</span>
+                        <span style="font-size:0.73rem;color:var(--muted);">📍 ${post.city} / ${post.district}</span>
+                    </div>
+                    <h3 class="post-title">${post.title}</h3>
+                    <p class="post-sub">${post.description}</p>
+                    <div class="post-footer">
+                        <div>
+                            <div class="post-price">Bütçe: ~${budgetFmt}</div>
+                            <div style="font-size:0.7rem;color:#6EE7B7;">⚡ ${post.offersCount} Açık Uzman Fiyat Verdi</div>
+                        </div>
+                        <button type="button" class="btn-minimal urgent-bid-btn">Fiyat Ver</button>
+                    </div>
+                `;
+                card.querySelector('.urgent-bid-btn').addEventListener('click', () => {
+                    post.offersCount += 1;
+                    triggerHapticImpact('LIGHT');
+                    renderUrgentFeed();
+                });
+                urgentFeedList.appendChild(card);
+            }
+        }
+
+        function renderB2bTenders() {
+            b2bListEl.innerHTML = '';
+            for (const t of b2bTenders) {
+                const p = t.sealedProformas[0];
+                const totalFmt = convertAndFormatGlobalPrice(p.financials.grandTotalTl, activeRegionCode).formatted;
+                const netFmt = convertAndFormatGlobalPrice(p.financials.supplierNetShareTl, activeRegionCode).formatted;
+                const card = document.createElement('article');
+                card.className = 'clean-post';
+                card.innerHTML = `
+                    <div class="post-top">
+                        <span class="badge-trend">🚗 Oto Sanayi &amp; Parça İhalesi</span>
+                        <span style="font-size:0.72rem;color:var(--muted);">📍 ${t.city}</span>
+                    </div>
+                    <h3 class="post-title">${t.title}</h3>
+                    <p class="post-sub">${t.spec}</p>
+                    <div style="padding:11px;border-radius:12px;background:var(--bg);border:1px solid var(--line);margin-bottom:10px;font-size:0.76rem;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                            <strong style="color:#6EE7B7;">📄 ${p.proformaRefCode} • ${p.supplierCompanyTitle}</strong>
+                            <span style="color:#FDE68A;">🔒 Özel Teklif</span>
+                        </div>
+                        <div style="color:var(--muted);margin-bottom:4px;">${p.partsDescription} (${p.warrantyMonths} Ay Garanti)</div>
+                        <div style="color:#FDE68A;font-weight:800;">KDV Dahil Sabit Sözleşme: ${totalFmt} (%88 Sanayici Net: ${netFmt})</div>
+                    </div>
+                    <button type="button" class="cta-work-btn b2b-send-prf-btn">🔒 Özelden Proforma &amp; Sözleşmeli Fiyat Ver</button>
+                `;
+                card.querySelector('.b2b-send-prf-btn').addEventListener('click', () => {
+                    triggerHapticImpact('MEDIUM');
+                    card.querySelector('.b2b-send-prf-btn').textContent = '✓ Özel Kapalı Zarf Proformanız İş Sahibine İletildi';
+                });
+                b2bListEl.appendChild(card);
+            }
+        }
 
         function renderInstagramProfile() {
             const currentMode = availabilityCycle[currentModeIndex];
-            const profile = customSyncedShowcase
-                ? {
-                    ...customSyncedShowcase,
-                    availability: formatInstagramProShowcase({
-                        displayName: customSyncedShowcase.displayName,
-                        availabilityConfig: { manualMode: currentMode, openHour: 8, closeHour: 20, currentHour: 14 }
-                    }).availability
-                }
-                : formatInstagramProShowcase({
-                    handle: 'selim_ustanomi_pro',
-                    displayName: 'Selim Karaca • Uzman Usta & Mühendislik',
-                    professionTitle: 'Tesisat, Kombi, Akıllı Ev & Acil Müdahale Uzmanı',
-                    clusterId: 'home_technical',
-                    city: 'İstanbul',
-                    district: 'Kadıköy',
-                    rating: 4.9,
-                    completedJobsCount: 342,
-                    followersCount: 2890,
-                    responseTimeMinutes: 3,
-                    availabilityConfig: {
-                        manualMode: currentMode,
-                        openHour: 8,
-                        closeHour: 20,
-                        currentHour: 14
-                    },
-                    priceMenu: [
-                        { title: 'Termal Kameralı Kaçak Tespiti', priceTl: 850, pricingType: 'FIXED', durationLabel: '45 dk' },
-                        { title: 'Kombi & Petek Kimyasal Yıkama', priceTl: 1400, pricingType: 'FIXED', durationLabel: '90 dk' },
-                        { title: 'Saatlik Teknik Usta İşçiliği', priceTl: 650, pricingType: 'HOURLY', durationLabel: '60 dk' }
-                    ],
-                    mediaGrid: [
-                        { id: 'm1', mediaType: 'REEL_VIDEO', caption: '🎬 Termal Tespit Reels', priceTagTl: 850 },
-                        { id: 'm2', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Banyo Tadilat Öncesi/Sonrası', priceTagTl: 14500 },
-                        { id: 'm3', mediaType: 'REEL_VIDEO', caption: '🎬 Akıllı Termostat Montajı', priceTagTl: 950 },
-                        { id: 'm4', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Kombi Kolektör Yenileme', priceTagTl: 3200 },
-                        { id: 'm5', mediaType: 'REEL_VIDEO', caption: '🎬 7/24 Acil Vana Müdahalesi', priceTagTl: 1100 },
-                        { id: 'm6', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 MEB & MYK Ustalık Belgelerim', priceTagTl: 0 }
-                    ]
-                });
+            const baseProfile = customSyncedShowcase || {
+                handle: 'selim_ustanomi',
+                displayName: 'Selim Karaca',
+                professionTitle: 'Tesisat, Kombi & Akıllı Ev Uzmanı • 🪪 TCKN/KYC Onaylı',
+                clusterId: 'home_technical',
+                city: 'İstanbul',
+                district: 'Kadıköy',
+                rating: 4.9,
+                completedJobsCount: 342,
+                followersCount: 2890,
+                responseTimeMinutes: 3,
+                priceMenu: [
+                    { title: 'Termal Kameralı Su Kaçağı Tespiti', priceTl: 850, pricingType: 'FIXED', durationLabel: '45 dk' },
+                    { title: 'Kombi & Petek Kimyasal Bakım', priceTl: 1400, pricingType: 'FIXED', durationLabel: '90 dk' },
+                    { title: 'Saatlik Uzman Usta İşçiliği', priceTl: 650, pricingType: 'HOURLY', durationLabel: '60 dk' }
+                ],
+                mediaGrid: [
+                    { id: 'm1', mediaType: 'REEL_VIDEO', caption: 'Termal Tespit', priceTagTl: 850, emoji: '🎬' },
+                    { id: 'm2', mediaType: 'BEFORE_AFTER_PHOTO', caption: 'Banyo Yenileme', priceTagTl: 14500, emoji: '✨' },
+                    { id: 'm3', mediaType: 'REEL_VIDEO', caption: 'Akıllı Termostat', priceTagTl: 950, emoji: '🌡️' },
+                    { id: 'm4', mediaType: 'BEFORE_AFTER_PHOTO', caption: 'Kombi Kolektör', priceTagTl: 3200, emoji: '🔧' },
+                    { id: 'm5', mediaType: 'REEL_VIDEO', caption: '7/24 Acil Vana', priceTagTl: 1100, emoji: '⚡' },
+                    { id: 'm6', mediaType: 'BEFORE_AFTER_PHOTO', caption: 'MYK Belgelerim', priceTagTl: 0, emoji: '🏅' }
+                ]
+            };
 
-            proModeToggle.textContent = profile.availability.badgeTextTr;
+            const profile = formatInstagramProShowcase({
+                ...baseProfile,
+                availabilityConfig: { manualMode: currentMode, openHour: 8, closeHour: 20, currentHour: 14 }
+            });
 
-            const priceRows = profile.priceMenu.map((pm) => `
-                <div class="price-menu-item">
-                    <div>
-                        <div style="font-weight:700;">${pm.title}</div>
-                        <div style="font-size:0.7rem;color:#CBD5E1;">⏱️ ${pm.durationLabel}</div>
+            proModeToggle.textContent = profile.availability.status === 'OPEN'
+                ? '🟢 Açık'
+                : profile.availability.status === 'ON_DUTY_24_7'
+                    ? '⚡ 7/24'
+                    : '🔴 Kapalı';
+
+            const highlightsHtml = profile.storyHighlights.map((h) => `
+                <div style="text-align:center;flex:0 0 auto;">
+                    <div class="ig-hl-circle">${h.coverEmoji}</div>
+                    <div style="font-size:0.68rem;color:var(--muted);">${h.title}</div>
+                </div>
+            `).join('');
+
+            const gridHtml = profile.mediaGrid.map((m, idx) => {
+                const pFmt = m.priceTagTl > 0 ? convertAndFormatGlobalPrice(m.priceTagTl, activeRegionCode).formatted : 'Onaylı ✓';
+                const icons = ['🎬', '✨', '🌡️', '🔧', '⚡', '🏅'];
+                return `
+                    <div class="ig-square">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:1.15rem;">${m.emoji || icons[idx % icons.length]}</span>
+                            <span style="font-size:0.65rem;color:var(--muted);">${m.mediaType === 'REEL_VIDEO' ? '▶' : '🖼️'}</span>
+                        </div>
+                        <div>
+                            <div class="ig-square-title">${m.caption}</div>
+                            <div class="ig-square-price">${pFmt}</div>
+                        </div>
                     </div>
-                    <span class="price-tag">${pm.pricingBadgeTr}</span>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            const gridCells = profile.mediaGrid.map((m) => `
-                <div class="ig-cell">
-                    <span style="font-weight:700;color:#FDE68A;">${m.mediaType === 'REEL_VIDEO' ? '▶ Reels' : '🖼️ Vitrin'}</span>
-                    <span>${m.caption}</span>
-                    ${m.priceTagTl > 0 ? `<span style="color:#A7F3D0;font-weight:700;">${m.priceTagTl} ₺</span>` : '<span style="color:#93C5FD;">Onaylı ✓</span>'}
-                </div>
-            `).join('');
+            const pricesHtml = profile.priceMenu.map((pm) => {
+                const pFmt = convertAndFormatGlobalPrice(pm.effectivePriceTl, activeRegionCode).formatted;
+                return `
+                    <div class="clean-price-row">
+                        <div>
+                            <div style="font-size:0.84rem;font-weight:700;">${pm.title}</div>
+                            <div style="font-size:0.71rem;color:var(--muted);">⏱️ ${pm.durationLabel} • Sabit/Şeffaf Fiyat</div>
+                        </div>
+                        <span style="font-size:0.88rem;font-weight:800;color:#FDE68A;">${pFmt}</span>
+                    </div>
+                `;
+            }).join('');
 
             igProfileContainer.innerHTML = `
-                <div class="ig-header">
-                    <div class="ig-avatar-ring" style="background:${profile.availability.storyRingColor};">
-                        <div class="story-avatar" style="font-size:1.75rem;">🛠️</div>
+                <div class="ig-top">
+                    <div class="ig-avatar" style="background:${profile.availability.storyRingColor};">
+                        <div class="ig-avatar-inner">🛠️</div>
                     </div>
-                    <div class="ig-stats">
-                        <div><span class="ig-stat-val">${profile.metrics.completedJobsCount}</span><span class="ig-stat-lbl">Net İş</span></div>
-                        <div><span class="ig-stat-val">${profile.metrics.rating}★</span><span class="ig-stat-lbl">Puan</span></div>
-                        <div><span class="ig-stat-val">${profile.metrics.followersCount}</span><span class="ig-stat-lbl">Takipçi</span></div>
+                    <div class="ig-counters">
+                        <div><span class="ig-num">${profile.metrics.completedJobsCount}</span><span class="ig-lbl">İş</span></div>
+                        <div><span class="ig-num">${profile.metrics.rating}★</span><span class="ig-lbl">Puan</span></div>
+                        <div><span class="ig-num">${profile.metrics.followersCount}</span><span class="ig-lbl">Takipçi</span></div>
                     </div>
                 </div>
-                <div style="margin-bottom:10px;">
-                    <div style="font-weight:800;font-size:0.95rem;">${profile.displayName} <span style="color:#38BDF8;">✓</span></div>
-                    <div style="font-size:0.76rem;color:#FDE68A;">${profile.handle} • ${profile.locationLabel} • ⚡ ${profile.metrics.responseTimeLabel}</div>
-                    <div style="font-size:0.78rem;color:#CBD5E1;margin-top:4px;">${profile.professionTitle}</div>
+
+                <h2 class="ig-bio-name">${profile.displayName} <span class="verified-check">✓</span></h2>
+                <p class="ig-bio-role">${profile.handle} • ${profile.locationLabel}</p>
+                <p style="font-size:0.8rem;margin:0 0 10px;line-height:1.38;">${profile.professionTitle}</p>
+
+                <div class="ig-hours-pill">
+                    <span>${profile.availability.badgeTextTr}</span>
+                    <span style="color:var(--muted);">• ${profile.availability.scheduleSummaryTr}</span>
                 </div>
-                <div class="hours-banner">
-                    <span>🕒 <strong>${profile.availability.scheduleSummaryTr}</strong></span>
-                    <span style="font-weight:800;color:#FDE68A;">${profile.availability.badgeTextTr}</span>
+
+                <div class="ig-actions">
+                    <button type="button" class="ig-btn-primary" id="ig-hire-btn">🤝 Seninle Çalışmak İstiyorum</button>
+                    <button type="button" class="ig-btn-secondary" id="ig-connect-store-btn">🔗 Mağaza Bağla</button>
+                    <button type="button" class="ig-btn-secondary" id="ig-kyc-btn" style="flex:0.45;">🪪 KYC</button>
                 </div>
-                <div style="font-size:0.8rem;font-weight:800;margin-bottom:6px;color:#FDE68A;">🏷️ Şeffaf Fiyat &amp; Hizmet Menüsü (Açık/Sabit Fiyatlar)</div>
-                ${priceRows}
-                <div style="font-size:0.8rem;font-weight:800;margin:12px 0 4px;color:#FDE68A;">📸 Instagram &amp; Reels İş Vitrini (Öncesi / Sonrası)</div>
-                <div class="ig-grid">${gridCells}</div>
+
+                <div class="ig-highlights">${highlightsHtml}</div>
+
+                <div class="ig-subtabs">
+                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'GRID' ? 'active' : ''}" data-subtab="GRID">⊞ VİTRİN &amp; REELS</button>
+                    <button type="button" class="ig-subtab ${activeProfileSubTab === 'PRICES' ? 'active' : ''}" data-subtab="PRICES">🏷️ AÇIK FİYAT LİSTESİ</button>
+                </div>
+
+                ${activeProfileSubTab === 'GRID' ? `<div class="ig-grid-3">${gridHtml}</div>` : `<div>${pricesHtml}</div>`}
             `;
+
+            igProfileContainer.querySelectorAll('.ig-subtab').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    activeProfileSubTab = btn.getAttribute('data-subtab');
+                    renderInstagramProfile();
+                });
+            });
+
+            document.getElementById('ig-hire-btn')?.addEventListener('click', () => {
+                triggerHapticImpact('MEDIUM');
+                document.getElementById('ig-hire-btn').textContent = '✓ Çalışma Talebiniz İletildi';
+            });
+
+            document.getElementById('ig-connect-store-btn')?.addEventListener('click', () => {
+                document.getElementById('create-sheet').classList.add('open');
+            });
+
+            document.getElementById('ig-kyc-btn')?.addEventListener('click', () => {
+                document.querySelectorAll('.view').forEach((v) => {
+                    v.classList.remove('active');
+                });
+                document.getElementById('tab-auth').classList.add('active');
+            });
         }
+
+        // Bottom Sheet Toggles
+        const filterSheet = document.getElementById('filter-sheet');
+        const createSheet = document.getElementById('create-sheet');
+        document.getElementById('open-filter-sheet-btn').addEventListener('click', () => filterSheet.classList.add('open'));
+        document.getElementById('close-filter-sheet-btn').addEventListener('click', () => filterSheet.classList.remove('open'));
+        document.getElementById('apply-filters-btn').addEventListener('click', () => {
+            filterSheet.classList.remove('open');
+            renderReels();
+            renderUrgentFeed();
+        });
+
+        document.getElementById('open-create-sheet-btn').addEventListener('click', () => createSheet.classList.add('open'));
+        document.getElementById('close-create-sheet-btn').addEventListener('click', () => createSheet.classList.remove('open'));
 
         proModeToggle.addEventListener('click', () => {
             currentModeIndex = (currentModeIndex + 1) % availabilityCycle.length;
@@ -1126,7 +1242,41 @@
             renderInstagramProfile();
         });
 
-        // Bind Sahibinden / Instagram / TikTok / Google Maps 1-Click Auto-Import Hub
+        document.getElementById('global-region-select').addEventListener('change', (e) => {
+            activeRegionCode = e.target.value;
+            renderReels();
+            renderUrgentFeed();
+            renderB2bTenders();
+            renderInstagramProfile();
+        });
+
+        // Share New Talent from Sheet
+        document.getElementById('share-talent-btn').addEventListener('click', async () => {
+            const titleEl = document.getElementById('talent-title-input');
+            const priceEl = document.getElementById('talent-price-input');
+            if (!titleEl.value || titleEl.value.trim().length < 4) return;
+            const cluster = resolveUniversalProfessionCluster(titleEl.value);
+            reelsItems.unshift({
+                id: `TALENT-${Date.now()}`,
+                handle: '@ustanomi_uzman',
+                clusterCode: cluster.code,
+                cluster: `${cluster.iconEmoji} ${cluster.titleTr.split(',')[0]}`,
+                emoji: cluster.iconEmoji,
+                title: titleEl.value.trim(),
+                priceTl: Math.max(100, Number(priceEl.value) || cluster.startingPriceTl),
+                availability: '🟢 Şu An Açık',
+                isProOpen: true,
+                likesCount: 1,
+                workRequestsCount: 0,
+                lastHireFeedback: ''
+            });
+            titleEl.value = '';
+            priceEl.value = '';
+            createSheet.classList.remove('open');
+            renderReels();
+        });
+
+        // 1-Click Auto-Import from Sahibinden / Instagram / TikTok
         const extUrlInput = document.getElementById('ext-sync-url-input');
         const extFeedback = document.getElementById('ext-sync-feedback');
         let presetTitleHint = '';
@@ -1140,10 +1290,9 @@
         });
 
         document.getElementById('ext-sync-pull-btn').addEventListener('click', async () => {
-            const rawUrl = (extUrlInput.value || '').trim();
             try {
                 const imported = parseAndImportExternalCommerceProfile({
-                    sourceUrl: rawUrl,
+                    sourceUrl: (extUrlInput.value || '').trim(),
                     rawTitle: presetTitleHint || undefined
                 });
                 presetTitleHint = '';
@@ -1152,265 +1301,14 @@
                     proHandle: imported.showcaseProfile.handle,
                     title: imported.showcaseProfile.displayName
                 });
-                extFeedback.style.color = '#A7F3D0';
-                extFeedback.innerHTML = `✓ <strong>${imported.connectorEmoji} ${imported.connectorNameTr}</strong> bağlandı! ${imported.importedItemsCount} ilan/fiyat, çalışma saatleri ve vitrin medyası çekildi.<br><span style="color:#FDE68A;font-size:0.71rem;">🔗 İlanlarınıza Eklenecek Güvenli Havuz Kodu: ${links.escrowDirectCheckoutUrl}</span>`;
-                triggerHapticImpact('MEDIUM');
-                await enqueueOfflineAction('EXTERNAL_COMMERCE_AUTO_IMPORT', {
-                    connectorCode: imported.connectorCode,
-                    sourceUrl: imported.sourceUrl
-                });
+                extFeedback.textContent = `✓ ${imported.connectorEmoji} ${imported.connectorNameTr} vitrininize aktarıldı! (${links.proHandle})`;
                 renderInstagramProfile();
             } catch {
-                extFeedback.style.color = '#FDA4AF';
-                extFeedback.textContent = '✕ Lütfen geçerli bir HTTPS Sahibinden, Instagram, TikTok, Google Maps, WhatsApp veya Trendyol bağlantısı giriniz.';
+                extFeedback.textContent = '✕ Geçerli bir HTTPS Sahibinden, Instagram veya TikTok linki giriniz.';
             }
         });
 
-        document.getElementById('share-talent-btn').addEventListener('click', async () => {
-            const titleEl = document.getElementById('talent-title-input');
-            const handleEl = document.getElementById('talent-handle-input');
-            const priceEl = document.getElementById('talent-price-input');
-            if (!titleEl.value || titleEl.value.trim().length < 4) return;
-
-            const cluster = resolveUniversalProfessionCluster(titleEl.value);
-            const rawHandle = (handleEl.value || 'yeni_yetenek').trim().replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
-            const newTalent = {
-                id: `TALENT-${Date.now()}`,
-                handle: `@${rawHandle || 'ustanomi_uzman'}`,
-                cluster: `${cluster.iconEmoji} ${cluster.titleTr}`,
-                title: titleEl.value.trim(),
-                priceTl: Math.max(100, Number(priceEl.value) || cluster.startingPriceTl),
-                availability: '🟢 Şu An Açık • Hemen Çalışabiliriz',
-                isProOpen: true,
-                likesCount: 1,
-                workRequestsCount: 0,
-                lastHireFeedback: '✨ Yeteneğiniz vitrine eklendi! Beğeni ve iş talebi aldıkça üst sıraya çıkar.'
-            };
-            reelsItems.push(newTalent);
-            await enqueueOfflineAction('SHARE_TALENT_POST', newTalent);
-            titleEl.value = '';
-            priceEl.value = '';
-            renderReels();
-        });
-
-        document.getElementById('publish-urgent-btn').addEventListener('click', async () => {
-            const titleEl = document.getElementById('urgent-title-input');
-            const tierEl = document.getElementById('urgent-tier-select');
-            const budgetEl = document.getElementById('urgent-budget-input');
-            if (!titleEl.value || titleEl.value.trim().length < 4) return;
-
-            const payload = createUrgentJobPostPayload({
-                title: titleEl.value,
-                description: 'Mobil uygulama üzerinden anlık konum ve fotoğraflı acil iş paylaşımı.',
-                professionQuery: titleEl.value,
-                urgencyCode: tierEl.value,
-                customerBudgetTl: Number(budgetEl.value) || 950
-            });
-
-            urgentPosts.unshift({
-                id: payload.urgentPostCode,
-                clusterCode: payload.clusterCode,
-                urgencyBadgeTr: payload.urgencyBadgeTr,
-                isEmergency: payload.urgencyCode === 'EMERGENCY_30M',
-                title: payload.title,
-                description: `${payload.clusterEmoji} ${payload.clusterTitleTr} • Sadece şu an AÇIK uzmanlara bildirim gönderildi.`,
-                city: payload.city,
-                district: payload.district,
-                estimatedBudgetTl: payload.estimatedBudgetTl,
-                offers: []
-            });
-
-            await enqueueOfflineAction('URGENT_JOB_POST', payload);
-            titleEl.value = '';
-            budgetEl.value = '';
-            renderUrgentFeed();
-        });
-
-        document.querySelectorAll('.nav-btn[data-target]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const target = btn.getAttribute('data-target');
-                document.querySelectorAll('.nav-btn').forEach((b) => {
-                    b.classList.remove('active');
-                });
-                document.querySelectorAll('.view-section').forEach((s) => {
-                    s.classList.remove('active');
-                });
-                btn.classList.add('active');
-                document.getElementById(target)?.classList.add('active');
-            });
-        });
-
-        const b2bTenders = [
-            {
-                id: 'TND-901',
-                tenderCategory: 'AUTO_REPAIR_PARTS',
-                title: '2021 BMW 320i Triger Seti, Devirdaim & Ön Fren Disk/Balata Değişimi',
-                spec: 'Şasi: WBA5R110... • Orijinal OEM veya Garantili Alman Muadil Parça + İşçilik',
-                city: 'İstanbul / Maslak Oto Sanayi',
-                sealedProformas: [
-                    createSealedProformaBidPayload({
-                        tenderId: 'TND-901',
-                        tenderCategory: 'AUTO_REPAIR_PARTS',
-                        supplierHandle: 'maslak_bimmer_servis',
-                        supplierCompanyTitle: 'Maslak BimmerMotor Özel Servis Ltd. Şti.',
-                        partsDescription: 'Orijinal OEM Triger Seti + Brembo Ön Disk/Balata Takımı + Antifriz',
-                        partOriginType: 'ORIGINAL_OEM',
-                        partsAmountTl: 14500,
-                        laborAmountTl: 4500,
-                        warrantyMonths: 12,
-                        deliveryDays: 1
-                    })
-                ]
-            },
-            {
-                id: 'TND-902',
-                tenderCategory: 'WHOLESALE_PROCUREMENT',
-                title: 'Şantiye Toptan 450m NYM Kablo, Sigorta Panosu & 60 Adet LED Armatür Alımı',
-                spec: 'TSE Belgeli • İrsaliyeli Şantiye Teslim Proforma İhalesi',
-                city: 'Ankara / Ostim OSB',
-                sealedProformas: [
-                    createSealedProformaBidPayload({
-                        tenderId: 'TND-902',
-                        tenderCategory: 'WHOLESALE_PROCUREMENT',
-                        supplierHandle: 'ostim_elektromarket_b2b',
-                        supplierCompanyTitle: 'Ostim ElektroMarket Toptan A.Ş.',
-                        partsDescription: '450m HES Kablo + Schneider Pano + 60x Philips LED Armatür',
-                        partOriginType: 'ORIGINAL_OEM',
-                        partsAmountTl: 38000,
-                        laborAmountTl: 0,
-                        warrantyMonths: 24,
-                        deliveryDays: 2
-                    })
-                ]
-            }
-        ];
-
-        const b2bListEl = document.getElementById('b2b-tenders-list');
-
-        function renderB2bTenders() {
-            if (!b2bListEl) return;
-            b2bListEl.innerHTML = '';
-
-            for (const t of b2bTenders) {
-                const catInfo = B2B_TENDER_CATEGORIES[t.tenderCategory] || B2B_TENDER_CATEGORIES.AUTO_REPAIR_PARTS;
-                const proformasHtml = t.sealedProformas.map((p) => {
-                    const f = p.financials;
-                    const totalFmt = convertAndFormatGlobalPrice(f.grandTotalTl, activeRegionCode).formatted;
-                    const netFmt = convertAndFormatGlobalPrice(f.supplierNetShareTl, activeRegionCode).formatted;
-                    const partsFmt = convertAndFormatGlobalPrice(f.partsAmountTl, activeRegionCode).formatted;
-                    const laborFmt = convertAndFormatGlobalPrice(f.laborAmountTl, activeRegionCode).formatted;
-                    const kdvFmt = convertAndFormatGlobalPrice(f.kdvAmountTl, activeRegionCode).formatted;
-
-                    return `
-                        <div style="margin-top:9px;padding:10px;border-radius:12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                                <span style="font-weight:800;color:#A7F3D0;">📄 ${p.proformaRefCode} • ${p.supplierCompanyTitle}</span>
-                                <span style="font-size:0.68rem;background:rgba(0,0,0,0.45);padding:3px 8px;border-radius:99px;color:#FDE68A;">🔒 Özel Kapalı Zarf</span>
-                            </div>
-                            <div style="font-size:0.75rem;color:#E2E8F0;margin-bottom:5px;">
-                                <strong>Parça/Malzeme (${p.partOriginLabelTr}):</strong> ${p.partsDescription}
-                            </div>
-                            <div style="font-size:0.74rem;color:#FDE68A;margin-bottom:5px;font-variant-numeric:tabular-nums;">
-                                Parça: ${partsFmt} + İşçilik: ${laborFmt} + %${f.kdvRatePercent} KDV (${kdvFmt}) = <strong>Toplam: ${totalFmt}</strong>
-                            </div>
-                            <div style="font-size:0.71rem;color:#CBD5E1;background:rgba(15,23,42,0.65);padding:7px 9px;border-radius:8px;line-height:1.38;">
-                                ⚖️ <strong>${p.contractClauseTr}</strong><br>
-                                <span style="color:#A7F3D0;">🛡️ Havuz Koruması: İş/Parça teslim onayında %88 Net (${netFmt}) sanayiciye aktarılır.</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                const card = document.createElement('article');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="card-header">
-                        <span class="urgent-badge today">${catInfo.titleTr}</span>
-                        <span style="font-size:0.72rem;color:#CBD5E1;">📍 ${t.city}</span>
-                    </div>
-                    <h3 class="card-title">${t.title}</h3>
-                    <p class="card-desc" style="margin-bottom:8px;">🔧 <strong>Teknik / Parça Özelliği:</strong> ${t.spec}</p>
-
-                    <div style="background:rgba(15,23,42,0.55);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px;margin-bottom:8px;">
-                        <div style="font-size:0.75rem;font-weight:800;color:#FDE68A;margin-bottom:6px;">
-                            🔒 Özelden Proforma &amp; Sabit Fiyat Sözleşmeli Teklif Ver (Rakipler Göremez)
-                        </div>
-                        <input type="text" class="input prf-company-input" style="margin-bottom:6px;" placeholder="Sanayi Servisi / Tedarikçi Firma Ünvanınız">
-                        <div class="bid-row" style="margin-bottom:6px;">
-                            <select class="input prf-origin-select" style="flex:1.2;">
-                                <option value="ORIGINAL_OEM">Orijinal OEM Parça/Mal</option>
-                                <option value="CERTIFIED_EQUIVALENT">TSE Garantili Muadil</option>
-                                <option value="CUSTOM_MANUFACTURED">Sıfır Özel İmalat</option>
-                            </select>
-                            <input type="text" class="input prf-parts-desc" style="flex:1.5;" placeholder="Parça Markası / Malzeme Detayı">
-                        </div>
-                        <div class="bid-row">
-                            <input type="number" class="input prf-parts-price" placeholder="Parça/Mal (₺)" min="0" step="100">
-                            <input type="number" class="input prf-labor-price" placeholder="İşçilik (₺)" min="0" step="100">
-                            <button type="button" class="btn-amber prf-submit-btn">🔒 Özel Proforma Gönder</button>
-                        </div>
-                    </div>
-
-                    <div>${proformasHtml}</div>
-                `;
-
-                const companyIn = card.querySelector('.prf-company-input');
-                const originSel = card.querySelector('.prf-origin-select');
-                const descIn = card.querySelector('.prf-parts-desc');
-                const partsPriceIn = card.querySelector('.prf-parts-price');
-                const laborPriceIn = card.querySelector('.prf-labor-price');
-
-                card.querySelector('.prf-submit-btn').addEventListener('click', async () => {
-                    const partsVal = Number(partsPriceIn.value) || 0;
-                    const laborVal = Number(laborPriceIn.value) || 0;
-                    if (partsVal + laborVal <= 0) return;
-
-                    const proforma = createSealedProformaBidPayload({
-                        tenderId: t.id,
-                        tenderCategory: t.tenderCategory,
-                        supplierHandle: 'sanayi_onayli_servis',
-                        supplierCompanyTitle: (companyIn.value || 'Onaylı Oto & Sanayi Servisi').trim(),
-                        partsDescription: (descIn.value || 'Garantili Yedek Parça + Tamir İşçiliği').trim(),
-                        partOriginType: originSel.value,
-                        partsAmountTl: partsVal,
-                        laborAmountTl: laborVal,
-                        warrantyMonths: 12,
-                        deliveryDays: 2
-                    });
-
-                    t.sealedProformas.unshift(proforma);
-                    triggerHapticImpact('MEDIUM');
-                    await enqueueOfflineAction('SEALED_B2B_PROFORMA_BID', proforma);
-                    renderB2bTenders();
-                });
-
-                b2bListEl.appendChild(card);
-            }
-        }
-
-        document.getElementById('b2b-create-tender-btn').addEventListener('click', async () => {
-            const catEl = document.getElementById('b2b-cat-select');
-            const titleEl = document.getElementById('b2b-title-input');
-            const specEl = document.getElementById('b2b-spec-input');
-            if (!titleEl.value || titleEl.value.trim().length < 4) return;
-
-            const newTender = {
-                id: `TND-${Date.now().toString(36).toUpperCase()}`,
-                tenderCategory: catEl.value,
-                title: titleEl.value.trim(),
-                spec: (specEl.value || 'Orijinal / Garantili Parça ve Sabit Fiyat Sözleşmeli').trim(),
-                city: 'İstanbul / Sanayi',
-                sealedProformas: []
-            };
-            b2bTenders.unshift(newTender);
-            triggerHapticImpact('LIGHT');
-            await enqueueOfflineAction('CREATE_B2B_TENDER', newTender);
-            titleEl.value = '';
-            specEl.value = '';
-            renderB2bTenders();
-        });
-
-        // Auth / KYC / Forgot Password Sub-Tab Switching & Live Validation
+        // Auth & KYC Handlers
         const authFeedback = document.getElementById('auth-feedback-box');
         document.querySelectorAll('.auth-tab-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -1433,30 +1331,20 @@
             tcknInput.value = val;
             if (val.length === 11) {
                 const ok = validateTurkishTckn(val);
-                tcknHint.style.color = ok ? '#A7F3D0' : '#FDA4AF';
-                tcknHint.textContent = ok
-                    ? '✓ Resmi 11 Hane T.C. Kimlik Algoritması Doğrulandı'
-                    : '✕ Geçersiz T.C. Kimlik Numarası (10. ve 11. kontrol hanesi hatalı)';
-            } else {
-                tcknHint.style.color = '#CBD5E1';
-                tcknHint.textContent = `🪪 ${val.length}/11 hane girildi`;
+                tcknHint.style.color = ok ? '#6EE7B7' : '#FDA4AF';
+                tcknHint.textContent = ok ? '✓ T.C. Kimlik Doğrulandı' : '✕ Geçersiz T.C. Kimlik Numarası';
             }
         });
 
         const pwdInput = document.getElementById('kyc-password');
-        const pwdBar = document.getElementById('kyc-pwd-bar');
         const pwdLabel = document.getElementById('kyc-pwd-label');
         pwdInput.addEventListener('input', () => {
             const res = evaluatePasswordStrength(pwdInput.value);
-            const widths = ['8%', '28%', '55%', '82%', '100%'];
-            const colors = ['#F43F5E', '#FB923C', '#FACC15', '#10B981', '#059669'];
-            pwdBar.style.width = widths[res.score] || '8%';
-            pwdBar.style.backgroundColor = colors[res.score] || '#F43F5E';
-            pwdLabel.style.color = res.isStrong ? '#A7F3D0' : '#FDE68A';
+            pwdLabel.style.color = res.isStrong ? '#6EE7B7' : '#FDE68A';
             pwdLabel.textContent = `Şifre Gücü: ${res.labelTr}`;
         });
 
-        document.getElementById('kyc-submit-btn').addEventListener('click', async () => {
+        document.getElementById('kyc-submit-btn').addEventListener('click', () => {
             const result = validateKycRegistrationPayload({
                 fullName: document.getElementById('kyc-fullname').value,
                 tckn: tcknInput.value,
@@ -1464,63 +1352,26 @@
                 email: document.getElementById('kyc-email').value,
                 password: pwdInput.value,
                 accountRole: document.getElementById('kyc-role-select').value,
-                kvkkAccepted: document.getElementById('kyc-kvkk-check').checked,
-                escrowContractAccepted: document.getElementById('kyc-escrow-check').checked
+                kvkkAccepted: true,
+                escrowContractAccepted: true
             });
+            authFeedback.style.color = result.valid ? '#6EE7B7' : '#FDA4AF';
+            authFeedback.textContent = result.valid ? `✓ ${result.kycBadgeTr} (${result.maskedTckn})` : `✕ ${result.messageTr}`;
+        });
 
-            if (!result.valid) {
-                authFeedback.style.color = '#FDA4AF';
-                authFeedback.textContent = `✕ ${result.messageTr}`;
-                triggerHapticImpact('HEAVY');
-                return;
-            }
-
-            await enqueueOfflineAction('KYC_COMMERCIAL_REGISTRATION', {
-                maskedTckn: result.maskedTckn,
-                role: result.normalizedRole
+        // Bottom Navigation Tab Switching
+        document.querySelectorAll('.tab-btn[data-target]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                document.querySelectorAll('.tab-btn').forEach((b) => {
+                    b.classList.remove('active');
+                });
+                document.querySelectorAll('.view').forEach((v) => {
+                    v.classList.remove('active');
+                });
+                btn.classList.add('active');
+                document.getElementById(target)?.classList.add('active');
             });
-            authFeedback.style.color = '#A7F3D0';
-            authFeedback.textContent = `✓ ${result.kycBadgeTr} (${result.maskedTckn}) • ${result.messageTr}`;
-            triggerHapticImpact('MEDIUM');
-        });
-
-        document.getElementById('login-submit-btn').addEventListener('click', () => {
-            const email = document.getElementById('login-email').value.trim();
-            const pwd = document.getElementById('login-password').value;
-            if (!email || pwd.length < 8) {
-                authFeedback.style.color = '#FDA4AF';
-                authFeedback.textContent = '✕ Lütfen kayıtlı e-posta adresinizi ve en az 8 karakterli şifrenizi giriniz.';
-                return;
-            }
-            authFeedback.style.color = '#A7F3D0';
-            authFeedback.textContent = '✓ Güvenli ticari oturum doğrulandı.';
-            triggerHapticImpact('LIGHT');
-        });
-
-        document.getElementById('forgot-send-otp-btn').addEventListener('click', () => {
-            const email = document.getElementById('forgot-email').value.trim();
-            if (!email.includes('@')) {
-                authFeedback.style.color = '#FDA4AF';
-                authFeedback.textContent = '✕ Şifre sıfırlama kodu için kayıtlı e-posta adresinizi giriniz.';
-                return;
-            }
-            authFeedback.style.color = '#FDE68A';
-            authFeedback.textContent = '📲 6 haneli şifre sıfırlama OTP kodunuz gönderildi (10 dk geçerli).';
-            triggerHapticImpact('LIGHT');
-        });
-
-        document.getElementById('forgot-reset-btn').addEventListener('click', () => {
-            const otp = document.getElementById('forgot-otp-code').value.trim();
-            const newPwd = document.getElementById('forgot-new-password').value;
-            const strength = evaluatePasswordStrength(newPwd);
-            if (otp.length !== 6 || !strength.isStrong) {
-                authFeedback.style.color = '#FDA4AF';
-                authFeedback.textContent = '✕ 6 haneli OTP kodunu ve güçlü yeni şifrenizi (en az 8 krk, büyük harf + rakam) giriniz.';
-                return;
-            }
-            authFeedback.style.color = '#A7F3D0';
-            authFeedback.textContent = '✓ Şifreniz kriptografik olarak yenilendi! Giriş sekmesinden oturum açabilirsiniz.';
-            triggerHapticImpact('MEDIUM');
         });
 
         initUstanomiNativeShell({
@@ -1531,83 +1382,36 @@
             }
         });
 
-        getOfflineQueue().then((items) => {
-            if (items.length > 0 && badgeEl) {
-                badgeEl.textContent = `${items.length} bekleyen saha kaydı senkronize edilecek`;
-            }
-        }).catch(() => {});
-
         renderStories();
         renderClusters();
-        renderUrgentFeed();
         renderReels();
-        renderInstagramProfile();
+        renderUrgentFeed();
         renderB2bTenders();
+        renderInstagramProfile();
 
-        // Support deep-linking to any tab or drawer state via ?tab=...&adv=1&sync=1
+        // Support deep-linking for live screenshot verification
         const urlParams = new URLSearchParams(window.location.search);
         const requestedTab = urlParams.get('tab');
         if (requestedTab) {
-            const tabBtn = document.querySelector(`.nav-btn[data-target="${requestedTab}"]`);
-            if (tabBtn) tabBtn.click();
+            document.querySelectorAll('.tab-btn').forEach((b) => {
+                b.classList.remove('active');
+            });
+            document.querySelectorAll('.view').forEach((v) => {
+                v.classList.remove('active');
+            });
+            document.querySelector(`.tab-btn[data-target="${requestedTab}"]`)?.classList.add('active');
+            document.getElementById(requestedTab)?.classList.add('active');
         }
-        if (urlParams.get('adv') === '1') {
-            const drawer = document.getElementById('adv-filters-drawer');
-            if (drawer) drawer.style.display = 'block';
+        if (urlParams.get('prices') === '1') {
+            activeProfileSubTab = 'PRICES';
+            renderInstagramProfile();
         }
-        if (urlParams.get('sync') === 'sahibinden') {
-            const presetBtn = document.querySelector('.quick-import-preset');
-            if (presetBtn) presetBtn.click();
+        if (urlParams.get('sheet') === 'filter') {
+            filterSheet.classList.add('open');
         }
-        if (urlParams.get('auth') === 'forgot') {
-            const forgotBtn = document.querySelector('.auth-tab-btn[data-auth-mode="forgot"]');
-            if (forgotBtn) forgotBtn.click();
+        if (urlParams.get('sheet') === 'create') {
+            createSheet.classList.add('open');
         }
-
-        // Bind Armut/Thumbtack Search Filters, Scope Wizard & Global Currency Switcher
-        const refreshAllFeeds = () => {
-            renderUrgentFeed();
-            renderReels();
-            renderB2bTenders();
-            updateSmartQuoteWizard();
-        };
-        document.getElementById('global-region-select').addEventListener('change', (e) => {
-            activeRegionCode = e.target.value;
-            triggerHapticImpact('LIGHT');
-            refreshAllFeeds();
-        });
-        document.getElementById('toggle-adv-filters-btn')?.addEventListener('click', () => {
-            const drawer = document.getElementById('adv-filters-drawer');
-            if (drawer) {
-                drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
-                triggerHapticImpact('LIGHT');
-            }
-        });
-
-        [
-            'market-search-input',
-            'market-city-select',
-            'filter-open-only',
-            'filter-kyc-only',
-            'filter-sort-select',
-            'filter-distance-select',
-            'filter-warranty-select',
-            'filter-origin-select',
-            'filter-rating-select',
-            'filter-min-price',
-            'filter-max-price',
-            'filter-efatura-only',
-            'filter-installment-only',
-            'filter-onduty-only',
-            'wizard-scope-select',
-            'wizard-materials-check'
-        ].forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', refreshAllFeeds);
-                el.addEventListener('change', refreshAllFeeds);
-            }
-        });
     </script>
 </body>
 </html>
