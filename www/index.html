@@ -5,44 +5,744 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#153E49">
     <link rel="manifest" href="manifest.json">
-    <title>Ustanomi</title>
+    <title>Ustanomi — Her İşin Uzmanı, Acil İşler &amp; Sosyal Vitrin</title>
     <style>
-        body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#153E49; color:#FAF9F6; font-family:system-ui,-apple-system,sans-serif; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); box-sizing:border-box; }
-        .loader { text-align:center; padding:24px; max-width:340px; }
-        .crest { width:72px; height:72px; margin:0 auto 18px; border-radius:22px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; border:1px solid rgba(245,158,11,0.5); box-shadow:0 12px 28px rgba(0,0,0,0.22); }
-        h1 { margin:0 0 8px; font-size:1.38rem; letter-spacing:2px; font-weight:800; }
-        p { margin:0 0 16px; font-size:0.88rem; color:#CBD5E1; line-height:1.45; }
-        .pill { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:6px 12px; border-radius:999px; background:rgba(245,158,11,0.16); color:#FDE68A; border:1px solid rgba(245,158,11,0.35); font-weight:600; }
-        .dot { width:7px; height:7px; border-radius:50%; background:#F59E0B; animation:pulse 1.4s infinite ease-in-out; }
-        @keyframes pulse { 0%, 100% { opacity:0.4; transform:scale(0.9); } 50% { opacity:1; transform:scale(1.15); } }
+        :root {
+            --bg-dark: #0F2930;
+            --bg-brand: #153E49;
+            --bg-card: rgba(15, 23, 42, 0.72);
+            --amber: #F59E0B;
+            --emerald: #10B981;
+            --rose: #F43F5E;
+            --text-main: #FAF9F6;
+            --text-muted: #CBD5E1;
+            --border-subtle: rgba(255, 255, 255, 0.14);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--bg-brand) 0%, var(--bg-dark) 100%);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(82px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+        }
+        .app-shell { max-width: 460px; margin: 0 auto; }
+
+        /* Top Bar */
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .crest { width: 42px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.09); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245,158,11,0.5); }
+        .brand-title { font-size: 1.08rem; font-weight: 800; letter-spacing: 1.2px; margin: 0; }
+        .brand-sub { font-size: 0.72rem; color: var(--text-muted); margin: 0; }
+        .status-toggle {
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(16, 185, 129, 0.55);
+            color: #A7F3D0;
+            padding: 6px 11px;
+            border-radius: 999px;
+            font-size: 0.73rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Instagram Story Rings (Active & On-Duty Pros) */
+        .stories-bar {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 2px 12px;
+            scrollbar-width: none;
+        }
+        .stories-bar::-webkit-scrollbar { display: none; }
+        .story-item { flex: 0 0 auto; width: 68px; text-align: center; cursor: pointer; }
+        .story-ring {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 5px;
+            border-radius: 50%;
+            padding: 2.5px;
+            background: conic-gradient(#F59E0B, #EC4899, #10B981, #F59E0B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .story-ring.closed { background: #64748B; }
+        .story-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #0F172A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            border: 2px solid var(--bg-dark);
+        }
+        .story-name { font-size: 0.68rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .story-tag { font-size: 0.6rem; color: #FDE68A; }
+
+        /* 8 Universal Profession Cluster Pills */
+        .cluster-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .cluster-scroll::-webkit-scrollbar { display: none; }
+        .cluster-chip {
+            flex: 0 0 auto;
+            padding: 7px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cluster-chip.active {
+            background: var(--amber);
+            color: #0F172A;
+            border-color: var(--amber);
+            font-weight: 800;
+        }
+
+        /* Section Cards */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .urgent-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            background: rgba(244, 63, 94, 0.2);
+            color: #FDA4AF;
+            border: 1px solid rgba(244, 63, 94, 0.45);
+        }
+        .urgent-badge.today {
+            background: rgba(245, 158, 11, 0.2);
+            color: #FDE68A;
+            border-color: rgba(245, 158, 11, 0.45);
+        }
+        .card-title { font-size: 0.96rem; font-weight: 700; margin: 0 0 5px; }
+        .card-desc { font-size: 0.81rem; color: var(--text-muted); margin: 0 0 10px; line-height: 1.42; }
+        .meta-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.73rem; color: #FDE68A; margin-bottom: 10px; }
+
+        /* Instant Bid Form inside Urgent Post */
+        .bid-row { display: flex; gap: 7px; }
+        .input {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(15, 23, 42, 0.85);
+            color: #FFFFFF;
+            font-size: 0.82rem;
+            font-family: inherit;
+        }
+        .btn-amber {
+            padding: 9px 13px;
+            border: none;
+            border-radius: 10px;
+            background: var(--amber);
+            color: #0F172A;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .offers-list { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.76rem; }
+        .offer-pill {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 9px;
+            border-radius: 9px;
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            margin-top: 6px;
+        }
+
+        /* TikTok / Reels Vertical Showcase Cards */
+        .reel-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            padding: 18px 16px;
+            margin-bottom: 12px;
+            min-height: 210px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .reel-top { display: flex; justify-content: space-between; align-items: center; }
+        .reel-tag { background: rgba(0,0,0,0.55); padding: 4px 10px; border-radius: 99px; font-size: 0.72rem; color: #FDE68A; font-weight: 700; }
+        .reel-actions { display: flex; gap: 12px; font-size: 0.8rem; }
+        .reel-action-btn { background: rgba(255,255,255,0.12); border: none; color: #fff; padding: 6px 10px; border-radius: 99px; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
+
+        /* Instagram Pro Profile Header & 3-Column Grid */
+        .ig-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .ig-avatar-ring {
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(#10B981, #F59E0B, #10B981);
+            flex-shrink: 0;
+        }
+        .ig-stats { display: flex; flex: 1; justify-content: space-around; text-align: center; }
+        .ig-stat-val { font-size: 0.98rem; font-weight: 800; display: block; }
+        .ig-stat-lbl { font-size: 0.68rem; color: var(--text-muted); }
+        .hours-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            font-size: 0.77rem;
+            margin-bottom: 12px;
+        }
+        .price-menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 11px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.06);
+            margin-bottom: 7px;
+            font-size: 0.8rem;
+        }
+        .price-tag { font-weight: 800; color: #FDE68A; font-variant-numeric: tabular-nums; }
+        .ig-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .ig-cell {
+            aspect-ratio: 1 / 1;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-subtle);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.7rem;
+        }
+
+        /* Bottom Navigation Bar (Instagram / TikTok Style) */
+        .bottom-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid var(--border-subtle);
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            z-index: 40;
+            backdrop-filter: blur(12px);
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.71rem;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+        }
+        .nav-btn.active { color: var(--amber); }
+        .nav-icon { font-size: 1.15rem; }
     </style>
 </head>
 <body>
-    <div class="loader" role="status" aria-live="polite">
-        <div class="crest">
-            <svg width="38" height="38" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M14 15C14 13.343 15.343 12 17 12H21.5C23.157 12 24.5 13.343 24.5 15V34.5C24.5 39.2 27.8 42.4 32 42.4L28.5 51.4C20.1 49.8 14 43.1 14 34.5V15Z" fill="#FFFFFF"/>
-                <path d="M50 15C50 13.343 48.657 12 47 12H42.5C40.843 12 39.5 13.343 39.5 15V34.5C39.5 39.2 36.2 42.4 32 42.4C31.2 42.4 30.45 42.28 29.75 42.08L26.8 51.1C28.45 51.68 30.2 52 32 52C41.94 52 50 44.16 50 34.5V15Z" fill="#F59E0B"/>
-                <path d="M32 13L37.5 16.2V22.6L32 25.8L26.5 22.6V16.2L32 13Z" fill="#FEF08A"/>
-            </svg>
-        </div>
-        <h1>USTANOMI</h1>
-        <p id="boot-status">Güvenli Havuz &amp; Doğrulanmış Usta Ağı hazırlanıyor...</p>
-        <div class="pill">
-            <span class="dot"></span>
-            <span id="queue-badge">Aşamalı Ödeme Koruması (%30 / %40 / %30)</span>
-        </div>
-    </div>
-    <script type="module">
-        import { getOfflineQueue, initUstanomiNativeShell } from './capacitor-bridge.js';
+    <div class="app-shell">
+        <!-- Top Bar with Live Open/Closed/24-7 Switch -->
+        <header class="topbar">
+            <div class="brand">
+                <div class="crest">
+                    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M14 15C14 13.343 15.343 12 17 12H21.5C23.157 12 24.5 13.343 24.5 15V34.5C24.5 39.2 27.8 42.4 32 42.4L28.5 51.4C20.1 49.8 14 43.1 14 34.5V15Z" fill="#FFFFFF"/>
+                        <path d="M50 15C50 13.343 48.657 12 47 12H42.5C40.843 12 39.5 13.343 39.5 15V34.5C39.5 39.2 36.2 42.4 32 42.4C31.2 42.4 30.45 42.28 29.75 42.08L26.8 51.1C28.45 51.68 30.2 52 32 52C41.94 52 50 44.16 50 34.5V15Z" fill="#F59E0B"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">USTANOMI</h1>
+                    <p class="brand-sub" id="queue-badge">Her İşin Uzmanı • Canlı Acil İş &amp; Vitrin</p>
+                </div>
+            </div>
+            <button type="button" class="status-toggle" id="pro-mode-toggle" title="Çalışma Durumunu Değiştir">
+                🟢 Açık (08:00-20:00)
+            </button>
+        </header>
 
-        const statusEl = document.getElementById('boot-status');
+        <!-- Instagram Story Bar: Nearby Open & 24/7 On-Duty Professionals Across All Trades -->
+        <section class="stories-bar" id="stories-bar" aria-label="Şu An Açık ve Nöbetçi Uzman Hikâyeleri"></section>
+
+        <!-- 8 Universal Profession Clusters -->
+        <nav class="cluster-scroll" id="cluster-bar" aria-label="Tüm Meslek Grupları"></nav>
+
+        <!-- TAB 1: ACİL İŞLER & ANLIK TEKLİF AKIŞI -->
+        <main id="tab-urgent" class="view-section active">
+            <!-- Quick Post Urgent Job Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="urgent-badge">⚡ 15 Saniyede Acil İş Paylaş</span>
+                    <span style="font-size:0.72rem;color:#A7F3D0;">Açık Uzmanlara Anında Bildirim</span>
+                </div>
+                <input type="text" id="urgent-title-input" class="input" style="margin-bottom:7px;" placeholder="Ne gerekiyor? (Örn: Kadıköy acil çilingir / Oto akü / Düğün fotoğrafçısı)">
+                <div class="bid-row">
+                    <select id="urgent-tier-select" class="input" style="flex:1.1;">
+                        <option value="EMERGENCY_30M">🔴 ACİL (30-60 Dk)</option>
+                        <option value="TODAY">🟡 BUGÜN İÇİNDE</option>
+                        <option value="SCHEDULED">🟢 PLANLI / RANDEVU</option>
+                    </select>
+                    <input type="number" id="urgent-budget-input" class="input" style="flex:0.8;" placeholder="Bütçe ₺" min="100" step="50">
+                    <button type="button" class="btn-amber" id="publish-urgent-btn">Paylaş</button>
+                </div>
+            </div>
+
+            <!-- Live Urgent Job Feed List -->
+            <div id="urgent-feed-list"></div>
+        </main>
+
+        <!-- TAB 2: TIKTOK / REELS DİKEY VİTRİN AKIŞI -->
+        <section id="tab-reels" class="view-section" aria-label="Uzman Reels ve Öncesi Sonrası Akışı">
+            <div id="reels-feed-list"></div>
+        </section>
+
+        <!-- TAB 3: INSTAGRAM TARZI UZMAN PROFİLİ (AÇIK/KAPALI SAATLER + ŞEFFAF FİYAT MENÜSÜ + 3'LÜ IZGARA) -->
+        <section id="tab-profile" class="view-section" aria-label="Instagram Tarzı Uzman Profil Vitrini">
+            <div class="card" id="ig-profile-container"></div>
+        </section>
+    </div>
+
+    <!-- Bottom Tab Navigation -->
+    <nav class="bottom-nav" aria-label="Alt Gezinme Menüsü">
+        <button type="button" class="nav-btn active" data-target="tab-urgent">
+            <span class="nav-icon">🚨</span>
+            <span>Acil İşler</span>
+        </button>
+        <button type="button" class="nav-btn" data-target="tab-reels">
+            <span class="nav-icon">🎬</span>
+            <span>Reels Vitrin</span>
+        </button>
+        <button type="button" class="nav-btn" data-target="tab-profile">
+            <span class="nav-icon">📸</span>
+            <span>Uzman Profilim</span>
+        </button>
+        <button type="button" class="nav-btn" id="open-live-cloud-btn">
+            <span class="nav-icon">🌐</span>
+            <span>Tam Ekran Ağ</span>
+        </button>
+    </nav>
+
+    <script type="module">
+        import {
+            calculateSplitPaymentEscrow,
+            createUrgentJobPostPayload,
+            enqueueOfflineAction,
+            formatInstagramProShowcase,
+            getOfflineQueue,
+            initUstanomiNativeShell,
+            triggerHapticImpact, 
+            UNIVERSAL_PROFESSION_CLUSTERS
+        } from './capacitor-bridge.js';
+
+        const LIVE_APP_URL = 'https://ustanomi-web-production.up.railway.app/app/';
         const badgeEl = document.getElementById('queue-badge');
+        const storiesBar = document.getElementById('stories-bar');
+        const clusterBar = document.getElementById('cluster-bar');
+        const urgentFeedList = document.getElementById('urgent-feed-list');
+        const reelsFeedList = document.getElementById('reels-feed-list');
+        const igProfileContainer = document.getElementById('ig-profile-container');
+        const proModeToggle = document.getElementById('pro-mode-toggle');
+
+        let activeClusterCode = 'ALL';
+        const availabilityCycle = ['OPEN', 'ON_DUTY_24_7', 'CLOSED'];
+        let currentModeIndex = 0;
+
+        const storyPros = [
+            { name: 'Selim Usta', tag: '⚡ 7/24 Tesisat', emoji: '🔧', open: true },
+            { name: 'Kaan Oto', tag: '🟢 Acil Çekici', emoji: '🚗', open: true },
+            { name: 'Elif Studio', tag: '🟢 Fotoğraf/Reels', emoji: '📸', open: true },
+            { name: 'Mert Bilişim', tag: '🟢 Kamera/Ağ', emoji: '💻', open: true },
+            { name: 'Seda VIP', tag: '🟢 Güzellik/Makyaj', emoji: '✂️', open: true },
+            { name: 'Burak Hoca', tag: '🔴 09:00 Açılır', emoji: '📚', open: false }
+        ];
+
+        const urgentPosts = [
+            {
+                id: 'URG-101',
+                clusterCode: 'HOME_TECH',
+                urgencyBadgeTr: '🔴 ACİL • 30-60 DK',
+                isEmergency: true,
+                title: 'Kadıköy Moda Su Tesisatı Ana Boru Kaçağı',
+                description: 'Daire giriş vanasından su sızıyor, şu an açık olan nöbetçi tesisat ustası aranıyor.',
+                city: 'İstanbul',
+                district: 'Kadıköy',
+                estimatedBudgetTl: 1200,
+                offers: [
+                    { pro: '@selim_tesisat_pro (🟢 Açık)', priceTl: 1100, eta: '20 dk içinde adresteyim' }
+                ]
+            },
+            {
+                id: 'URG-102',
+                clusterCode: 'AUTO_LOGISTICS',
+                urgencyBadgeTr: '🔴 ACİL • 30-60 DK',
+                isEmergency: true,
+                title: 'Ataşehir TEM Bağlantı Yolu Akü Takviye & Oto Elektrik',
+                description: 'Araç marş basmıyor, yerinde mobil akü takviye veya değişim fiyat teklifi.',
+                city: 'İstanbul',
+                district: 'Ataşehir',
+                estimatedBudgetTl: 1500,
+                offers: [
+                    { pro: '@kaan_oto_kurtarma (⚡ 7/24 Nöbetçi)', priceTl: 1350, eta: '15 dk varış' }
+                ]
+            },
+            {
+                id: 'URG-103',
+                clusterCode: 'EVENTS_MEDIA',
+                urgencyBadgeTr: '🟡 BUGÜN İÇİNDE',
+                isEmergency: false,
+                title: 'Beşiktaş Kafe Açılışı İçin 2 Saatlik Reels & Drone Çekimi',
+                description: 'Instagram ve TikTok için dikey 4K kurgulu 3 adet Reels videosu teslimi.',
+                city: 'İstanbul',
+                district: 'Beşiktaş',
+                estimatedBudgetTl: 3500,
+                offers: [
+                    { pro: '@elif_visual_studio (🟢 Açık)', priceTl: 3200, eta: 'Bugün 16:00 setteyim' }
+                ]
+            }
+        ];
+
+        const reelsItems = [
+            {
+                handle: '@selim_tesisat_pro',
+                cluster: '🏠 Ev & Teknik Servis',
+                title: 'Kırmadan Termal Kameralı Su Kaçağı Tespiti & Onarımı',
+                priceTag: 'Sabit Keşif & Tespit: 850 ₺',
+                availability: '🟢 Şu An Açık • 20 dk Varış',
+                likes: 418
+            },
+            {
+                handle: '@elif_visual_studio',
+                cluster: '📸 Etkinlik & Medya',
+                title: 'Restoran & Marka Tanıtımı 60 Sn TikTok/Reels Çekim Paketi',
+                priceTag: 'Başlangıç Paketi: 2.800 ₺',
+                availability: '🟢 Şu An Açık • Randevu Müsait',
+                likes: 965
+            },
+            {
+                handle: '@kaan_oto_kurtarma',
+                cluster: '🚗 Oto & Yol Yardım',
+                title: 'Gece 03:00 Yerinde AGM Akü Değişimi & Alternatör Ölçümü',
+                priceTag: '7/24 Nöbetçi Servis: 1.250 ₺',
+                availability: '⚡ 7/24 Acil Nöbetçi',
+                likes: 612
+            }
+        ];
+
+        function renderStories() {
+            storiesBar.innerHTML = '';
+            for (const s of storyPros) {
+                const div = document.createElement('div');
+                div.className = 'story-item';
+                div.innerHTML = `
+                    <div class="story-ring ${s.open ? '' : 'closed'}">
+                        <div class="story-avatar">${s.emoji}</div>
+                    </div>
+                    <div class="story-name">${s.name}</div>
+                    <div class="story-tag">${s.tag}</div>
+                `;
+                storiesBar.appendChild(div);
+            }
+        }
+
+        function renderClusters() {
+            clusterBar.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = `cluster-chip ${activeClusterCode === 'ALL' ? 'active' : ''}`;
+            allBtn.textContent = '🔥 Tüm Meslekler';
+            allBtn.addEventListener('click', () => {
+                activeClusterCode = 'ALL';
+                renderClusters();
+                renderUrgentFeed();
+            });
+            clusterBar.appendChild(allBtn);
+
+            for (const c of UNIVERSAL_PROFESSION_CLUSTERS) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `cluster-chip ${activeClusterCode === c.code ? 'active' : ''}`;
+                btn.textContent = `${c.iconEmoji} ${c.titleTr}`;
+                btn.addEventListener('click', () => {
+                    activeClusterCode = c.code;
+                    renderClusters();
+                    renderUrgentFeed();
+                });
+                clusterBar.appendChild(btn);
+            }
+        }
+
+        function renderUrgentFeed() {
+            urgentFeedList.innerHTML = '';
+            const filtered = activeClusterCode === 'ALL'
+                ? urgentPosts
+                : urgentPosts.filter((p) => p.clusterCode === activeClusterCode);
+
+            for (const post of filtered) {
+                const card = document.createElement('article');
+                card.className = 'card';
+                const offersHtml = post.offers.map((o) => {
+                    const split = calculateSplitPaymentEscrow(o.priceTl);
+                    return `
+                        <div class="offer-pill">
+                            <span><strong>${o.pro}</strong> • ${o.eta}</span>
+                            <span style="color:#FDE68A;font-weight:800;">${o.priceTl} ₺ (%88 Usta: ${split.subMerchantShareTl} ₺)</span>
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="urgent-badge ${post.isEmergency ? '' : 'today'}">${post.urgencyBadgeTr}</span>
+                        <span style="font-size:0.74rem;color:#CBD5E1;">📍 ${post.city} / ${post.district}</span>
+                    </div>
+                    <h2 class="card-title">${post.title}</h2>
+                    <p class="card-desc">${post.description}</p>
+                    <div class="meta-row">
+                        <span>💰 Müşteri Bütçesi: ~${post.estimatedBudgetTl} ₺</span>
+                        <span>🛡️ Güvenli Havuz (%88 Usta / %12 Güvence)</span>
+                    </div>
+                    <div class="bid-row">
+                        <input type="number" class="input bid-price-input" placeholder="Fiyat Teklifiniz (₺)" min="100" step="50">
+                        <input type="text" class="input bid-eta-input" placeholder="Varış / Süre (Örn: 25 dk)">
+                        <button type="button" class="btn-amber submit-bid-btn">Fiyat Ver</button>
+                    </div>
+                    <div class="offers-list">${offersHtml}</div>
+                `;
+
+                const priceIn = card.querySelector('.bid-price-input');
+                const etaIn = card.querySelector('.bid-eta-input');
+                const bidBtn = card.querySelector('.submit-bid-btn');
+
+                bidBtn.addEventListener('click', async () => {
+                    const priceVal = Number(priceIn.value);
+                    if (!Number.isFinite(priceVal) || priceVal <= 0) return;
+                    const etaVal = (etaIn.value || '30 dk içinde').trim();
+                    post.offers.unshift({
+                        pro: '@ustanomi_uzman (🟢 Açık)',
+                        priceTl: priceVal,
+                        eta: etaVal
+                    });
+                    await enqueueOfflineAction('URGENT_PRO_BID', {
+                        postId: post.id,
+                        priceTl: priceVal,
+                        eta: etaVal
+                    });
+                    renderUrgentFeed();
+                });
+
+                urgentFeedList.appendChild(card);
+            }
+        }
+
+        function renderReels() {
+            reelsFeedList.innerHTML = '';
+            for (const r of reelsItems) {
+                const el = document.createElement('article');
+                el.className = 'reel-card';
+                el.innerHTML = `
+                    <div class="reel-top">
+                        <span class="reel-tag">${r.cluster}</span>
+                        <span class="reel-tag">${r.availability}</span>
+                    </div>
+                    <div style="margin: 22px 0;">
+                        <div style="font-size:0.8rem;color:#FDE68A;font-weight:700;margin-bottom:4px;">${r.handle} ✓</div>
+                        <h3 style="margin:0 0 8px;font-size:1.05rem;">${r.title}</h3>
+                        <div style="display:inline-block;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.5);padding:5px 10px;border-radius:8px;font-size:0.78rem;color:#A7F3D0;font-weight:700;">
+                            🏷️ ${r.priceTag}
+                        </div>
+                    </div>
+                    <div class="reel-actions">
+                        <button type="button" class="reel-action-btn">❤️ ${r.likes} Beğeni</button>
+                        <button type="button" class="reel-action-btn" onclick="document.querySelector('[data-target=tab-profile]').click()">📸 Instagram Profilini &amp; Fiyatlarını Gör</button>
+                    </div>
+                `;
+                reelsFeedList.appendChild(el);
+            }
+        }
+
+        function renderInstagramProfile() {
+            const currentMode = availabilityCycle[currentModeIndex];
+            const profile = formatInstagramProShowcase({
+                handle: 'selim_ustanomi_pro',
+                displayName: 'Selim Karaca • Uzman Usta & Mühendislik',
+                professionTitle: 'Tesisat, Kombi, Akıllı Ev & Acil Müdahale Uzmanı',
+                clusterId: 'home_technical',
+                city: 'İstanbul',
+                district: 'Kadıköy',
+                rating: 4.9,
+                completedJobsCount: 342,
+                followersCount: 2890,
+                responseTimeMinutes: 3,
+                availabilityConfig: {
+                    manualMode: currentMode,
+                    openHour: 8,
+                    closeHour: 20,
+                    currentHour: 14
+                },
+                priceMenu: [
+                    { title: 'Termal Kameralı Kaçak Tespiti', priceTl: 850, pricingType: 'FIXED', durationLabel: '45 dk' },
+                    { title: 'Kombi & Petek Kimyasal Yıkama', priceTl: 1400, pricingType: 'FIXED', durationLabel: '90 dk' },
+                    { title: 'Saatlik Teknik Usta İşçiliği', priceTl: 650, pricingType: 'HOURLY', durationLabel: '60 dk' }
+                ],
+                mediaGrid: [
+                    { id: 'm1', mediaType: 'REEL_VIDEO', caption: '🎬 Termal Tespit Reels', priceTagTl: 850 },
+                    { id: 'm2', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Banyo Tadilat Öncesi/Sonrası', priceTagTl: 14500 },
+                    { id: 'm3', mediaType: 'REEL_VIDEO', caption: '🎬 Akıllı Termostat Montajı', priceTagTl: 950 },
+                    { id: 'm4', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 Kombi Kolektör Yenileme', priceTagTl: 3200 },
+                    { id: 'm5', mediaType: 'REEL_VIDEO', caption: '🎬 7/24 Acil Vana Müdahalesi', priceTagTl: 1100 },
+                    { id: 'm6', mediaType: 'BEFORE_AFTER_PHOTO', caption: '📸 MEB & MYK Ustalık Belgelerim', priceTagTl: 0 }
+                ]
+            });
+
+            proModeToggle.textContent = profile.availability.badgeTextTr;
+
+            const priceRows = profile.priceMenu.map((pm) => `
+                <div class="price-menu-item">
+                    <div>
+                        <div style="font-weight:700;">${pm.title}</div>
+                        <div style="font-size:0.7rem;color:#CBD5E1;">⏱️ ${pm.durationLabel}</div>
+                    </div>
+                    <span class="price-tag">${pm.pricingBadgeTr}</span>
+                </div>
+            `).join('');
+
+            const gridCells = profile.mediaGrid.map((m) => `
+                <div class="ig-cell">
+                    <span style="font-weight:700;color:#FDE68A;">${m.mediaType === 'REEL_VIDEO' ? '▶ Reels' : '🖼️ Vitrin'}</span>
+                    <span>${m.caption}</span>
+                    ${m.priceTagTl > 0 ? `<span style="color:#A7F3D0;font-weight:700;">${m.priceTagTl} ₺</span>` : '<span style="color:#93C5FD;">Onaylı ✓</span>'}
+                </div>
+            `).join('');
+
+            igProfileContainer.innerHTML = `
+                <div class="ig-header">
+                    <div class="ig-avatar-ring" style="background:${profile.availability.storyRingColor};">
+                        <div class="story-avatar" style="font-size:1.75rem;">🛠️</div>
+                    </div>
+                    <div class="ig-stats">
+                        <div><span class="ig-stat-val">${profile.metrics.completedJobsCount}</span><span class="ig-stat-lbl">Net İş</span></div>
+                        <div><span class="ig-stat-val">${profile.metrics.rating}★</span><span class="ig-stat-lbl">Puan</span></div>
+                        <div><span class="ig-stat-val">${profile.metrics.followersCount}</span><span class="ig-stat-lbl">Takipçi</span></div>
+                    </div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="font-weight:800;font-size:0.95rem;">${profile.displayName} <span style="color:#38BDF8;">✓</span></div>
+                    <div style="font-size:0.76rem;color:#FDE68A;">${profile.handle} • ${profile.locationLabel} • ⚡ ${profile.metrics.responseTimeLabel}</div>
+                    <div style="font-size:0.78rem;color:#CBD5E1;margin-top:4px;">${profile.professionTitle}</div>
+                </div>
+                <div class="hours-banner">
+                    <span>🕒 <strong>${profile.availability.scheduleSummaryTr}</strong></span>
+                    <span style="font-weight:800;color:#FDE68A;">${profile.availability.badgeTextTr}</span>
+                </div>
+                <div style="font-size:0.8rem;font-weight:800;margin-bottom:6px;color:#FDE68A;">🏷️ Şeffaf Fiyat &amp; Hizmet Menüsü (Açık/Sabit Fiyatlar)</div>
+                ${priceRows}
+                <div style="font-size:0.8rem;font-weight:800;margin:12px 0 4px;color:#FDE68A;">📸 Instagram &amp; Reels İş Vitrini (Öncesi / Sonrası)</div>
+                <div class="ig-grid">${gridCells}</div>
+            `;
+        }
+
+        proModeToggle.addEventListener('click', () => {
+            currentModeIndex = (currentModeIndex + 1) % availabilityCycle.length;
+            triggerHapticImpact('LIGHT');
+            renderInstagramProfile();
+        });
+
+        document.getElementById('publish-urgent-btn').addEventListener('click', async () => {
+            const titleEl = document.getElementById('urgent-title-input');
+            const tierEl = document.getElementById('urgent-tier-select');
+            const budgetEl = document.getElementById('urgent-budget-input');
+            if (!titleEl.value || titleEl.value.trim().length < 4) return;
+
+            const payload = createUrgentJobPostPayload({
+                title: titleEl.value,
+                description: 'Mobil uygulama üzerinden anlık konum ve fotoğraflı acil iş paylaşımı.',
+                professionQuery: titleEl.value,
+                urgencyCode: tierEl.value,
+                customerBudgetTl: Number(budgetEl.value) || 950
+            });
+
+            urgentPosts.unshift({
+                id: payload.urgentPostCode,
+                clusterCode: payload.clusterCode,
+                urgencyBadgeTr: payload.urgencyBadgeTr,
+                isEmergency: payload.urgencyCode === 'EMERGENCY_30M',
+                title: payload.title,
+                description: `${payload.clusterEmoji} ${payload.clusterTitleTr} • Sadece şu an AÇIK uzmanlara bildirim gönderildi.`,
+                city: payload.city,
+                district: payload.district,
+                estimatedBudgetTl: payload.estimatedBudgetTl,
+                offers: []
+            });
+
+            await enqueueOfflineAction('URGENT_JOB_POST', payload);
+            titleEl.value = '';
+            budgetEl.value = '';
+            renderUrgentFeed();
+        });
+
+        document.querySelectorAll('.nav-btn[data-target]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                document.querySelectorAll('.nav-btn').forEach((b) => {
+                    b.classList.remove('active');
+                });
+                document.querySelectorAll('.view-section').forEach((s) => {
+                    s.classList.remove('active');
+                });
+                btn.classList.add('active');
+                document.getElementById(target)?.classList.add('active');
+            });
+        });
+
+        document.getElementById('open-live-cloud-btn').addEventListener('click', () => {
+            window.location.assign(LIVE_APP_URL);
+        });
 
         initUstanomiNativeShell({
             onNetworkChange(status) {
-                if (!status.connected && statusEl) {
-                    statusEl.textContent = 'Çevrimdışı saha modu etkinleştiriliyor...';
+                if (!status.connected) {
                     window.location.replace('offline.html');
                 }
             }
@@ -53,6 +753,12 @@
                 badgeEl.textContent = `${items.length} bekleyen saha kaydı senkronize edilecek`;
             }
         }).catch(() => {});
+
+        renderStories();
+        renderClusters();
+        renderUrgentFeed();
+        renderReels();
+        renderInstagramProfile();
     </script>
 </body>
 </html>

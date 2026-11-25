@@ -181,3 +181,45 @@ CREATE TABLE IF NOT EXISTS ledger_transactions (
   CONSTRAINT fk_ledger_lead FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_ledger_offer FOREIGN KEY (offer_id) REFERENCES pro_offers(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Universal Professions, Urgent Job Feed & Instagram/TikTok Pro Showcase Tables
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS pro_social_profiles (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL UNIQUE,
+  handle VARCHAR(64) NOT NULL UNIQUE,
+  profession_title VARCHAR(140) NOT NULL,
+  cluster_code VARCHAR(40) NOT NULL DEFAULT 'HOME_TECH',
+  city VARCHAR(80) NOT NULL DEFAULT 'İstanbul',
+  district VARCHAR(80) NOT NULL DEFAULT 'Kadıköy',
+  availability_mode ENUM('OPEN', 'CLOSED', 'ON_DUTY_24_7', 'AUTO') NOT NULL DEFAULT 'AUTO',
+  open_hour TINYINT UNSIGNED NOT NULL DEFAULT 8,
+  close_hour TINYINT UNSIGNED NOT NULL DEFAULT 20,
+  response_time_minutes SMALLINT UNSIGNED NOT NULL DEFAULT 4,
+  followers_count INT UNSIGNED NOT NULL DEFAULT 0,
+  price_menu_json JSON NULL,
+  story_highlights_json JSON NULL,
+  media_grid_json JSON NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_social_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX idx_social_cluster_mode (cluster_code, availability_mode, city)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS urgent_job_posts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  urgent_post_code VARCHAR(32) NOT NULL UNIQUE,
+  customer_user_id INT UNSIGNED NOT NULL,
+  cluster_code VARCHAR(40) NOT NULL,
+  urgency_code ENUM('EMERGENCY_30M', 'TODAY', 'SCHEDULED') NOT NULL DEFAULT 'EMERGENCY_30M',
+  city VARCHAR(80) NOT NULL DEFAULT 'İstanbul',
+  district VARCHAR(80) NOT NULL DEFAULT 'Kadıköy',
+  title VARCHAR(180) NOT NULL,
+  description TEXT NOT NULL,
+  estimated_budget_kurus BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  status ENUM('OPEN', 'MATCHED', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'OPEN',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_urgent_customer FOREIGN KEY (customer_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_urgent_open_cluster (status, urgency_code, cluster_code, city)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,6 +1,7 @@
 /**
- * Ustanomi Native Capacitor 6 Bridge, AI Studio Lead/Offer Workflow, Offline Field Queue & Split-Payment Engine
- * License: MIT (_mit-kit aligned: mobile/offline-hook, service/signature-qr-helpers, payments/iyzico-paytr-webhook, finance/tr-money-math)
+ * Ustanomi Native Capacitor 6 Bridge, AI Studio Lead/Offer Workflow, Universal Professions,
+ * Instagram/TikTok Pro Showcase, Urgent Job Feed, Open/Closed Availability & 88/12 Split-Payment Engine
+ * License: MIT (_mit-kit aligned)
  */
 
 const ALLOWED_NAVIGATION_HOSTS = new Set([
@@ -49,7 +50,7 @@ export const OFFER_LIFECYCLE_TRANSITIONS = Object.freeze({
 });
 
 /**
- * Canonical 6 Ustanomi Service Categories from AI Studio (OfferServiceCategory)
+ * Canonical 6 Ustanomi Service Categories from AI Studio (preserved for backward compatibility)
  */
 export const OFFER_SERVICE_CATEGORIES = Object.freeze([
 	Object.freeze({
@@ -139,6 +140,152 @@ export const OFFER_SERVICE_CATEGORIES = Object.freeze([
 ]);
 
 /**
+ * 8 Universal Profession Clusters ("Her İşin Bir Ustası Vardır" — Usta + Ekonomi = Ustanomi)
+ */
+export const UNIVERSAL_PROFESSION_CLUSTERS = Object.freeze([
+	Object.freeze({
+		id: "home_technical",
+		code: "HOME_TECH",
+		titleTr: "Ev, Tadilat & Teknik Servis",
+		iconEmoji: "🏠",
+		startingPriceTl: 650,
+		professions: Object.freeze([
+			"Su & Doğalgaz Tesisatçısı",
+			"Elektrik & Akıllı Ev Ustası",
+			"Kombi & Klima Servisi",
+			"Boya, Alçıpan & Dekorasyon",
+			"Marangoz & Mobilya Montaj",
+			"7/24 Nöbetçi Çilingir",
+		]),
+	}),
+	Object.freeze({
+		id: "auto_transport",
+		code: "AUTO_LOGISTICS",
+		titleTr: "Oto, Yol Yardım & Nakliye",
+		iconEmoji: "🚗",
+		startingPriceTl: 900,
+		professions: Object.freeze([
+			"7/24 Oto Çekici & Kurtarma",
+			"Mobil Lastik & Akü Takviye",
+			"Oto Elektrik & Mekanik Ustası",
+			"Evden Eve & Parça Eşya Nakliyat",
+			"Yerinde Oto Yıkama & Detailing",
+		]),
+	}),
+	Object.freeze({
+		id: "digital_tech",
+		code: "DIGITAL_TECH",
+		titleTr: "Dijital, Teknoloji & Kamera",
+		iconEmoji: "💻",
+		startingPriceTl: 750,
+		professions: Object.freeze([
+			"Telefon & Bilgisayar Tamiri",
+			"Güvenlik Kamerası & Alarm Kurulumu",
+			"Web, Yazılım & Sosyal Medya Uzmanı",
+			"Grafik Tasarım & Video Kurgu",
+		]),
+	}),
+	Object.freeze({
+		id: "events_media",
+		code: "EVENTS_MEDIA",
+		titleTr: "Etkinlik, Fotoğraf & Organizasyon",
+		iconEmoji: "📸",
+		startingPriceTl: 1500,
+		professions: Object.freeze([
+			"Düğün, Nişan & Ürün Fotoğrafçısı",
+			"Drone & Reels Video Çekimi",
+			"Organizasyon, Süsleme & Catering",
+			"DJ & Canlı Müzik Ekibi",
+		]),
+	}),
+	Object.freeze({
+		id: "beauty_wellness",
+		code: "BEAUTY_CARE",
+		titleTr: "Kişisel Bakım & Güzellik",
+		iconEmoji: "✂️",
+		startingPriceTl: 600,
+		professions: Object.freeze([
+			"VIP Evde Kuaför & Berber",
+			"Gelin Başı & Profesyonel Makyaj",
+			"Fizyoterapi & Medikal Masaj Uzmanı",
+			"Diyetisyen & Yaşam Koçu",
+		]),
+	}),
+	Object.freeze({
+		id: "education_coaching",
+		code: "EDUCATION_PRO",
+		titleTr: "Eğitim, Özel Ders & Koçluk",
+		iconEmoji: "📚",
+		startingPriceTl: 550,
+		professions: Object.freeze([
+			"Özel Direksiyon Ustası",
+			"Matematik, YKS/LGS & İngilizce Özel Ders",
+			"Birebir Fitness & Yüzme Eğitmeni",
+			"Piyano, Gitar & Müzik Eğitmeni",
+		]),
+	}),
+	Object.freeze({
+		id: "cleaning_garden",
+		code: "CLEANING_GARDEN",
+		titleTr: "Temizlik, Koltuk Yıkama & Bahçe",
+		iconEmoji: "🧹",
+		startingPriceTl: 1100,
+		professions: Object.freeze([
+			"Ev, Ofis & İnşaat Sonrası Temizlik",
+			"Yerinde Buharlı Koltuk & Yatak Yıkama",
+			"Haşere İlaçlama & Dezenfeksiyon",
+			"Bahçıvan & Peyzaj Bakımı",
+		]),
+	}),
+	Object.freeze({
+		id: "b2b_industrial",
+		code: "B2B_INDUSTRIAL",
+		titleTr: "B2B Sanayi, Kaynak & Yapı Malzemesi",
+		iconEmoji: "🏭",
+		startingPriceTl: 2200,
+		professions: Object.freeze([
+			"Argon / Demir Kaynak & Ferforje Ustası",
+			"Endüstriyel Mutfak & Kazan Servisi",
+			"Toptan Yapı Malzemesi & Proforma",
+			"İş Güvenliği & Elektrik Pano Bakımı",
+		]),
+	}),
+]);
+
+/**
+ * Urgency Tiers for "Acil İşler" Live Feed
+ */
+export const URGENCY_TIERS = Object.freeze({
+	EMERGENCY_30M: Object.freeze({
+		code: "EMERGENCY_30M",
+		badgeTr: "🔴 ACİL • 30-60 DK",
+		slaMinutes: 45,
+		surgeMultiplier: 1.25,
+	}),
+	TODAY: Object.freeze({
+		code: "TODAY",
+		badgeTr: "🟡 BUGÜN İÇİNDE",
+		slaMinutes: 240,
+		surgeMultiplier: 1.0,
+	}),
+	SCHEDULED: Object.freeze({
+		code: "SCHEDULED",
+		badgeTr: "🟢 PLANLI / RANDEVULU",
+		slaMinutes: 1440,
+		surgeMultiplier: 1.0,
+	}),
+});
+
+/**
+ * Pro Availability & Working Hours Modes (Open / Closed / 24-7 On-Duty)
+ */
+export const PRO_AVAILABILITY_MODES = Object.freeze({
+	OPEN: "OPEN",
+	CLOSED: "CLOSED",
+	ON_DUTY_24_7: "ON_DUTY_24_7",
+});
+
+/**
  * Supported BDDK-licensed sub-merchant escrow payment providers from AI Studio (88% Master / 12% Commission)
  */
 export const ESCROW_PAYMENT_PROVIDERS = Object.freeze({
@@ -191,6 +338,235 @@ export function resolveOfferServiceCategory(rawFilter) {
 		}
 	}
 	return null;
+}
+
+/**
+ * Resolves any profession query (e.g. "çilingir", "oto çekici", "fotoğrafçı", "kuaför", "özel ders")
+ * into one of the 8 Universal Profession Clusters.
+ * @param {string} query
+ */
+export function resolveUniversalProfessionCluster(query) {
+	if (typeof query !== "string" || !query.trim()) {
+		return UNIVERSAL_PROFESSION_CLUSTERS[0];
+	}
+	const q = query.trim().toLocaleLowerCase("tr-TR");
+	for (const cluster of UNIVERSAL_PROFESSION_CLUSTERS) {
+		if (
+			cluster.id.toLocaleLowerCase("tr-TR") === q ||
+			cluster.code.toLocaleLowerCase("tr-TR") === q ||
+			cluster.titleTr.toLocaleLowerCase("tr-TR").includes(q) ||
+			cluster.professions.some((p) => p.toLocaleLowerCase("tr-TR").includes(q))
+		) {
+			return cluster;
+		}
+	}
+	return UNIVERSAL_PROFESSION_CLUSTERS[0];
+}
+
+/**
+ * Evaluates a professional's real-time Open / Closed / 24-7 On-Duty status, story ring color,
+ * and pricing multiplier based on working hours (`openHour`..`closeHour`) and manual switch.
+ * @param {{
+ *   manualMode?: "OPEN" | "CLOSED" | "ON_DUTY_24_7" | "AUTO",
+ *   openHour?: number,
+ *   closeHour?: number,
+ *   currentHour?: number
+ * }} config
+ */
+export function evaluateProAvailability(config = {}) {
+	const {
+		manualMode = "AUTO",
+		openHour = 8,
+		closeHour = 20,
+		currentHour = 14,
+	} = config;
+
+	if (manualMode === "ON_DUTY_24_7") {
+		return {
+			status: PRO_AVAILABILITY_MODES.ON_DUTY_24_7,
+			isAcceptingUrgentJobs: true,
+			badgeTextTr: "⚡ 7/24 Nöbetçi Açık",
+			storyRingColor: "#F59E0B",
+			rateMultiplier: 1.25,
+			scheduleSummaryTr: `7/24 Acil Nöbetçi (${String(openHour).padStart(2, "0")}:00-${String(closeHour).padStart(2, "0")}:00 Normal Mesai)`,
+		};
+	}
+
+	if (manualMode === "CLOSED") {
+		return {
+			status: PRO_AVAILABILITY_MODES.CLOSED,
+			isAcceptingUrgentJobs: false,
+			badgeTextTr: `🔴 Kapalı • ${String(openHour).padStart(2, "0")}:00'da Açılır`,
+			storyRingColor: "#94A3B8",
+			rateMultiplier: 1.0,
+			scheduleSummaryTr: `Mesai Dışı (${String(openHour).padStart(2, "0")}:00 - ${String(closeHour).padStart(2, "0")}:00)`,
+		};
+	}
+
+	const withinHours =
+		manualMode === "OPEN" ||
+		(currentHour >= openHour && currentHour < closeHour);
+
+	if (withinHours) {
+		return {
+			status: PRO_AVAILABILITY_MODES.OPEN,
+			isAcceptingUrgentJobs: true,
+			badgeTextTr: `🟢 Şu An Açık (${String(closeHour).padStart(2, "0")}:00'a kadar)`,
+			storyRingColor: "#10B981",
+			rateMultiplier: 1.0,
+			scheduleSummaryTr: `Bugün Açık: ${String(openHour).padStart(2, "0")}:00 - ${String(closeHour).padStart(2, "0")}:00`,
+		};
+	}
+
+	return {
+		status: PRO_AVAILABILITY_MODES.CLOSED,
+		isAcceptingUrgentJobs: false,
+		badgeTextTr: `🔴 Kapalı • Yarın ${String(openHour).padStart(2, "0")}:00'da Açılır`,
+		storyRingColor: "#94A3B8",
+		rateMultiplier: 1.0,
+		scheduleSummaryTr: `Çalışma Saatleri: ${String(openHour).padStart(2, "0")}:00 - ${String(closeHour).padStart(2, "0")}:00`,
+	};
+}
+
+/**
+ * Formats and validates an Instagram & TikTok style Pro Profile Showcase:
+ * - Bio, Verified Badges, Live Availability Story Ring
+ * - Transparent Price Menu (`FIXED` / `STARTING_FROM` / `HOURLY`)
+ * - 3-Column Portfolio Grid & Vertical Reels/TikTok Short Video items
+ * @param {{
+ *   handle: string,
+ *   displayName: string,
+ *   professionTitle: string,
+ *   clusterId?: string,
+ *   city?: string,
+ *   district?: string,
+ *   rating?: number,
+ *   completedJobsCount?: number,
+ *   followersCount?: number,
+ *   responseTimeMinutes?: number,
+ *   availabilityConfig?: Record<string, unknown>,
+ *   priceMenu?: Array<{title: string, priceTl: number, pricingType?: "FIXED" | "STARTING_FROM" | "HOURLY", durationLabel?: string}>,
+ *   storyHighlights?: Array<{id: string, title: string, coverEmoji: string}>,
+ *   mediaGrid?: Array<{id: string, mediaType: "REEL_VIDEO" | "BEFORE_AFTER_PHOTO", caption: string, likesCount?: number, priceTagTl?: number}>
+ * }} profileInput
+ */
+export function formatInstagramProShowcase(profileInput) {
+	if (
+		!profileInput ||
+		typeof profileInput.displayName !== "string" ||
+		!profileInput.displayName.trim()
+	) {
+		throw new Error("PRO_DISPLAY_NAME_REQUIRED");
+	}
+	const availability = evaluateProAvailability(
+		profileInput.availabilityConfig || {},
+	);
+	const cluster = resolveUniversalProfessionCluster(
+		profileInput.clusterId || profileInput.professionTitle || "",
+	);
+	const rawHandle = (profileInput.handle || profileInput.displayName)
+		.toLocaleLowerCase("tr-TR")
+		.replace(/[^a-z0-9_]/g, "");
+
+	const formattedPrices = (
+		Array.isArray(profileInput.priceMenu) ? profileInput.priceMenu : []
+	).map((item) => {
+		const basePrice = Math.max(0, Number(item.priceTl) || 0);
+		const effectivePrice = Math.round(basePrice * availability.rateMultiplier);
+		const typeLabel =
+			item.pricingType === "FIXED"
+				? "Sabit Net Fiyat"
+				: item.pricingType === "HOURLY"
+					? "Saatlik Ücret"
+					: "Başlangıç Fiyatı";
+		return {
+			title: String(item.title || "Standart Hizmet").trim(),
+			basePriceTl: basePrice,
+			effectivePriceTl: effectivePrice,
+			pricingType: item.pricingType || "STARTING_FROM",
+			pricingBadgeTr: `${effectivePrice} ₺ (${typeLabel})`,
+			durationLabel: item.durationLabel || "Ortalama 60 dk",
+		};
+	});
+
+	return {
+		handle: `@${rawHandle || "ustanomi_pro"}`,
+		displayName: profileInput.displayName.trim(),
+		professionTitle: profileInput.professionTitle || cluster.titleTr,
+		clusterCode: cluster.code,
+		clusterEmoji: cluster.iconEmoji,
+		locationLabel: `${profileInput.city || "İstanbul"} / ${profileInput.district || "Kadıköy"}`,
+		metrics: {
+			rating: Number(profileInput.rating || 4.9),
+			completedJobsCount: Number(profileInput.completedJobsCount || 120),
+			followersCount: Number(profileInput.followersCount || 1450),
+			responseTimeLabel: `${Number(profileInput.responseTimeMinutes || 4)} dk yanıt`,
+		},
+		availability,
+		priceMenu: formattedPrices,
+		storyHighlights: Array.isArray(profileInput.storyHighlights)
+			? profileInput.storyHighlights
+			: [
+					{ id: "hl_1", title: "Öncesi/Sonrası", coverEmoji: "✨" },
+					{ id: "hl_2", title: "Fiyat Listem", coverEmoji: "🏷️" },
+					{ id: "hl_3", title: "Belgelerim", coverEmoji: "🏅" },
+					{ id: "hl_4", title: "Müşteri Yorumu", coverEmoji: "⭐" },
+				],
+		mediaGrid: Array.isArray(profileInput.mediaGrid)
+			? profileInput.mediaGrid
+			: [],
+	};
+}
+
+/**
+ * Validates and builds an "Acil İşler" (Urgent Job Feed) post where customers share an urgent need
+ * and nearby open pros submit instant price + ETA offers.
+ * @param {{
+ *   title: string,
+ *   description: string,
+ *   professionQuery: string,
+ *   urgencyCode?: "EMERGENCY_30M" | "TODAY" | "SCHEDULED",
+ *   city?: string,
+ *   district?: string,
+ *   customerBudgetTl?: number
+ * }} postInput
+ */
+export function createUrgentJobPostPayload(postInput) {
+	if (
+		!postInput ||
+		typeof postInput.title !== "string" ||
+		postInput.title.trim().length < 4
+	) {
+		throw new Error("URGENT_POST_TITLE_TOO_SHORT");
+	}
+	const tier =
+		URGENCY_TIERS[postInput.urgencyCode] || URGENCY_TIERS.EMERGENCY_30M;
+	const cluster = resolveUniversalProfessionCluster(
+		postInput.professionQuery || postInput.title,
+	);
+	const budgetTl = Math.max(
+		0,
+		Number(postInput.customerBudgetTl) || cluster.startingPriceTl,
+	);
+
+	return {
+		urgentPostCode: `ACIL-${Date.now().toString(36).toUpperCase()}`,
+		title: redactKvkkSensitiveText(postInput.title.trim()),
+		description: redactKvkkSensitiveText(
+			String(postInput.description || "").trim(),
+		),
+		clusterCode: cluster.code,
+		clusterTitleTr: cluster.titleTr,
+		clusterEmoji: cluster.iconEmoji,
+		urgencyCode: tier.code,
+		urgencyBadgeTr: tier.badgeTr,
+		slaMinutes: tier.slaMinutes,
+		city: (postInput.city || "İstanbul").trim(),
+		district: (postInput.district || "Kadıköy").trim(),
+		estimatedBudgetTl: budgetTl,
+		onlyNotifyOpenPros: tier.code === "EMERGENCY_30M",
+		createdAt: new Date().toISOString(),
+	};
 }
 
 /**
@@ -266,17 +642,6 @@ export function canTransitionOfferState(fromState, toState) {
 /**
  * Deterministic RBAC & Anti-IDOR policy evaluator ported from AI Studio WorkflowRoleAccessEvaluator.
  * Prevents role spoofing, self-bidding, and cross-customer lead/offer tampering.
- * @param {{
- *   action: string,
- *   actorUserId: number,
- *   authenticatedRole: "CUSTOMER" | "MASTER",
- *   isVerifiedPro?: boolean,
- *   claimedClientRole?: string | null,
- *   leadOwnerUserId?: number | null,
- *   offerAuthorProUserId?: number | null,
- *   assignedProUserId?: number | null,
- *   participatingProUserIds?: number[]
- * }} params
  */
 export function evaluateWorkflowRoleAccess(params) {
 	const {
@@ -531,11 +896,6 @@ export function redactKvkkSensitiveText(text) {
 		.replace(/\b[1-9]\d{10}\b/g, "**[TCKN-REDACTED]**");
 }
 
-/**
- * Helper to access Capacitor native plugins safely without throwing in browser/WebView fallback mode.
- * @param {string} pluginName
- * @returns {Record<string, unknown> | null}
- */
 function getCapacitorPlugin(pluginName) {
 	if (typeof window === "undefined") {
 		return null;
@@ -547,10 +907,6 @@ function getCapacitorPlugin(pluginName) {
 	return cap.Plugins[pluginName] || null;
 }
 
-/**
- * Reads offline field queue from Capacitor Preferences or localStorage fallback.
- * @returns {Promise<Array<{id: string, type: string, payload: Record<string, unknown>, createdAt: string}>>}
- */
 export async function getOfflineQueue() {
 	const prefPlugin = getCapacitorPlugin("Preferences");
 	let raw = null;
@@ -571,10 +927,6 @@ export async function getOfflineQueue() {
 	}
 }
 
-/**
- * Persists offline queue array to Capacitor Preferences or localStorage.
- * @param {Array<{id: string, type: string, payload: Record<string, unknown>, createdAt: string}>} queue
- */
 async function saveOfflineQueue(queue) {
 	const serialized = JSON.stringify(queue.slice(-MAX_QUEUE_ITEMS));
 	const prefPlugin = getCapacitorPlugin("Preferences");
@@ -585,11 +937,6 @@ async function saveOfflineQueue(queue) {
 	}
 }
 
-/**
- * Enqueues a field action (milestone photo, discovery note, customer wet signature) when offline.
- * @param {string} type
- * @param {Record<string, unknown>} payload
- */
 export async function enqueueOfflineAction(type, payload) {
 	if (typeof type !== "string" || !type.trim()) {
 		throw new Error("Offline action type is required");
@@ -607,10 +954,6 @@ export async function enqueueOfflineAction(type, payload) {
 	return entry;
 }
 
-/**
- * Flushes queued offline field actions when connectivity is restored.
- * @param {(item: {id: string, type: string, payload: Record<string, unknown>, createdAt: string}) => Promise<boolean>} syncHandler
- */
 export async function flushOfflineQueue(syncHandler) {
 	const queue = await getOfflineQueue();
 	if (queue.length === 0) {
@@ -635,10 +978,6 @@ export async function flushOfflineQueue(syncHandler) {
 	return { synced, remaining: remaining.length };
 }
 
-/**
- * Triggers native tactile feedback via @capacitor/haptics.
- * @param {"LIGHT" | "MEDIUM" | "HEAVY"} style
- */
 export async function triggerHapticImpact(style = "LIGHT") {
 	const haptics = getCapacitorPlugin("Haptics");
 	if (haptics && typeof haptics.impact === "function") {
@@ -659,10 +998,6 @@ export async function triggerHapticImpact(style = "LIGHT") {
 	return false;
 }
 
-/**
- * Captures a work-site photo or MYK/MEB certificate via @capacitor/camera.
- * @param {{quality?: number, allowEditing?: boolean}} options
- */
 export async function captureFieldPhoto(options = {}) {
 	const camera = getCapacitorPlugin("Camera");
 	const quality =
@@ -680,9 +1015,6 @@ export async function captureFieldPhoto(options = {}) {
 	throw new Error("CAMERA_PLUGIN_UNAVAILABLE");
 }
 
-/**
- * Fetches current verified GPS coordinates for Emergency 30-Min Usta Radar.
- */
 export async function getCurrentRadarLocation() {
 	const geo = getCapacitorPlugin("Geolocation");
 	if (geo && typeof geo.getCurrentPosition === "function") {
@@ -703,10 +1035,6 @@ export async function getCurrentRadarLocation() {
 	throw new Error("GEOLOCATION_UNAVAILABLE");
 }
 
-/**
- * Opens an approved 3D Secure payment page (PayTR / iyzico) or Ustanomi legal document in @capacitor/browser.
- * @param {string} url
- */
 export async function openSecurePaymentOrLegalUrl(url) {
 	if (!isAllowedUstanomiUrl(url)) {
 		throw new Error("BLOCKED_UNTRUSTED_NAVIGATION_URL");
@@ -727,10 +1055,6 @@ export async function openSecurePaymentOrLegalUrl(url) {
 	return false;
 }
 
-/**
- * Mounts a touch-friendly wet-signature canvas for field milestone approval (_mit-kit/service/signature-qr-helpers).
- * @param {HTMLCanvasElement} canvas
- */
 export function createSignaturePad(canvas) {
 	if (!canvas || typeof canvas.getContext !== "function") {
 		throw new Error("VALID_CANVAS_REQUIRED");
@@ -800,10 +1124,6 @@ export function createSignaturePad(canvas) {
 	};
 }
 
-/**
- * Initializes native lifecycle listeners: StatusBar, SplashScreen, Android hardware back button, and Network observer.
- * @param {{onNetworkChange?: (status: {connected: boolean, connectionType: string}) => void}} callbacks
- */
 export async function initUstanomiNativeShell(callbacks = {}) {
 	const statusBar = getCapacitorPlugin("StatusBar");
 	if (statusBar && typeof statusBar.setBackgroundColor === "function") {
@@ -852,10 +1172,17 @@ export async function initUstanomiNativeShell(callbacks = {}) {
 
 export const UstanomiNative = Object.freeze({
 	OFFER_SERVICE_CATEGORIES,
+	UNIVERSAL_PROFESSION_CLUSTERS,
+	URGENCY_TIERS,
+	PRO_AVAILABILITY_MODES,
 	ESCROW_PAYMENT_PROVIDERS,
 	LEAD_LIFECYCLE_TRANSITIONS,
 	OFFER_LIFECYCLE_TRANSITIONS,
 	resolveOfferServiceCategory,
+	resolveUniversalProfessionCluster,
+	evaluateProAvailability,
+	formatInstagramProShowcase,
+	createUrgentJobPostPayload,
 	isAllowedUstanomiUrl,
 	canTransitionEscrow,
 	canTransitionLeadState,
